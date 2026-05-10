@@ -1,0 +1,6 @@
+artifacts
+attached_assets
+lib
+node_modules
+scripts
+sysengage
