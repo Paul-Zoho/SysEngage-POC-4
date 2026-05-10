@@ -1,0 +1,8 @@
+{
+  "description": "Expected outputs for simple_requirements.docx fixture",
+  "note": "Exact counts depend on generated docx content (2 heading sections, 3 body paragraphs)",
+  "expected_segment_count": 2,
+  "expected_source_count_min": 3,
+  "expected_execution_status": "Success",
+  "expected_read_completion_status": true
+}

@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+
+{% block title %}Source Capture — Execution Summary{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Execution Summary</h1>
+    <p class="subtitle">
+        AnalysisPass <code>{{ analysis_pass.pass_id }}</code>
+        &mdash;
+        <span class="status-badge status-{{ analysis_pass.execution_status | lower }}">
+            {{ analysis_pass.execution_status }}
+        </span>
+    </p>
+</div>
+
+<div class="card">
+    <h2>Read Witness</h2>
+    {% if read_witness %}
+    <table class="data-table">
+        <tr><th>Input hash (SHA-256)</th><td><code>{{ read_witness.input_hash }}</code></td></tr>
+        <tr><th>Byte count</th><td>{{ read_witness.byte_count }}</td></tr>
+        <tr><th>Character count</th><td>{{ read_witness.character_count }}</td></tr>
+        <tr><th>Read mode</th><td>{{ read_witness.read_mode }}</td></tr>
+        <tr><th>Read completion</th><td>{{ read_witness.read_completion_status }}</td></tr>
+        <tr><th>Format detected</th><td>{{ read_witness.format_detected }}</td></tr>
+    </table>
+    {% else %}
+    <p class="muted">No Read Witness data (execution may have failed in Pass 0).</p>
+    {% endif %}
+</div>
+
+{% if analysis_pass.execution_status == "Failed" %}
+<div class="alert alert-error">
+    <strong>Failure reason:</strong> {{ outputs.failure_reason or "Unknown" }}<br/>
+    <strong>Failed in:</strong> {{ outputs.failure_pass or "Unknown" }}
+</div>
+<div class="form-actions">
+    <a href="/source-capture" class="btn-primary">Try again</a>
+</div>
+{% else %}
+
+<div class="card">
+    <h2>Entity Counts</h2>
+    <div class="counts-grid">
+        <div class="count-item">
+            <span class="count-number">{{ mechanism_data.segment_count or 0 }}</span>
+            <span class="count-label">Segments</span>
+        </div>
+        <div class="count-item">
+            <span class="count-number">{{ mechanism_data.source_count or 0 }}</span>
+            <span class="count-label">Sources</span>
+        </div>
+        <div class="count-item">
+            <span class="count-number">{{ mechanism_data.source_atom_count or 0 }}</span>
+            <span class="count-label">SourceAtoms</span>
+        </div>
+    </div>
+</div>
+
+{% if segments %}
+<div class="card">
+    <h2>Segments</h2>
+    <table class="data-table">
+        <thead>
+            <tr><th>ID</th><th>Title</th><th>Description</th></tr>
+        </thead>
+        <tbody>
+        {% for seg in segments %}
+            <tr>
+                <td><code>{{ seg.segment_id }}</code></td>
+                <td>{{ seg.title }}</td>
+                <td class="muted">{{ seg.description or "—" }}</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
+
+{% if sources %}
+<div class="card">
+    <h2>Sources</h2>
+    <table class="data-table">
+        <thead>
+            <tr><th>ID</th><th>Segment</th><th>Context</th><th>Content (verbatim)</th></tr>
+        </thead>
+        <tbody>
+        {% for src in sources %}
+            <tr>
+                <td><code>{{ src.source_id }}</code></td>
+                <td><code>{{ src.segment_id or "—" }}</code></td>
+                <td>{{ src.segmentation_context }}</td>
+                <td class="source-text">{{ src.source_text[:200] }}{% if src.source_text|length > 200 %}&hellip;{% endif %}</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
+
+<div class="form-actions">
+    <a href="/source-capture" class="btn-secondary">Upload another file</a>
+</div>
+{% endif %}
+
+<div class="card muted-card">
+    <h3>Audit Details</h3>
+    <table class="data-table">
+        <tr><th>Pass ID</th><td><code>{{ analysis_pass.pass_id }}</code></td></tr>
+        <tr><th>Phase</th><td>{{ analysis_pass.phase_id }}</td></tr>
+        <tr><th>Mode</th><td>{{ analysis_pass.mode_active }}</td></tr>
+        <tr><th>Project</th><td>{{ analysis_pass.project_id }}</td></tr>
+        <tr><th>Practitioner</th><td>{{ analysis_pass.practitioner_id }}</td></tr>
+        <tr><th>Started</th><td>{{ analysis_pass.pass_started_at }}</td></tr>
+        <tr><th>Completed</th><td>{{ analysis_pass.pass_completed_at or "—" }}</td></tr>
+        <tr><th>Elapsed</th><td>{{ analysis_pass.elapsed_ms or "—" }} ms</td></tr>
+        <tr><th>Mode violations</th><td>{{ (outputs.mode_violations or []) | length }}</td></tr>
+    </table>
+</div>
+{% endblock %}

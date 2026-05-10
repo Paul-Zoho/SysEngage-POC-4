@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block title %}Source Capture — Upload{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Source Capture</h1>
+    <p class="subtitle">Supply input material for Zachman framework analysis.</p>
+</div>
+
+{% if error %}
+<div class="alert alert-error">
+    <strong>Error:</strong> {{ error }}
+</div>
+{% endif %}
+
+<div class="card">
+    <h2>Upload Input Material</h2>
+    <p>Supported formats: <code>.txt</code>, <code>.md</code>, <code>.docx</code>, <code>.pdf</code></p>
+
+    <form method="post" enctype="multipart/form-data" action="/source-capture">
+        <div class="form-group">
+            <label for="file">Input file</label>
+            <input type="file" id="file" name="file" accept=".txt,.md,.docx,.pdf"
+                   required class="file-input" />
+        </div>
+
+        <div class="form-group">
+            <label for="project_id">Project ID</label>
+            <input type="text" id="project_id" name="project_id"
+                   value="PROJ001" class="text-input" />
+        </div>
+
+        <div class="form-group">
+            <label for="practitioner_id">Practitioner ID</label>
+            <input type="text" id="practitioner_id" name="practitioner_id"
+                   value="SH002" class="text-input" />
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn-primary">Run Source Capture</button>
+        </div>
+    </form>
+</div>
+
+<div class="info-panel">
+    <h3>What happens during Source Capture</h3>
+    <ol>
+        <li><strong>Pass 0 — Read Witness:</strong> File is read end-to-end; SHA-256 hash, byte count, and character count computed.</li>
+        <li><strong>Pass 0A — Segment Construction:</strong> Structural markers (headings, document boundaries) produce Segment groupings.</li>
+        <li><strong>Pass 0B — Source Capture:</strong> Paragraph-level verbatim Sources produced under LPM discipline (byte-for-byte preserved).</li>
+        <li><strong>Pass 0C — SourceAtom Splitting:</strong> Sources split into atomic units (sentence/line boundaries).</li>
+    </ol>
+    <p>All entities committed atomically. AnalysisPass audit record produced per execution.</p>
+</div>
+{% endblock %}

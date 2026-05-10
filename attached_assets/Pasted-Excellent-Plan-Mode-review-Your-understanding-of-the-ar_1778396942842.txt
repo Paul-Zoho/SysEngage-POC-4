@@ -1,0 +1,57 @@
+Excellent Plan Mode review. Your understanding of the architecture is accurate — confirmed. Three of your six findings are real spec issues that I'll capture in the tracker; the other three are workspace/scope decisions I'll answer below.
+Answers to your five questions
+Q1 — Identifier prefixes: You are correct. The canonical ledger spec v2.9 takes precedence over replit.md and the Row 4 documents — both of those documents introduced an error by restating prefixes from memory rather than referencing the canonical spec. Use the canonical patterns:
+
+Source: ^S\d{3}$ (e.g., S001)
+Segment: ^SEG\d{3}$
+SourceAtom: ^SA\d{3}$
+AnalysisPass: ^P\d{3}$
+
+Postgres sequences should be named accordingly (e.g., s_id_seq, seg_id_seq, sa_id_seq, p_id_seq or similar — your call on naming convention as long as it's consistent). This finding is captured in our Issues Tracker as a Quality Discipline finding (the kind of drift our template-design work was supposed to prevent — we duplicated rather than referenced and got it wrong).
+Q2 — Database: I will provide a Neon connection string. Hold off on database-touching code until I confirm the connection string is set. For now you can proceed with schemas, models, and migration definitions; just don't attempt to apply migrations until the Neon connection is live.
+Q3 — Workspace approach: Use a clean-slate approach if possible. The existing Node.js/pnpm workspace artifacts are unrelated to SysEngage and will create cognitive noise during the build. If you can move them to an archive directory or otherwise isolate them, please do so. If a clean-slate workspace isn't possible, your proposed sysengage/ subdirectory approach is acceptable — but flag this as additional setup overhead that wouldn't exist in a clean repo. Confirm which approach you take before scaffolding.
+Q4 — Re-execution for v1: Implement the mechanism-level re-execution invocation API and exercise it via pytest only. No /re-execute web endpoint for v1. The web layer's /source-capture upload endpoint handles initial execution only; re-execution semantics are exercised by pytest invoking the mechanism API directly with a re-execution context. This is a real spec ambiguity (distinction between "mechanism API supports re-execution" vs "web layer exposes endpoint") which I'll capture as a tracker finding.
+Q5 — Fixture binaries: Generate simple_requirements.docx and corrupt_pdf.pdf in conftest.py (your proposed approach). Keep the repo binary-free. The conftest code documents what each fixture represents, which is more self-documenting than committed binaries. The plain-text fixtures (.txt, .md, .xyz) should be committed as-is.
+Findings captured for tracker
+Three of your findings are spec issues I'll capture for the tracker as v0.7:
+
+F18 candidate — Identifier prefix discrepancy between canonical ledger spec and Row 4 Applied / Row 4 Mechanism Source Capture / replit.md. Quality Discipline category. Resolution: use canonical patterns; revise Row 4 docs in next cycle. Your build proceeds with the correct (canonical) patterns.
+F19 candidate — Re-execution invocation distinction unclear in v1 specs. The replit.md said "no UI for v1" but didn't clarify whether the mechanism API itself should support re-execution invocation. Quality Discipline category. Resolution: mechanism API supports re-execution; web layer does not expose a dedicated endpoint for v1.
+The workspace-state finding (Finding 2) and fixture-creation findings (Findings 4 & 5) are not spec issues — they're build-context decisions resolved by my answers above.
+
+Build sequence — confirmed
+Your proposed build sequence is excellent. Proceed in the order you outlined:
+
+Project scaffold & environment (sysengage/ structure, pyproject.toml, alembic init)
+Schemas and models (Pydantic + SQLAlchemy + mappers + Alembic migration with canonical sequences)
+Core architectural patterns (@pass_mode decorator, audit trail helpers, orchestrator stub)
+Source Capture mechanism (decoders, four Pass modules, orchestration entry point)
+FastAPI + Jinja templates (upload route, summary view; no re-execute endpoint for v1)
+Tests and fixtures (committed plain-text fixtures, conftest-generated binary fixtures, per-Pass and end-to-end tests)
+
+Build sequence amendment — apply F18 patterns from the start
+Apply the canonical ledger spec v2.9 identifier patterns from Phase 2 onwards. Don't wait until the end — the patterns affect Postgres sequence names, Pydantic regex validators, and the Alembic migration. Building with the wrong patterns would require rework.
+What to do during the build
+A few patterns I'd like you to maintain throughout:
+
+Flag spec ambiguities as Findings — same as you did in Plan Mode. If the specs don't give a clear answer, flag it explicitly with a brief description and the choice you'd make. Don't silently invent.
+Keep architectural commitments visible in code — for the five critical conventions (LPM byte-preservation, mode decorator, mechanism provenance on AnalysisPass, one-transaction-per-execution, identifier sequencing): include a brief comment at the top of each module that exercises the convention, citing the relevant spec section. This makes architectural drift catchable in code review.
+Test fixtures should match Implementation Spec §9 exactly — the verbatim fixture content (e.g., simple_paragraph.txt's three lines) is part of the spec; producing different content would change test outcomes. If you spot any inconsistency between fixture content and expected outputs in §9, flag as a Finding.
+Use Alembic migrations from the start — don't run schema-creating raw SQL or Base.metadata.create_all(). Every schema change should be an Alembic migration so the schema evolves correctly across environments.
+One reasonable surprise to expect: per Issues Tracker F16/F17 (Quality Discipline cluster), the Row 3 Mechanism Source Capture spec has known content gaps that the Row 4 spec papered over by inventing edge cases. Specifically:
+
+File open failures (file not found, permission denied) — implementation handling described in Row 4 §4.1.4 only
+Invalid Segmentation policy configuration — implementation handling in Row 4 §4.2.4 only
+Concurrency / identifier collisions / mode violation failure modes — covered in Row 4 §10 only
+
+When you implement these edge cases, follow the Row 4 spec. If you find the Row 4 description insufficient or implementation forces additional decisions, flag as Finding so we can update Row 3 in v0.3 retrofit.
+
+Proceed
+Once you've confirmed:
+
+(a) you'll use the canonical ledger spec patterns (S###, SEG###, SA###, P###)
+(b) which workspace approach you'll take (clean-slate or sysengage/ subdirectory)
+(c) you understand the re-execution scope (mechanism API yes, web endpoint no)
+
+…you can proceed with implementation per the proposed build sequence. I will provide the Neon connection string before you reach the migration-application step.
+If at any point you hit a spec ambiguity or contradiction that blocks progress, stop and flag it. Don't invent silently — surfacing gaps is the point of this test.
