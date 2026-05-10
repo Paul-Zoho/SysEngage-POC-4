@@ -1,0 +1,85 @@
+I'm building the first mechanism of SysEngage — an AI-powered Systems Engineering Tool that performs Zachman framework analysis on software products. This is a v1 prototype focused on validating a production pattern (specifications → AI-coding-agent → working code). It is not a full SysEngage build.
+
+**Please switch to Plan Mode for this kick-off so we can review architecture and assumptions before code is written.**
+
+## Scope of this task
+
+Build only the **Source Capture mechanism** end-to-end. Source Capture is the foundational SysEngage mechanism — it ingests Practitioner-supplied input material (text files, .md, .docx, .pdf) and produces canonical ledger entities (Source / Segment / SourceAtom / AnalysisPass) byte-for-byte preserved under LPM (Literal Persistence Mode) discipline. The mechanism is fully deterministic — zero AI involvement.
+
+Do NOT build any other SysEngage mechanism. Do NOT build authentication, multi-tenancy, or downstream Phase 2+ functionality. Do NOT add features not in the specifications.
+
+## How to read the specifications
+
+Four specification documents are uploaded to this project. Read them in this order:
+
+1. **`replit.md`** in the repo root — concise project overview, tech stack, critical conventions, key commands, project structure. This is your always-loaded context; refer back to it as needed.
+
+2. **`docs/SysEngage_Row_4_Applied_to_SysEngage_v0_1.docx`** — architectural commitments for SysEngage v1. Locks: Python 3.12+, FastAPI, Neon PostgreSQL via SQLAlchemy 2.x, Alembic migrations, Pydantic v2 validation, Anthropic Python SDK (not exercised by Source Capture), Jinja templates, pytest. Contains §1-16 covering every architectural decision. **Read this second.**
+
+3. **`docs/SysEngage_Row_4_Mechanism_Source_Capture_v0_1.docx`** — implementation specification for Source Capture at architectural depth + verification criteria + test fixtures. Contains §1-12 covering pass-by-pass implementation (§4), schema and validation (§5), mode discipline realisation (§6), audit trail population (§7), verification criteria (§8), test fixtures (§9), edge cases (§10), cross-mechanism interactions (§11), build notes (§12). **Read this third — it is the primary spec for this build.**
+
+4. **`docs/SysEngage_Row_3_Mechanism_Source_Capture_v0_1.docx`** — logical-design specification (the layer above implementation). Reference if any implementation question requires going back to the logical model. Mostly you won't need it — Row 4 docs are sufficient — but it is here for completeness. **Read only if needed.**
+
+There is also `docs/sysengage_minimal_ledger_spec_v2_9.docx` available in the project — this is the canonical entity schema specification (Source / Segment / SourceAtom / AnalysisPass attribute definitions). The Pydantic models you produce must mirror this canonical schema. Reference it when implementing schemas.
+
+If any spec document fails to parse (.docx parsing issues), let me know and I will provide markdown-extracted versions.
+
+## What I want from you in Plan Mode
+
+Before writing any code, please:
+
+1. **Confirm you have read** `replit.md`, the Row 4 Applied document, and the Row 4 Mechanism Source Capture document. Summarise back to me your understanding of the architecture and the mechanism in 5-10 sentences. This lets me verify alignment before code is generated.
+
+2. **Surface any spec gaps or ambiguities** you encounter. The specs are v0.1 — known to be provisional. If you find something underspecified, contradictory, or implementation-blocking, flag it explicitly as a "Finding". Do not invent answers silently — flagging gaps is more valuable than papering over them.
+
+3. **Propose a build sequence**. I expect roughly: schemas (Pydantic + SQLAlchemy + Alembic migrations) → core architectural patterns (mode discipline decorator, audit trail helpers) → Source Capture mechanism (per-Pass modules) → FastAPI routes + Jinja templates → pytest tests + fixtures. But propose your sequence and I'll confirm or adjust.
+
+4. **Identify what test fixtures need to be created**. The Implementation Spec §9 lists fixtures: `simple_paragraph.txt`, `multi_section.md`, `simple_requirements.docx`, `empty.txt`, `single_short_statement.txt`, `abbreviation_handling.txt`, `very_large_paragraph.txt`, `corrupt_pdf.pdf`, `unsupported_format.xyz`. Some are plain text and you can create them per spec content. Some are binary (`simple_requirements.docx`, `corrupt_pdf.pdf`) — confirm whether you'll generate them programmatically or whether I should provide them.
+
+After Plan Mode review, I'll confirm or adjust, and you can proceed to implementation.
+
+## Critical conventions (do not violate)
+
+These are non-negotiable architectural commitments from the specifications:
+
+- **LPM byte-preservation**: Source.content is byte-for-byte verbatim from input. No normalisation, no encoding transformation, no whitespace collapse beyond canonical character-stream conversion. Implemented via Pydantic `frozen=True` on the Source model — attempted modification raises RuntimeError. This is the central LPM enforcement; do not weaken it.
+
+- **Mode declaration via decorator**: every mechanism Pass uses `@pass_mode("LPM")` (or appropriate mode). The decorator records `mode_active` on AnalysisPass, instruments execution to detect mode violations, and sets `execution_status=Failed` on violation. Implement the decorator in `core/modes/` per Row 4 Applied §9.
+
+- **Mechanism provenance lives on AnalysisPass.outputs**: per Issue F4 architectural commitment, mechanism-internal data (Read Witness, mechanism_data, mode_violations) lives on `AnalysisPass.outputs` (JSONB column), NOT on canonical entity types themselves. See Row 4 Applied §10 and Row 4 Mechanism Source Capture §7.
+
+- **One transaction per mechanism execution**: per Row 4 Applied §5 — all entities (Sources, Segments, SourceAtoms, AnalysisPass) commit atomically per mechanism execution, or none do. Exception: on failure, the AnalysisPass record with failure detail is committed in a separate transaction so failures remain auditable.
+
+- **Identifier sequencing**: per Row 4 Applied §5 — Postgres sequences per identifier prefix (src_id_seq → SRC###; seg_id_seq → SEG###; etc.). Zero-pad to 3 digits; format extends automatically as numbers grow. The exact prefix for atom IDs is pending finalisation per Issue F11; recommended ATM###.
+
+## Verification target
+
+The build is correct when `pytest tests/source_capture/` passes all fixtures listed in Mechanism Implementation Spec §9. Specifically:
+
+- All happy-path fixtures produce expected entity counts and content
+- All edge-case fixtures produce expected error behaviour or correct handling
+- Determinism fixtures: re-running the mechanism produces identical entity content (modulo identifier sequence) across runs
+- Phase 10 re-execution fixture: re-running with new input appends entities without modifying prior ones
+
+If you can demonstrate `pytest tests/source_capture/` passes against the fixtures, the build validates the production pattern.
+
+## Database setup
+
+Neon PostgreSQL is the target persistence platform. Either:
+
+- I will provide a Neon connection string for the project, OR
+- You can use a local Postgres instance for development and we'll connect to Neon for the final test.
+
+Confirm which approach you'd prefer. The architectural commitment is to Neon for production deployment; local Postgres for development is acceptable and common.
+
+## What to do if something is unclear
+
+For any question where the specifications don't give you a clear answer:
+
+- Flag it explicitly as a Finding (with brief description of the unclear point and the choice you would make)
+- Make the choice that seems most consistent with the architectural commitments in Row 4 Applied
+- Document your choice in the code (comment on the relevant module) so I can review
+
+Do NOT silently invent unspecified behaviour. Surfacing gaps is the genuine value of this test — it tells us whether the specs are complete enough to produce working code.
+
+Ready when you are. Start by confirming you have access to the four specification documents and the canonical ledger spec, then proceed with Plan Mode review per the four points above.
