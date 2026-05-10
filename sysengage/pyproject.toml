@@ -30,6 +30,7 @@ dev = [
 
 [tool.setuptools.packages.find]
 where = [".."]
+include = ["sysengage*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
