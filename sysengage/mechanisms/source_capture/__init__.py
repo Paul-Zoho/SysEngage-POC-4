@@ -82,7 +82,11 @@ from schemas.source_atom import SourceAtom
 class SourceCaptureResult:
     """
     Result of a Source Capture mechanism execution.
-    Contains the assigned pass_id and entity counts for the caller.
+    Contains the assigned pass_id, entity counts, and all produced IDs for the caller.
+
+    segment_ids and atom_ids are included so export_ledger() can scope DB queries
+    using the explicit IDs assigned during this run without needing an extra DB
+    column or a secondary lookup.
     """
 
     pass_id: str
@@ -91,7 +95,15 @@ class SourceCaptureResult:
     segment_count: int
     source_atom_count: int
     source_ids: list[str]
+    segment_ids: list[str] = None  # type: ignore[assignment]
+    atom_ids: list[str] = None  # type: ignore[assignment]
     failure_reason: str | None = None
+
+    def __post_init__(self) -> None:
+        if self.segment_ids is None:
+            self.segment_ids = []
+        if self.atom_ids is None:
+            self.atom_ids = []
 
 
 def run_source_capture(
@@ -352,6 +364,8 @@ def run_source_capture(
             segment_count=len(segment_ids),
             source_atom_count=len(atom_ids),
             source_ids=source_ids,
+            segment_ids=segment_ids,
+            atom_ids=atom_ids,
         )
 
     except ModeViolationError as exc:

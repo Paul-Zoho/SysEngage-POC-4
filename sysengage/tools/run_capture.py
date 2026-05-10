@@ -6,8 +6,11 @@ Not a mechanism. Not registered under mechanisms/. Purpose: allow a Practitioner
 to submit real input material to the Source Capture mechanism and inspect the
 resulting canonical ledger JSON without requiring pytest.
 
-Invocation (from workspace root or sysengage/ directory):
+Invocation (from workspace root where sysengage/ is a package):
     python -m sysengage.tools.run_capture <input_file_path> <output_ledger_path>
+
+Or from within sysengage/ with PYTHONPATH set to the workspace root:
+    PYTHONPATH=.. python -m sysengage.tools.run_capture <input_file_path> <output_ledger_path>
 
 Exit codes:
     0 — success
@@ -24,10 +27,22 @@ from pathlib import Path
 from uuid import uuid4
 
 
+def _ensure_sysengage_on_path() -> None:
+    """
+    Add the sysengage/ package directory to sys.path so that internal imports
+    (mechanisms, core, models, schemas) resolve regardless of the working directory.
+    Safe to call multiple times; only inserts if not already present.
+    """
+    sysengage_dir = str(Path(__file__).parent.parent.resolve())
+    if sysengage_dir not in sys.path:
+        sys.path.insert(0, sysengage_dir)
+
+
 def export_ledger(
     pass_id: str,
     source_ids: list[str],
-    project_id: str,
+    segment_ids: list[str],
+    atom_ids: list[str],
 ) -> dict:
     """
     Query the database for all entities produced by this Source Capture execution
@@ -41,23 +56,22 @@ def export_ledger(
 
     Scoping strategy:
     - AnalysisPass: fetched by pass_id (exact).
-    - Sources: fetched by source_ids (returned by the orchestrator).
-    - Segments: fetched by project_id filtered to those referenced by the Sources.
-    - SourceAtoms: fetched by source_ref in source_ids.
+    - project_id: sourced from the AnalysisPass row — used as an additional scope
+      guard for all entity queries.
+    - Sources: fetched by source_ids filtered to ap_row.project_id.
+    - Segments: fetched by segment_ids filtered to ap_row.project_id.
+    - SourceAtoms: fetched by atom_ids filtered to ap_row.project_id.
 
     Args:
-        pass_id:    The AnalysisPass identifier from this execution.
-        source_ids: List of Source identifiers produced by this execution.
-        project_id: The project identifier used for this execution.
+        pass_id:     The AnalysisPass identifier from this execution.
+        source_ids:  List of Source identifiers produced by this execution.
+        segment_ids: List of Segment identifiers produced by this execution.
+        atom_ids:    List of SourceAtom identifiers produced by this execution.
 
     Returns:
         Canonical ledger dict conforming to sysengage_ledger_version 2.10.
     """
-    import sys
-    import os
-
-    sys.path.insert(0, str(Path(__file__).parent.parent))
-    os.chdir(Path(__file__).parent.parent)
+    _ensure_sysengage_on_path()
 
     from sqlalchemy import select
     from core.db import get_session
@@ -77,10 +91,15 @@ def export_ledger(
         if ap_row is None:
             raise RuntimeError(f"AnalysisPass {pass_id} not found in database.")
 
+        project_id: str = ap_row.project_id
+
         if source_ids:
             src_rows = (
                 session.execute(
-                    select(SourceModel).where(SourceModel.source_id.in_(source_ids))
+                    select(SourceModel).where(
+                        SourceModel.source_id.in_(source_ids),
+                        SourceModel.project_id == project_id,
+                    )
                 )
                 .scalars()
                 .all()
@@ -88,14 +107,12 @@ def export_ledger(
         else:
             src_rows = []
 
-        segment_ids = list(
-            {r.segment_id for r in src_rows if r.segment_id is not None}
-        )
         if segment_ids:
             seg_rows = (
                 session.execute(
                     select(SegmentModel).where(
-                        SegmentModel.segment_id.in_(segment_ids)
+                        SegmentModel.segment_id.in_(segment_ids),
+                        SegmentModel.project_id == project_id,
                     )
                 )
                 .scalars()
@@ -104,18 +121,19 @@ def export_ledger(
         else:
             seg_rows = []
 
-        if source_ids:
-            atom_rows = (
+        if atom_ids:
+            atom_rows_db = (
                 session.execute(
                     select(SourceAtomModel).where(
-                        SourceAtomModel.source_ref.in_(source_ids)
+                        SourceAtomModel.atom_id.in_(atom_ids),
+                        SourceAtomModel.project_id == project_id,
                     )
                 )
                 .scalars()
                 .all()
             )
         else:
-            atom_rows = []
+            atom_rows_db = []
 
         for src in src_rows:
             elements.append(
@@ -155,7 +173,7 @@ def export_ledger(
                 }
             )
 
-        for atom in atom_rows:
+        for atom in atom_rows_db:
             elements.append(
                 {
                     "element_id": atom.atom_id,
@@ -221,8 +239,14 @@ def main() -> None:
             "the resulting canonical ledger JSON to an output file."
         ),
     )
-    parser.add_argument("input_file", help="Path to the input file (.txt, .md, .docx, .pdf)")
-    parser.add_argument("output_ledger", help="Path where the canonical ledger JSON will be written")
+    parser.add_argument(
+        "input_file",
+        help="Path to the input file (.txt, .md, .docx, .pdf)",
+    )
+    parser.add_argument(
+        "output_ledger",
+        help="Path where the canonical ledger JSON will be written",
+    )
     args = parser.parse_args()
 
     input_path = Path(args.input_file)
@@ -236,10 +260,7 @@ def main() -> None:
         print(f"Error: input path is not a file: {input_path}", file=sys.stderr)
         sys.exit(1)
 
-    import os
-    sysengage_dir = Path(__file__).parent.parent
-    os.chdir(sysengage_dir)
-    sys.path.insert(0, str(sysengage_dir))
+    _ensure_sysengage_on_path()
 
     try:
         from mechanisms.source_capture import run_source_capture
@@ -272,7 +293,8 @@ def main() -> None:
         ledger = export_ledger(
             pass_id=result.pass_id,
             source_ids=result.source_ids,
-            project_id=project_id,
+            segment_ids=result.segment_ids,
+            atom_ids=result.atom_ids,
         )
     except Exception as exc:
         print(f"Error: ledger export failed — {exc}", file=sys.stderr)
