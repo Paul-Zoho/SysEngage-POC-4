@@ -1,7 +1,7 @@
 """
 Audit trail helpers for AnalysisPass lifecycle management.
 
-Per Row 4 Applied §10 and Mechanism Implementation Spec §7:
+Per Row 4 Applied §10 and Mechanism Implementation Spec v0.4 §7:
 - One AnalysisPass record per mechanism execution.
 - Created at mechanism start, finalised at mechanism end (success or failure).
 - On failure: main transaction rolls back; AnalysisPass with failure detail
@@ -10,6 +10,14 @@ Per Row 4 Applied §10 and Mechanism Implementation Spec §7:
 Per Row 4 Applied §5 transactional discipline:
 - All canonical entities commit atomically in one transaction.
 - AnalysisPass failure record commits in a second, separate transaction.
+
+Canonical AnalysisPass attributes per v2.11 (F25/F27 resolution):
+  pass_type, mechanism, evaluated_scope, confidence are now REQUIRED canonical
+  attributes. They are added to create_analysis_pass_record and persisted via
+  persist_analysis_pass so they appear in the DB and in canonical export (F25).
+
+Non-canonical attributes (kept for operational use, stripped at export per F24):
+  phase_id — intentional placeholder for multi-Phase tracking (Q7: Possibility 3).
 """
 
 import time
@@ -25,6 +33,10 @@ def create_analysis_pass_record(
     project_id: str,
     practitioner_id: str,
     phase_id: str = "PH001",
+    pass_type: str = "Universal",
+    mechanism: str = "SourceCapture",
+    evaluated_scope: str = "All input material in this project",
+    confidence: float = 1.0,
 ) -> dict[str, Any]:
     """
     Build the in-memory AnalysisPass data dict at mechanism start.
@@ -36,6 +48,10 @@ def create_analysis_pass_record(
         "project_id": project_id,
         "practitioner_id": practitioner_id,
         "phase_id": phase_id,
+        "pass_type": pass_type,
+        "mechanism": mechanism,
+        "evaluated_scope": evaluated_scope,
+        "confidence": confidence,
         "pass_started_at": datetime.now(timezone.utc),
         "pass_completed_at": None,
         "execution_status": "In-Progress",
@@ -124,6 +140,9 @@ def persist_analysis_pass(session: Session, pass_data: dict[str, Any]) -> str:
     Assign a pass_id from the Postgres sequence and insert the AnalysisPass row.
     Does NOT commit — caller is responsible for commit/rollback.
 
+    Writes canonical attributes pass_type, mechanism, evaluated_scope, confidence
+    as dedicated columns (F25/F27 resolution — these were previously missing from DB).
+
     Returns the assigned pass_id.
     """
     seq_val = get_next_sequence_value(session, "p_id_seq")
@@ -132,6 +151,12 @@ def persist_analysis_pass(session: Session, pass_data: dict[str, Any]) -> str:
     record = AnalysisPassModel(
         pass_id=pass_id,
         phase_id=pass_data["phase_id"],
+        pass_type=pass_data.get("pass_type", "Universal"),
+        mechanism=pass_data.get("mechanism", "SourceCapture"),
+        evaluated_scope=pass_data.get(
+            "evaluated_scope", "All input material in this project"
+        ),
+        confidence=pass_data.get("confidence", 1.0),
         pass_started_at=pass_data["pass_started_at"],
         pass_completed_at=pass_data.get("pass_completed_at"),
         execution_status=pass_data["execution_status"],

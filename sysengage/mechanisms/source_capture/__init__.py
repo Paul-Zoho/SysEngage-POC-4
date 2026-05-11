@@ -1,10 +1,21 @@
 """
 Source Capture mechanism — orchestration entry point.
 
-Per Implementation Spec §3.1 and §1 (Module location).
+Per Implementation Spec v0.4 §3.1 and §1 (Module location).
 
 Exposes run_source_capture() as the single entry point for the mechanism.
 Internally sequences Passes 0 → 0A → 0B → 0C.
+
+Pass names (v0.4 canonical):
+  Pass 0  — Read Witness
+  Pass 0A — Source Capture (sentence-level)
+  Pass 0B — Segment Construction (heading-based)
+  Pass 0C — SourceAtom Splitting (default no-op in v1)
+
+Entity persistence order (v2.11 canonical):
+  1. Sources (Pass 0A output) — assigned IDs first; form the anchor for source_refs.
+  2. Segments (Pass 0B output) — source_refs populated from assigned Source IDs.
+  3. SourceAtoms (Pass 0C output) — reference their parent Source via source_ref.
 
 Critical architectural commitments enforced here:
   1. LPM byte-preservation: Source Pydantic models frozen=True (schemas/source.py).
@@ -18,16 +29,21 @@ Critical architectural commitments enforced here:
 Transactional discipline (Row 4 Applied §5):
   - Project + Stakeholder records committed in an isolated mini-transaction FIRST.
     This ensures they exist as FK anchors even if the main transaction rolls back.
-  - All canonical entities (Segment, Source, SourceAtom, AnalysisPass) commit
+  - All canonical entities (Source, Segment, SourceAtom, AnalysisPass) commit
     atomically in ONE main transaction on success.
   - On failure: main transaction rolls back; AnalysisPass failure record commits
     in a SEPARATE transaction (also relies on project+stakeholder existing).
 
-Re-execution semantics (Implementation Spec §10.4):
+Re-execution semantics (Implementation Spec v0.4 §10.4):
   - Detect existing Sources via input_hash match on prior AnalysisPass records.
   - If hash matches an existing successful execution for this project: skip.
   - If no match: run all Passes and append new entities.
   - Existing entities never modified (LPM).
+
+Canonical field changes from v0.3 → v0.4:
+  - Source: no longer carries segment_id FK (F24 fix). Sources are autonomous.
+  - Segment: carries source_refs = list of source_ids (canonical v2.11 relation).
+  - AnalysisPass: carries pass_type, mechanism, evaluated_scope, confidence (F25/F27 fix).
 """
 
 from __future__ import annotations
@@ -61,21 +77,17 @@ from mechanisms.source_capture.errors import (
     SegmentationPolicyError,
 )
 from mechanisms.source_capture.pass_0_read_witness import run_pass_0
-from mechanisms.source_capture.pass_0a_segment_construction import (
-    run_pass_0a,
-)
-from mechanisms.source_capture.pass_0b_source_capture import run_pass_0b
+from mechanisms.source_capture.pass_0a_source_capture import run_pass_0a
+from mechanisms.source_capture.pass_0b_segment_construction import run_pass_0b
 from mechanisms.source_capture.pass_0c_source_atom_splitting import run_pass_0c
 from mappers.source_capture import (
     source_pydantic_to_sqlalchemy,
     segment_pydantic_to_sqlalchemy,
-    source_atom_pydantic_to_sqlalchemy,
 )
 from models.project import ProjectModel
 from models.stakeholder import StakeholderModel
 from schemas.source import Source
 from schemas.segment import Segment
-from schemas.source_atom import SourceAtom
 
 
 @dataclass
@@ -118,8 +130,13 @@ def run_source_capture(
     """
     Execute the Source Capture mechanism end-to-end.
 
-    Passes: 0 (Read Witness) → 0A (Segment Construction) →
-            0B (Source Capture) → 0C (SourceAtom Splitting).
+    Passes: 0 (Read Witness) → 0A (Source Capture, sentence-level) →
+            0B (Segment Construction) → 0C (SourceAtom Splitting, no-op in v1).
+
+    Entity persistence order:
+      Sources first (IDs needed for Segment.source_refs) → flush →
+      Segments (source_refs populated from Source IDs) → flush →
+      SourceAtoms (reference parent Source via source_ref).
 
     Transactional discipline (Row 4 Applied §5):
       Step 1: Commit project+stakeholder in isolated mini-transaction (survives rollback).
@@ -132,6 +149,10 @@ def run_source_capture(
     pass_data = create_analysis_pass_record(
         project_id=project_id,
         practitioner_id=practitioner_id,
+        pass_type="Universal",
+        mechanism="SourceCapture",
+        evaluated_scope="All input material in this project",
+        confidence=1.0,
     )
 
     # --- Step 1: Commit project+stakeholder in isolated mini-transaction ---
@@ -172,15 +193,23 @@ def run_source_capture(
 
         # --- Re-execution check ---
         if re_execution_context is not None:
-            existing_hash = _find_existing_hash(session, project_id, read_witness["input_hash"])
+            existing_hash = _find_existing_hash(
+                session, project_id, read_witness["input_hash"]
+            )
             if existing_hash:
                 session.close()
                 pass_data2 = create_analysis_pass_record(
-                    project_id=project_id, practitioner_id=practitioner_id
+                    project_id=project_id,
+                    practitioner_id=practitioner_id,
+                    pass_type="Universal",
+                    mechanism="SourceCapture",
+                    evaluated_scope="All input material in this project",
+                    confidence=1.0,
                 )
                 _abort(
                     pass_data2,
-                    f"Re-execution skipped: input already captured (hash={read_witness['input_hash'][:8]}...)",
+                    f"Re-execution skipped: input already captured "
+                    f"(hash={read_witness['input_hash'][:8]}...)",
                     "Pass 0",
                 )
                 return SourceCaptureResult(
@@ -193,11 +222,9 @@ def run_source_capture(
                     failure_reason="already_captured",
                 )
 
-        # --- Pass 0A: Segment Construction ---
+        # --- Pass 0A: Source Capture (sentence-level) ---
         try:
-            segment_specs = run_pass_0a(
-                decode_result, policy=segmentation_policy
-            )
+            source_specs = run_pass_0a(decode_result, policy=segmentation_policy)
         except SegmentationPolicyError as exc:
             session.close()
             _abort(pass_data, _sanitize(str(exc)), "Pass 0A")
@@ -211,38 +238,33 @@ def run_source_capture(
                 failure_reason=_sanitize(str(exc)),
             )
 
-        # --- Pass 0B: Source Capture ---
-        source_specs = run_pass_0b(
-            decode_result,
-            segment_specs,
-            input_material_ref=str(file_path),
-        )
+        # --- Pass 0B: Segment Construction ---
+        try:
+            segment_specs = run_pass_0b(
+                decode_result, source_specs, policy=segmentation_policy
+            )
+        except SegmentationPolicyError as exc:
+            session.close()
+            _abort(pass_data, _sanitize(str(exc)), "Pass 0B")
+            return SourceCaptureResult(
+                pass_id=commit_failure_pass(pass_data),
+                execution_status="Failed",
+                source_count=0,
+                segment_count=0,
+                source_atom_count=0,
+                source_ids=[],
+                failure_reason=_sanitize(str(exc)),
+            )
 
-        # --- Pass 0C: SourceAtom Splitting ---
+        # --- Pass 0C: SourceAtom Splitting (no-op in v1, produce_atoms_for_prose=False) ---
         atom_specs = run_pass_0c(source_specs)
 
         # --- Assign IDs and persist in ONE transaction ---
-        segment_ids: list[str] = []
         source_ids: list[str] = []
+        segment_ids: list[str] = []
         atom_ids: list[str] = []
 
-        # 1. Persist Segments
-        seg_index_to_id: dict[int, str] = {}
-        for seg_idx, seg_spec in enumerate(segment_specs):
-            seq_val = get_next_sequence_value(session, "seg_id_seq")
-            seg_id = format_identifier("SEG", seq_val)
-            segment_ids.append(seg_id)
-            seg_index_to_id[seg_idx] = seg_id
-
-            segment = Segment(
-                segment_id=seg_id,
-                title=seg_spec.title,
-                description=seg_spec.description,
-                project_id=project_id,
-            )
-            session.add(segment_pydantic_to_sqlalchemy(segment))
-
-        # 2. Persist Sources
+        # 1. Persist Sources FIRST — IDs needed for Segment.source_refs.
         src_index_to_id: dict[int, str] = {}
         non_text_ids: list[str] = []
         decoding_issue_ids: list[str] = []
@@ -253,19 +275,12 @@ def run_source_capture(
             source_ids.append(src_id)
             src_index_to_id[src_idx] = src_id
 
-            seg_id_for_source = (
-                seg_index_to_id.get(src_spec.segment_spec_index)
-                if src_spec.segment_spec_index is not None
-                else None
-            )
-
             source = Source(
                 source_id=src_id,
                 source_text=src_spec.source_text,
                 segmentation_context=src_spec.segmentation_context,
                 input_material_ref=str(file_path),
                 confidence=1.0,
-                segment_id=seg_id_for_source,
                 is_non_text=src_spec.is_non_text,
                 has_decoding_issues=src_spec.has_decoding_issues,
                 project_id=project_id,
@@ -277,33 +292,53 @@ def run_source_capture(
             if src_spec.has_decoding_issues:
                 decoding_issue_ids.append(src_id)
 
-        # Flush segments and sources to DB so FK constraints on source_atom are satisfied
-        # before the bulk atom INSERT.
+        # Flush Sources so IDs exist in the session before building source_refs.
+        session.flush()
+
+        # 2. Persist Segments — source_refs built from assigned Source IDs.
+        src_index_to_seg_id: dict[int, str] = {}
+
+        for seg_spec in segment_specs:
+            seq_val = get_next_sequence_value(session, "seg_id_seq")
+            seg_id = format_identifier("SEG", seq_val)
+            segment_ids.append(seg_id)
+
+            source_refs = [
+                src_index_to_id[i]
+                for i in seg_spec.source_spec_indices
+                if i in src_index_to_id
+            ]
+
+            segment = Segment(
+                segment_id=seg_id,
+                title=seg_spec.title,
+                description=seg_spec.description,
+                source_refs=source_refs,
+                project_id=project_id,
+            )
+            session.add(segment_pydantic_to_sqlalchemy(segment))
+
+            for src_idx in seg_spec.source_spec_indices:
+                src_index_to_seg_id[src_idx] = seg_id
+
+        # Flush Segments before SourceAtom inserts so FK constraints are satisfied.
         session.flush()
 
         # 3. Persist SourceAtoms — bulk insert for performance.
-        # Fetch ALL atom sequence values in ONE round trip, then do ONE bulk INSERT.
-        # This is critical for large inputs (e.g. 1000-atom paragraphs): individual
-        # inserts take >60s; bulk insert completes in <2s.
+        # Fetch ALL atom sequence values in ONE round trip, then ONE bulk INSERT.
+        # This is critical for large inputs: individual inserts take >60s; bulk <2s.
         if atom_specs:
             sa_seq_vals = get_next_n_sequence_values(
                 session, "sa_id_seq", len(atom_specs)
             )
             atom_rows: list[dict] = []
-            now = __import__("datetime").datetime.now(
-                __import__("datetime").timezone.utc
-            )
+            now = datetime.now(timezone.utc)
             for atom_spec, seq_val in zip(atom_specs, sa_seq_vals):
                 atom_id = format_identifier("SA", seq_val)
                 atom_ids.append(atom_id)
 
                 parent_src_id = src_index_to_id.get(atom_spec.source_spec_index, "")
-                parent_src_spec = source_specs[atom_spec.source_spec_index]
-                seg_id_for_atom = (
-                    seg_index_to_id.get(parent_src_spec.segment_spec_index)
-                    if parent_src_spec.segment_spec_index is not None
-                    else None
-                )
+                seg_id_for_atom = src_index_to_seg_id.get(atom_spec.source_spec_index)
                 atom_rows.append(
                     {
                         "atom_id": atom_id,
@@ -321,10 +356,7 @@ def run_source_capture(
             from sqlalchemy.dialects.postgresql import insert as pg_insert
             from models.source_atom import SourceAtomModel
 
-            session.execute(
-                pg_insert(SourceAtomModel),
-                atom_rows,
-            )
+            session.execute(pg_insert(SourceAtomModel), atom_rows)
 
         # 4. Build mechanism_data
         mechanism_data: dict[str, Any] = {
@@ -512,7 +544,7 @@ def _find_existing_hash(
 ) -> bool:
     """
     Check if input_hash already exists in a successful AnalysisPass for this project.
-    Per Implementation Spec §10.4 re-execution semantics.
+    Per Implementation Spec v0.4 §10.4 re-execution semantics.
     """
     from sqlalchemy import select
     from models.analysis_pass import AnalysisPassModel

@@ -6,12 +6,18 @@ Provides:
   - tmp_fixture(content, suffix): create a temp file with given content
   - simple_requirements_docx: generate simple_requirements.docx via python-docx
   - corrupt_pdf: generate a deliberately corrupt PDF binary
-  - very_large_paragraph: generate a >100KB plain-text paragraph
+  - very_long_sentence: generate a >100KB plain-text file with ONE sentence
   - project_id / practitioner_id: canonical test identifiers
   - db_cleanup: clean up test entities after each test
 
 Per user preference: .docx and corrupt_pdf generated in conftest (binary-free repo).
 Plain-text fixtures (.txt, .md, .xyz) committed as files.
+
+Fixture change log:
+  v0.4: very_large_paragraph → very_long_sentence (renamed + content changed).
+        Old fixture repeated a sentence 1000× → many sentence boundaries → many Sources.
+        New fixture is a SINGLE sentence with no internal periods (~120KB).
+        Expected per §9.2.4: exactly 1 Source.
 """
 
 import io
@@ -81,7 +87,7 @@ def simple_requirements_docx(tmp_path: Path) -> Path:
 
     Content: title + 2 heading sections + body paragraphs simulating
     a typical small requirements specification.
-    Expected: 2 Segments (H2 headings), 3+ Sources (body paragraphs).
+    Expected: 2 Segments (H2 headings), >= 5 Sources (sentence-level).
     """
     import docx  # type: ignore[import]
 
@@ -129,19 +135,24 @@ def corrupt_pdf(tmp_path: Path) -> Path:
 
 
 @pytest.fixture
-def very_large_paragraph(tmp_path: Path) -> Path:
+def very_long_sentence(tmp_path: Path) -> Path:
     """
-    Generate a >100KB plain-text file with a single paragraph.
-    Content is repeated sentences to exceed the 100KB threshold.
-    Expected: 1 Source produced; no error.
+    Generate a >100KB plain-text file with a SINGLE sentence.
+
+    Content: one long prose sentence with no internal sentence-ending
+    punctuation until the very final period. No period is followed by
+    whitespace + capital letter anywhere → exactly 1 Source produced.
+
+    Per §9.2.4: >100KB single sentence → exactly 1 Source, no error.
     """
-    sentence = (
-        "The system performs analysis of the described product "
-        "using the Zachman framework across six perspectives. "
+    phrase = "further integrating and coordinating the required subsystems "
+    content = (
+        "The system achieves its overarching objectives by "
+        + phrase * 2000
+        + "in full compliance with all specifications."
     )
-    content = sentence * 1000
     assert len(content.encode("utf-8")) > 100_000, "Generated content must exceed 100KB"
-    txt_path = tmp_path / "very_large_paragraph.txt"
+    txt_path = tmp_path / "very_long_sentence.txt"
     txt_path.write_text(content, encoding="utf-8")
     return txt_path
 
@@ -153,7 +164,6 @@ def unsupported_format_path(tmp_path: Path) -> Path:
     decoded as UTF-8, triggering UnsupportedFormatError.
     Per Implementation Spec §9.2.6.
     """
-    # Non-UTF-8 bytes: invalid continuation byte sequence
     binary_content = b"\xff\xfe\x00\x01\x02\x03BINARY_DATA_NOT_UTF8\x80\x81\x82"
     xyz_path = tmp_path / "unsupported_format.xyz"
     xyz_path.write_bytes(binary_content)
@@ -177,7 +187,6 @@ def db_cleanup(project_id: str):
         from models.source import SourceModel
         from models.segment import SegmentModel
         from models.project import ProjectModel
-        from models.stakeholder import StakeholderModel
 
         session = get_session()
         try:

@@ -1,8 +1,16 @@
 """
 Pydantic ↔ SQLAlchemy mappers for Source Capture entities.
 
-Per Implementation Spec §5.3: conversion functions for all four entity types.
+Per Implementation Spec v0.4 §5.3: conversion functions for all four entity types.
 Handles JSONB outputs serialisation for AnalysisPass.
+
+Changes from v0.3:
+  - source_pydantic_to_sqlalchemy: removed segment_id (no longer on Source, per F24).
+  - source_sqlalchemy_to_pydantic: removed segment_id.
+  - segment_pydantic_to_sqlalchemy: added source_refs (ARRAY column).
+  - segment_sqlalchemy_to_pydantic: reads source_refs from ARRAY column (was ORM relation).
+  - analysis_pass_sqlalchemy_to_pydantic: added pass_type, mechanism,
+    evaluated_scope, confidence (F25/F27 resolution).
 """
 
 from schemas.source import Source
@@ -23,7 +31,6 @@ def source_pydantic_to_sqlalchemy(source: Source) -> SourceModel:
         parent_source_ref=source.parent_source_ref,
         input_material_ref=source.input_material_ref,
         confidence=source.confidence,
-        segment_id=source.segment_id,
         is_non_text=source.is_non_text,
         has_decoding_issues=source.has_decoding_issues,
         project_id=source.project_id,
@@ -38,7 +45,6 @@ def source_sqlalchemy_to_pydantic(model: SourceModel) -> Source:
         parent_source_ref=model.parent_source_ref,
         input_material_ref=model.input_material_ref,
         confidence=model.confidence,
-        segment_id=model.segment_id,
         is_non_text=model.is_non_text,
         has_decoding_issues=model.has_decoding_issues,
         project_id=model.project_id,
@@ -50,6 +56,7 @@ def segment_pydantic_to_sqlalchemy(segment: Segment) -> SegmentModel:
         segment_id=segment.segment_id,
         title=segment.title,
         description=segment.description,
+        source_refs=list(segment.source_refs),
         parent_segment_ref=segment.parent_segment_ref,
         confidence=segment.confidence,
         project_id=segment.project_id,
@@ -57,12 +64,11 @@ def segment_pydantic_to_sqlalchemy(segment: Segment) -> SegmentModel:
 
 
 def segment_sqlalchemy_to_pydantic(model: SegmentModel) -> Segment:
-    source_refs = [s.source_id for s in (model.sources or [])]
     return Segment(
         segment_id=model.segment_id,
         title=model.title,
         description=model.description,
-        source_refs=source_refs,
+        source_refs=list(model.source_refs or []),
         parent_segment_ref=model.parent_segment_ref,
         confidence=model.confidence,
         project_id=model.project_id,
@@ -98,6 +104,10 @@ def source_atom_sqlalchemy_to_pydantic(model: SourceAtomModel) -> SourceAtom:
 def analysis_pass_sqlalchemy_to_pydantic(model: AnalysisPassModel) -> AnalysisPass:
     return AnalysisPass(
         pass_id=model.pass_id,
+        pass_type=model.pass_type,
+        mechanism=model.mechanism,
+        evaluated_scope=model.evaluated_scope,
+        confidence=model.confidence,
         phase_id=model.phase_id,
         pass_started_at=model.pass_started_at,
         pass_completed_at=model.pass_completed_at,

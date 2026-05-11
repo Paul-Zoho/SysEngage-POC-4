@@ -1,15 +1,23 @@
 """
-Source Pydantic schema — canonical ledger spec v2.9 §Element Type — Source.
+Source Pydantic schema — canonical ledger spec v2.11 §Element Type — Source.
 
-Per Row 4 Applied §7 and Implementation Spec §5.1.
+Per Row 4 Applied §7 and Implementation Spec v0.4 §5.1.
 
 Critical: model_config frozen=True enforces LPM byte-preservation discipline.
 Any attempt to modify source_text after construction raises ValidationError
 (Pydantic v2 frozen model), which the @pass_mode("LPM") decorator detects
 and records as a mode_violation on AnalysisPass.
 
-Finding F18: source_id format uses canonical ^S\\d{3,}$ (not SRC### from replit.md).
-Finding F20: field named source_text per canonical spec (not content per impl spec).
+Canonical attributes (v2.11, all serialised at export — F24 fix):
+  source_id, source_text, segmentation_context, input_material_ref,
+  confidence, parent_source_ref.
+
+Non-canonical attributes (implementation-internal, stripped at export per F24):
+  is_non_text, has_decoding_issues, project_id.
+
+NO segment_id field (F24 fix). The canonical relation is Segment.source_refs
+(Segment → Source via ARRAY). segment_id was a non-canonical inverted relation
+that contradicted v2.11 and has been removed.
 """
 
 import re
@@ -35,7 +43,6 @@ class Source(BaseModel):
     input_material_ref: str
     confidence: float = 1.0
     parent_source_ref: str | None = None
-    segment_id: str | None = None
     is_non_text: bool = False
     has_decoding_issues: bool = False
     project_id: str
@@ -45,7 +52,7 @@ class Source(BaseModel):
     def validate_source_id(cls, v: str) -> str:
         if not SOURCE_ID_PATTERN.match(v):
             raise ValueError(
-                f"source_id must match ^S\\d{{3,}}$ (canonical ledger spec v2.9). Got: {v!r}"
+                f"source_id must match ^S\\d{{3,}}$ (canonical ledger spec v2.11). Got: {v!r}"
             )
         return v
 

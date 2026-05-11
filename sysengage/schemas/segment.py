@@ -1,15 +1,24 @@
 """
-Segment Pydantic schema — canonical ledger spec v2.9 §Element Type — Segment.
+Segment Pydantic schema — canonical ledger spec v2.11 §Element Type — Segment.
 
-Per Row 4 Applied §7 and Implementation Spec §5.1.
+Per Row 4 Applied §7 and Implementation Spec v0.4 §5.1.
 
-Finding F18: segment_id format uses canonical ^SEG\\d{3,}$ (not SEG### from
-the identifier table in replit.md, which happens to match — but confirmed here
-against canonical spec directly).
+Canonical attributes (v2.11, all serialised at export — F24 fix):
+  segment_id, title, description, source_refs, parent_segment_ref, confidence.
+
+Non-canonical attributes (stripped at export per F24): project_id.
+
+source_refs lists source_id values of all Sources within this Segment.
+This is the canonical Segment → Source relation per v2.11. Sources do NOT
+back-reference Segment (no segment_id on Source per F24 fix).
+
+The Non-Empty-Segment rule (Pass 0B §4.3.2) ensures source_refs is non-empty
+in practice; the field itself has no minimum-length validator to allow
+round-tripping edge cases.
 """
 
 import re
-from pydantic import BaseModel, ConfigDict, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 SEGMENT_ID_PATTERN = re.compile(r"^SEG\d{3,}$")
 
@@ -20,7 +29,7 @@ class Segment(BaseModel):
 
     Represents a coarse-grained structural grouping of Source excerpts.
     Optional — produced only when input has structural markers (section
-    headings, document boundaries) per Pass 0A Segment Construction.
+    headings, document boundaries) per Pass 0B Segment Construction.
     """
 
     model_config = ConfigDict(frozen=True)
@@ -28,7 +37,7 @@ class Segment(BaseModel):
     segment_id: str
     title: str
     description: str | None = None
-    source_refs: list[str] = []
+    source_refs: list[str] = Field(default_factory=list)
     parent_segment_ref: str | None = None
     confidence: float = 1.0
     project_id: str
@@ -38,7 +47,7 @@ class Segment(BaseModel):
     def validate_segment_id(cls, v: str) -> str:
         if not SEGMENT_ID_PATTERN.match(v):
             raise ValueError(
-                f"segment_id must match ^SEG\\d{{3,}}$ (canonical ledger spec v2.9). Got: {v!r}"
+                f"segment_id must match ^SEG\\d{{3,}}$ (canonical ledger spec v2.11). Got: {v!r}"
             )
         return v
 

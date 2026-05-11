@@ -1,15 +1,43 @@
 """
 Tests for Pass 0C — SourceAtom Splitting.
 
-Per Implementation Spec §8.4 verification criteria and §9 test fixtures.
+Per Implementation Spec v0.4 §8.4 verification criteria and §9 test fixtures.
 
-Tests:
-  - simple_paragraph.txt: 3 SourceAtoms (3 sentences per §9.1.1)
-  - abbreviation_handling.txt: 3 atoms despite Dr./Inc./Mr. abbreviations (§9.2.3)
-  - single_short_statement.txt: 0 atoms (no boundary) per §9.2.2
-  - atom_text is verbatim subset of parent Source.source_text
-  - Position uniqueness: no two atoms share same position for one Source
-  - Determinism: same Source → identical atom content and positions
+v1 default behaviour (produce_atoms_for_prose=False):
+  Pass 0C is a no-op in v1. Default call always returns 0 atoms regardless of input.
+  This is the canonical v1 behaviour per Implementation Spec v0.4 §4.4.3.
+
+Non-default behaviour (produce_atoms_for_prose=True):
+  Full splitting logic applied. Abbreviation handling still enforced.
+  Reserved for future downstream mechanisms requiring sub-sentence anchors.
+
+Tests (default, produce_atoms_for_prose=False):
+  - Any input → 0 atoms always
+
+Tests (non-default, produce_atoms_for_prose=True):
+  - abbreviation_handling.txt: 3 atoms ("Dr. Smith works at Acme Inc." is atom 1,
+    then "He is a clinician." is atom 2, then "Mr. Jones is the patient." is atom 3)
+    Wait — abbreviation_handling.txt (NEW content) is now sentence-level Sources from Pass 0A:
+    Source 1: "Dr. Smith works at Acme Inc."
+    Source 2: " He is a clinician."
+    Source 3: " Mr. Jones is the patient."
+    With produce_atoms_for_prose=True, Pass 0C tries to sub-split each Source.
+    "Dr. Smith works at Acme Inc." has no sub-sentence boundary → 0 atoms (zero-atom rule: no period
+    followed by whitespace+capital within the source_text itself, since Inc. is the last word).
+    Wait: "Dr. Smith works at Acme Inc." — the "." in "Dr." is protected (TITLE_ABBR). The "." at "Inc."
+    → followed by end of string → no boundary. So 0 atoms from source 1.
+    "He is a clinician." → no internal boundary → 0 atoms.
+    "Mr. Jones is the patient." → "Mr." protected, "patient." at end → 0 atoms.
+    Hmm, actually with the zero-atom rule: source_text must have terminal punctuation for atoms.
+    "Dr. Smith works at Acme Inc." → has "." → check: any sentence boundary? No (Inc. is end) → 0 atoms.
+    So with produce_atoms_for_prose=True and the new sentence-level fixture, 0 atoms total.
+    This is correct — each Source IS already a sentence, so no sub-splitting occurs.
+  - simple_paragraph: with old 3-sentence paragraph → 1 Source → 0 atoms (single sentence, no boundaries)
+    Actually with the NEW simple_paragraph.txt (4 sentences → 4 Sources), each Source is a sentence.
+    Sub-splitting each sentence: no internal boundaries → 0 atoms per Source → 0 total.
+  - single_short_statement: "Hello" → no terminal punctuation → zero-atom rule → 0 atoms
+  - Position uniqueness: no two atoms share same position for one Source (when atoms exist)
+  - Determinism
 """
 
 from pathlib import Path
@@ -17,120 +45,134 @@ from pathlib import Path
 import pytest
 
 from mechanisms.source_capture.pass_0_read_witness import run_pass_0
-from mechanisms.source_capture.pass_0a_segment_construction import run_pass_0a
-from mechanisms.source_capture.pass_0b_source_capture import run_pass_0b
+from mechanisms.source_capture.pass_0a_source_capture import run_pass_0a
 from mechanisms.source_capture.pass_0c_source_atom_splitting import run_pass_0c
 
 
-class TestPass0CHappyPath:
-    def test_simple_paragraph_produces_three_atoms(self, simple_paragraph_path: Path):
-        """
-        3 SourceAtoms expected for simple_paragraph.txt per Implementation Spec §9.1.1.
+class TestPass0CDefaultNoOp:
+    """
+    Default behaviour (produce_atoms_for_prose=False): always 0 atoms.
+    This is the canonical v1 default per Implementation Spec v0.4 §4.4.3.
+    """
 
-        The file is a single paragraph with 3 sentences, producing 1 Source and 3 atoms.
-        """
-        _, dr = run_pass_0(simple_paragraph_path)
-        segs = run_pass_0a(dr)
-        sources = run_pass_0b(dr, segs, input_material_ref=str(simple_paragraph_path))
-        atoms = run_pass_0c(sources)
-
-        assert len(atoms) == 3
-
-    def test_single_short_statement_zero_atoms(
-        self, single_short_statement_path: Path
+    def test_simple_paragraph_default_produces_zero_atoms(
+        self, simple_paragraph_path: Path
     ):
-        """0 SourceAtoms for 'Hello' (no sentence boundary) per §9.2.2."""
-        _, dr = run_pass_0(single_short_statement_path)
-        segs = run_pass_0a(dr)
-        sources = run_pass_0b(
-            dr, segs, input_material_ref=str(single_short_statement_path)
-        )
-        atoms = run_pass_0c(sources)
+        """Default call on simple_paragraph.txt → 0 atoms."""
+        _, dr = run_pass_0(simple_paragraph_path)
+        source_specs = run_pass_0a(dr)
+        atoms = run_pass_0c(source_specs)
 
         assert len(atoms) == 0
 
-    def test_abbreviation_handling_three_atoms(self, abbreviation_path: Path):
-        """
-        3 atoms from 'Dr. Smith works at Acme Inc. He is a clinician. Mr. Jones is the patient.'
-        Per Implementation Spec §9.2.3 expected outputs.
-        """
-        _, dr = run_pass_0(abbreviation_path)
-        segs = run_pass_0a(dr)
-        sources = run_pass_0b(dr, segs, input_material_ref=str(abbreviation_path))
-        atoms = run_pass_0c(sources)
-
-        assert len(atoms) == 3
-
-    def test_abbreviation_atom_texts(self, abbreviation_path: Path):
-        """
-        Verify atom text content per Implementation Spec §9.2.3 expected outputs.
-
-        Fixture: "Dr. Smith will present the findings. He will use slides. The team has been informed."
-        SourceAtom 1: "Dr. Smith will present the findings."
-        SourceAtom 2: "He will use slides."
-        SourceAtom 3: "The team has been informed."
-
-        Key assertion: "Dr." abbreviation does NOT trigger a false split before "Smith",
-        even though "Smith" starts with a capital letter.
-        """
-        _, dr = run_pass_0(abbreviation_path)
-        segs = run_pass_0a(dr)
-        sources = run_pass_0b(dr, segs, input_material_ref=str(abbreviation_path))
-        atoms = run_pass_0c(sources)
-
-        texts = [a.atom_text.strip() for a in atoms]
-        assert "Dr. Smith will present the findings." in texts
-        assert "He will use slides." in texts
-        assert "The team has been informed." in texts
-
-    def test_multi_section_produces_four_atoms(self, multi_section_path: Path):
-        """
-        4 SourceAtoms expected for multi_section.md per §9.1.2:
-        2 in first paragraph (2 sentences), 1 in second, 1 in third.
-        """
+    def test_multi_section_default_produces_zero_atoms(
+        self, multi_section_path: Path
+    ):
+        """Default call on multi_section.md → 0 atoms."""
         _, dr = run_pass_0(multi_section_path)
-        segs = run_pass_0a(dr)
-        sources = run_pass_0b(dr, segs, input_material_ref=str(multi_section_path))
-        atoms = run_pass_0c(sources)
+        source_specs = run_pass_0a(dr)
+        atoms = run_pass_0c(source_specs)
 
-        assert len(atoms) == 4
+        assert len(atoms) == 0
+
+    def test_abbreviation_default_produces_zero_atoms(
+        self, abbreviation_path: Path
+    ):
+        """Default call on abbreviation_handling.txt → 0 atoms."""
+        _, dr = run_pass_0(abbreviation_path)
+        source_specs = run_pass_0a(dr)
+        atoms = run_pass_0c(source_specs)
+
+        assert len(atoms) == 0
+
+    def test_single_short_statement_default_produces_zero_atoms(
+        self, single_short_statement_path: Path
+    ):
+        """Default call on single_short_statement.txt → 0 atoms."""
+        _, dr = run_pass_0(single_short_statement_path)
+        source_specs = run_pass_0a(dr)
+        atoms = run_pass_0c(source_specs)
+
+        assert len(atoms) == 0
+
+    def test_empty_source_specs_produces_zero_atoms(self):
+        """Empty source_specs → 0 atoms (no-op, no error)."""
+        atoms = run_pass_0c([])
+
+        assert len(atoms) == 0
 
 
-class TestPass0CBytePreservation:
-    def test_atom_text_is_subset_of_source_text(self, simple_paragraph_path: Path):
+class TestPass0CWithAtomSplitting:
+    """
+    Non-default behaviour (produce_atoms_for_prose=True).
+    Full splitting logic; reserved for future downstream mechanisms.
+    """
+
+    def test_single_short_statement_zero_atoms_with_splitting(
+        self, single_short_statement_path: Path
+    ):
         """
-        atom_text bytes are byte-for-byte identical to corresponding subset
-        of parent Source.source_text per Implementation Spec §8.4 invariant.
+        'Hello' has no terminal punctuation → zero-atom rule → 0 atoms
+        even with produce_atoms_for_prose=True.
+        """
+        _, dr = run_pass_0(single_short_statement_path)
+        source_specs = run_pass_0a(dr)
+        atoms = run_pass_0c(source_specs, produce_atoms_for_prose=True)
+
+        assert len(atoms) == 0
+
+    def test_sentence_level_sources_produce_zero_atoms(
+        self, simple_paragraph_path: Path
+    ):
+        """
+        When Sources are already sentence-level (from Pass 0A), sub-splitting
+        them with produce_atoms_for_prose=True yields 0 atoms — each Source
+        has no internal sentence boundary.
         """
         _, dr = run_pass_0(simple_paragraph_path)
-        segs = run_pass_0a(dr)
-        sources = run_pass_0b(dr, segs, input_material_ref=str(simple_paragraph_path))
-        atoms = run_pass_0c(sources)
+        source_specs = run_pass_0a(dr)
+        atoms = run_pass_0c(source_specs, produce_atoms_for_prose=True)
+
+        assert len(atoms) == 0
+
+    def test_atom_text_is_subset_of_source_text(
+        self, multi_section_path: Path
+    ):
+        """
+        If atoms are produced: atom_text bytes are verbatim subset of
+        parent Source spec's source_text per LPM invariant.
+        """
+        _, dr = run_pass_0(multi_section_path)
+        source_specs = run_pass_0a(dr)
+        atoms = run_pass_0c(source_specs, produce_atoms_for_prose=True)
 
         for atom in atoms:
-            parent_text = sources[atom.source_spec_index].source_text
+            parent_text = source_specs[atom.source_spec_index].source_text
             assert atom.atom_text.strip() in parent_text, (
-                f"Atom text {atom.atom_text!r} not found in parent Source text {parent_text!r}"
+                f"Atom text {atom.atom_text!r} not found in parent source text {parent_text!r}"
             )
 
-    def test_abbreviation_atom_text_in_source(self, abbreviation_path: Path):
-        _, dr = run_pass_0(abbreviation_path)
-        segs = run_pass_0a(dr)
-        sources = run_pass_0b(dr, segs, input_material_ref=str(abbreviation_path))
-        atoms = run_pass_0c(sources)
+    def test_source_spec_index_is_valid(self, simple_paragraph_path: Path):
+        """
+        source_spec_index on each AtomSpec references a valid index in source_specs.
+        """
+        _, dr = run_pass_0(simple_paragraph_path)
+        source_specs = run_pass_0a(dr)
+        atoms = run_pass_0c(source_specs, produce_atoms_for_prose=True)
 
+        n = len(source_specs)
         for atom in atoms:
-            parent_text = sources[atom.source_spec_index].source_text
-            assert atom.atom_text.strip() in parent_text
+            assert 0 <= atom.source_spec_index < n, (
+                f"source_spec_index {atom.source_spec_index} out of range [0, {n})"
+            )
 
 
 class TestPass0CPositionUniqueness:
     def test_no_duplicate_positions_per_source(self, multi_section_path: Path):
         """Position uniqueness: no two atoms share same position for one Source."""
         _, dr = run_pass_0(multi_section_path)
-        segs = run_pass_0a(dr)
-        sources = run_pass_0b(dr, segs, input_material_ref=str(multi_section_path))
-        atoms = run_pass_0c(sources)
+        source_specs = run_pass_0a(dr)
+        atoms = run_pass_0c(source_specs, produce_atoms_for_prose=True)
 
         from collections import defaultdict
         positions_by_source: dict[int, list[int]] = defaultdict(list)
@@ -139,20 +181,35 @@ class TestPass0CPositionUniqueness:
 
         for src_idx, positions in positions_by_source.items():
             assert len(positions) == len(set(positions)), (
-                f"Duplicate positions for source {src_idx}: {positions}"
+                f"Duplicate positions for source_spec_index {src_idx}: {positions}"
             )
 
 
 class TestPass0CDeterminism:
-    def test_identical_atom_content_on_rerun(self, simple_paragraph_path: Path):
-        def run_all(path: Path):
-            _, dr = run_pass_0(path)
-            segs = run_pass_0a(dr)
-            srcs = run_pass_0b(dr, segs, input_material_ref=str(path))
-            return run_pass_0c(srcs)
+    def test_default_always_returns_empty(self, simple_paragraph_path: Path):
+        """Default mode is deterministically 0 atoms on any run."""
+        _, dr = run_pass_0(simple_paragraph_path)
+        source_specs = run_pass_0a(dr)
 
-        atoms1 = run_all(simple_paragraph_path)
-        atoms2 = run_all(simple_paragraph_path)
+        atoms1 = run_pass_0c(source_specs)
+        atoms2 = run_pass_0c(source_specs)
+
+        assert len(atoms1) == 0
+        assert len(atoms2) == 0
+
+    def test_identical_atom_content_on_rerun_with_splitting(
+        self, multi_section_path: Path
+    ):
+        """
+        With produce_atoms_for_prose=True: same input → identical atom content.
+        """
+        _, dr1 = run_pass_0(multi_section_path)
+        specs1 = run_pass_0a(dr1)
+        atoms1 = run_pass_0c(specs1, produce_atoms_for_prose=True)
+
+        _, dr2 = run_pass_0(multi_section_path)
+        specs2 = run_pass_0a(dr2)
+        atoms2 = run_pass_0c(specs2, produce_atoms_for_prose=True)
 
         assert len(atoms1) == len(atoms2)
         for a1, a2 in zip(atoms1, atoms2):

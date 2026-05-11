@@ -1,0 +1,21 @@
+Good question. Q7 is genuinely a code-quality decision, not a canonical-conformance question — both options keep the implementation canonically conformant (phase_id stripped at export either way per F24 resolution). So you're not asking the wrong question, but the framing "keep it for backward compatibility" needs unpacking before answering.
+Three possibilities for what phase_id actually is
+Without seeing the codebase I can't tell which applies. You can.
+Possibility 1 — phase_id is dead weight: No code reads it; no FK references it; it exists as a leftover field with no real role. Likely if it was added speculatively during the v1 build.
+Possibility 2 — phase_id is load-bearing: Some code path queries by phase_id, joins on it, indexes it, returns it via an internal API. Removing it cascades through dependent code.
+Possibility 3 — phase_id is intentional placeholder: It was added with explicit intent to support a planned future capability (multi-Phase tracking, per-Phase audit query, multi-tenancy). Removing it discards architectural intent.
+The "removing it would require a migration that adds risk" framing actually doesn't apply because the schema is being recreated anyway (per Q6). Dropping the column during recreate is approximately the same cost as keeping it. The real risk is breaking code that depends on it — which only exists in Possibility 2.
+Concrete check before deciding
+Before settling on (a) or (b), please check three things in the codebase:
+
+Does any code read analysis_pass.phase_id? (grep for references)
+Does any FK or index use phase_id? (check schema definitions and migration history)
+Was phase_id added with explicit intent for a specific future use? (check git history / comments / docstrings)
+
+If all three answers are "no" → it's Possibility 1, drop the column during recreate (cleaner; aligns with Pattern P6 in the tracker — when producing the next version, fix known small defects rather than perpetuating them).
+If any answer is "yes" → it's Possibility 2 or 3, keep the column and strip at export per your proposed plan. Surface a brief explanation in your completion summary so the disposition is recorded.
+What to do if you can't easily tell
+If the answer isn't obvious after a quick check, default to keep the column and strip at export (your proposed plan). This is the safer default — wrong-guess risk is symmetric (keeping dead code = minor waste; deleting load-bearing code = bug) but recovery cost is asymmetric (re-adding a deleted column is harder than removing dead code). Note the disposition in your completion summary as "Q7: phase_id kept in DB model, stripped at export, [reason]" so we can revisit later if needed.
+Not a blocker
+Q7 is a small implementation-design question, not a spec-conformance blocker. Either choice keeps you canonically conformant. Proceed with the rest of the implementation; resolve Q7 either by doing the three-check then deciding, or by deferring to the safer default if the check isn't quick.
+Proceed with implementation. Make the Q7 disposition call yourself based on the checks above; record it in the completion summary so we know which possibility applied.

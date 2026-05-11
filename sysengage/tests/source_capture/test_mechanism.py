@@ -1,17 +1,24 @@
 """
 End-to-end mechanism tests for Source Capture.
 
-Per Implementation Spec §8.5, §9, and §10.
+Per Implementation Spec v0.4 §8.5, §9, and §10.
 
 Tests:
   - Happy path end-to-end: AnalysisPass created, entities persisted
+  - Canonical field assertions on AnalysisPass (F25/F27 resolution):
+    pass_type, mechanism, evaluated_scope, confidence
   - Atomicity: on failure, no partial entity persistence
   - Determinism: re-run produces identical entity content
   - Phase 10 re-execution: same input skipped; new input appended
   - Edge cases: empty input, corrupt pdf, unsupported format
-  - Large paragraph: 1 Source, no error
+  - Large single sentence: exactly 1 Source, no error
   - AnalysisPass.outputs.read_witness populated correctly
   - AnalysisPass.outputs.mechanism_data populated correctly
+
+Entity counts per v0.4 §9.1.x:
+  §9.1.1 simple_paragraph.txt: 4 Sources, 0 Segments, 0 SourceAtoms
+  §9.1.2 multi_section.md: 4 Sources, 2 Segments, 0 SourceAtoms
+  §9.2.4 very_long_sentence: 1 Source, 0 Segments, 0 SourceAtoms
 """
 
 from pathlib import Path
@@ -88,7 +95,8 @@ class TestEndToEndHappyPath:
     ):
         """
         Full mechanism run for simple_paragraph.txt.
-        Expected per §9.1.1: 1 Source, 0 Segments, 3 SourceAtoms, Success status.
+        Expected per §9.1.1 (v0.4): 4 Sources, 0 Segments, 0 SourceAtoms, Success.
+        Sentence-level Source Capture (Pass 0A); Pass 0C no-op in v1.
         """
         result = run_source_capture(
             simple_paragraph_path,
@@ -98,9 +106,9 @@ class TestEndToEndHappyPath:
 
         assert result.execution_status == "Success"
         assert result.pass_id.startswith("P")
+        assert result.source_count == 4
         assert result.segment_count == 0
-        assert result.source_count >= 1
-        assert result.source_atom_count == 3
+        assert result.source_atom_count == 0
 
     def test_simple_paragraph_entities_persisted(
         self,
@@ -108,6 +116,7 @@ class TestEndToEndHappyPath:
         project_id: str,
         practitioner_id: str,
     ):
+        """4 Sources persisted, 0 atoms. source_count matches DB query."""
         result = run_source_capture(
             simple_paragraph_path,
             project_id=project_id,
@@ -117,8 +126,8 @@ class TestEndToEndHappyPath:
         sources = _query_sources(project_id)
         atoms = _query_atoms(project_id)
 
-        assert len(sources) >= 1
-        assert len(atoms) == 3
+        assert len(sources) == 4
+        assert len(atoms) == 0
         assert result.source_count == len(sources)
 
     def test_analysis_pass_record_created(
@@ -127,6 +136,10 @@ class TestEndToEndHappyPath:
         project_id: str,
         practitioner_id: str,
     ):
+        """
+        AnalysisPass persisted with all canonical v2.11 attributes (F25/F27 resolution).
+        Asserts: pass_type, mechanism, evaluated_scope, confidence, mode_active, phase_id.
+        """
         result = run_source_capture(
             simple_paragraph_path,
             project_id=project_id,
@@ -138,6 +151,10 @@ class TestEndToEndHappyPath:
         assert ap.execution_status == "Success"
         assert ap.mode_active == "LPM"
         assert ap.phase_id == "PH001"
+        assert ap.pass_type == "Universal"
+        assert ap.mechanism == "SourceCapture"
+        assert ap.evaluated_scope == "All input material in this project"
+        assert ap.confidence == 1.0
 
     def test_read_witness_on_analysis_pass(
         self,
@@ -168,7 +185,10 @@ class TestEndToEndHappyPath:
         project_id: str,
         practitioner_id: str,
     ):
-        """mechanism_data sub-structure populated per §7.4."""
+        """
+        mechanism_data sub-structure populated per §7.4.
+        v0.4: source_count==4, segment_count==0, source_atom_count==0.
+        """
         result = run_source_capture(
             simple_paragraph_path,
             project_id=project_id,
@@ -178,10 +198,10 @@ class TestEndToEndHappyPath:
         ap = _query_pass(result.pass_id)
         md = ap.outputs.get("mechanism_data", {})
 
-        assert md["source_count"] >= 1
+        assert md["source_count"] == 4
         assert md["segment_count"] == 0
-        assert md["source_atom_count"] == 3
-        assert len(md["source_ids"]) >= 1
+        assert md["source_atom_count"] == 0
+        assert len(md["source_ids"]) == 4
 
     def test_multi_section_end_to_end(
         self,
@@ -191,7 +211,8 @@ class TestEndToEndHappyPath:
     ):
         """
         Full mechanism run for multi_section.md.
-        Expected per §9.1.2: 3 Sources, 2 Segments, 4 SourceAtoms.
+        Expected per §9.1.2 (v0.4): 4 Sources, 2 Segments, 0 SourceAtoms.
+        Section One: 3 sentences → 3 Sources. Section Two: 1 sentence → 1 Source.
         """
         result = run_source_capture(
             multi_section_path,
@@ -200,12 +221,51 @@ class TestEndToEndHappyPath:
         )
 
         assert result.execution_status == "Success"
+        assert result.source_count == 4
         assert result.segment_count == 2
-        assert result.source_count == 3
-        assert result.source_atom_count == 4
+        assert result.source_atom_count == 0
 
         segments = _query_segments(project_id)
         assert len(segments) == 2
+
+    def test_multi_section_segments_have_source_refs(
+        self,
+        multi_section_path: Path,
+        project_id: str,
+        practitioner_id: str,
+    ):
+        """
+        Segments produced by multi_section.md must have non-empty source_refs
+        (canonical v2.11 Segment → Source relation via ARRAY).
+        """
+        run_source_capture(
+            multi_section_path,
+            project_id=project_id,
+            practitioner_id=practitioner_id,
+        )
+
+        segments = _query_segments(project_id)
+        for seg in segments:
+            assert seg.source_refs is not None
+            assert len(seg.source_refs) > 0, (
+                f"Segment '{seg.title}' has empty source_refs (violates v2.11)"
+            )
+
+    def test_sources_have_no_segment_id(
+        self,
+        multi_section_path: Path,
+        project_id: str,
+        practitioner_id: str,
+    ):
+        """
+        Sources must NOT have a segment_id column (F24 fix).
+        Verified by confirming the model has no segment_id attribute.
+        """
+        from models.source import SourceModel
+
+        assert not hasattr(SourceModel, "segment_id"), (
+            "SourceModel must not have segment_id column (F24 fix)"
+        )
 
     def test_source_ids_match_canonical_format(
         self,
@@ -213,7 +273,7 @@ class TestEndToEndHappyPath:
         project_id: str,
         practitioner_id: str,
     ):
-        """Source IDs must match ^S\\d{3,}$ per canonical ledger spec v2.9."""
+        """Source IDs must match ^S\\d{3,}$ per canonical ledger spec v2.11."""
         import re
 
         result = run_source_capture(
@@ -232,7 +292,7 @@ class TestEndToEndHappyPath:
         project_id: str,
         practitioner_id: str,
     ):
-        """pass_id must match ^P\\d{3,}$ per canonical ledger spec v2.9."""
+        """pass_id must match ^P\\d{3,}$ per canonical ledger spec v2.11."""
         import re
 
         result = run_source_capture(
@@ -259,7 +319,7 @@ class TestEndToEndHappyPath:
 
         assert result.execution_status == "Success"
         assert result.segment_count >= 2
-        assert result.source_count >= 3
+        assert result.source_count >= 5
 
 
 class TestEdgeCases:
@@ -349,25 +409,29 @@ class TestEdgeCases:
         assert result.execution_status == "Failed"
         assert result.source_count == 0
 
-    def test_very_large_paragraph_one_source(
+    def test_very_long_sentence_one_source(
         self,
-        very_large_paragraph: Path,
+        very_long_sentence: Path,
         project_id: str,
         practitioner_id: str,
     ):
-        """Per §9.2.4: >100KB single paragraph → 1 Source, no error."""
+        """
+        Per §9.2.4: >100KB SINGLE sentence → exactly 1 Source, no error.
+        No internal sentence-ending punctuation → 1 Source from Pass 0A.
+        Must complete within 10 seconds.
+        """
         import time
 
         start = time.monotonic()
         result = run_source_capture(
-            very_large_paragraph,
+            very_long_sentence,
             project_id=project_id,
             practitioner_id=practitioner_id,
         )
         elapsed = time.monotonic() - start
 
         assert result.execution_status == "Success"
-        assert result.source_count >= 1
+        assert result.source_count == 1
         assert elapsed < 10.0, f"Mechanism took {elapsed:.1f}s — exceeds 10s limit"
 
 
@@ -400,7 +464,7 @@ class TestAtomicity:
 class TestDeterminism:
     """
     Determinism fixtures: re-running mechanism produces identical entity content.
-    Per Implementation Spec §9.3.
+    Per Implementation Spec v0.4 §9.3.
     Identifiers may differ (sequence-allocated); content must be bit-identical.
     """
 
@@ -437,7 +501,6 @@ class TestDeterminism:
                 "Source content differs across runs (determinism violation)"
             )
 
-        # Cleanup second project
         session = get_session()
         try:
             from sqlalchemy import delete
@@ -483,7 +546,6 @@ class TestDeterminism:
         assert rw1["byte_count"] == rw2["byte_count"]
         assert rw1["character_count"] == rw2["character_count"]
 
-        # Cleanup
         session = get_session()
         try:
             from sqlalchemy import delete
@@ -505,7 +567,7 @@ class TestDeterminism:
 
 class TestPhase10ReExecution:
     """
-    Phase 10 re-execution fixtures per Implementation Spec §9.4.
+    Phase 10 re-execution fixtures per Implementation Spec v0.4 §9.4.
     Re-execution with same input: skipped (existing hash detected).
     Re-execution with new input: entities appended.
     """
@@ -518,11 +580,11 @@ class TestPhase10ReExecution:
         practitioner_id: str,
     ):
         """
-        Run with simple_paragraph.txt, then run with multi_section.md
-        (re-execution context). Both sets of entities exist in the ledger.
+        Run with simple_paragraph.txt (4 Sources), then multi_section.md (4 Sources).
+        Total after second run: 8 Sources.
         Per Implementation Spec §9.4.1.
         """
-        result1 = run_source_capture(
+        run_source_capture(
             simple_paragraph_path,
             project_id=project_id,
             practitioner_id=practitioner_id,
@@ -530,7 +592,7 @@ class TestPhase10ReExecution:
         sources_after_first = _query_sources(project_id)
         count_after_first = len(sources_after_first)
 
-        result2 = run_source_capture(
+        run_source_capture(
             multi_section_path,
             project_id=project_id,
             practitioner_id=practitioner_id,
@@ -544,11 +606,10 @@ class TestPhase10ReExecution:
             "Re-execution with new input should add new Sources"
         )
 
-        original_ids = {s.source_id for s in sources_after_first}
-        assert all(s.source_id in {s2.source_id for s2 in sources_after_second}
-                   for s in sources_after_first), (
-            "Original Sources must still be present after re-execution"
-        )
+        assert all(
+            s.source_id in {s2.source_id for s2 in sources_after_second}
+            for s in sources_after_first
+        ), "Original Sources must still be present after re-execution"
 
     def test_reexecution_same_input_skipped(
         self,
@@ -558,9 +619,9 @@ class TestPhase10ReExecution:
     ):
         """
         Re-execution with the same input (same hash) should be skipped.
-        Per Implementation Spec §10.4.
+        Per Implementation Spec v0.4 §10.4.
         """
-        result1 = run_source_capture(
+        run_source_capture(
             simple_paragraph_path,
             project_id=project_id,
             practitioner_id=practitioner_id,

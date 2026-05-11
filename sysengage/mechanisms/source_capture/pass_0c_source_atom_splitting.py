@@ -1,30 +1,32 @@
 """
 Pass 0C — SourceAtom Splitting.
 
-Per Implementation Spec §4.4 and Row 4 Applied §9.
+Per Implementation Spec v0.4 §4.4 and Row 4 Applied §9.
 
 Mode: LPM — mechanical splitting only; no semantic interpretation.
 
-What this Pass does:
-  1. Per Source: applies SourceAtom granularity rules (sentence boundaries
-     for prose, line boundaries for structured text).
+v1 default behaviour (produce_atoms_for_prose=False):
+  Pass 0C is a structural no-op for prose Sources in v1. Sources from Pass 0A
+  are already sentence-level; no sub-sentence splitting is required for v1
+  downstream mechanisms. Passing produce_atoms_for_prose=False (the default)
+  returns an empty list immediately. This is the correct v1 behaviour per
+  Implementation Spec v0.4 §4.4.3.
+
+Non-default behaviour (produce_atoms_for_prose=True):
+  Applies the full splitting logic (sentence boundaries for prose, line
+  boundaries for structured text, list-item boundaries for enumerated content).
+  Reserved for future downstream mechanisms that require sub-sentence anchors.
+
+What this Pass does (when produce_atoms_for_prose=True):
+  1. Per Source: applies SourceAtom granularity rules.
   2. Handles known false-positive abbreviation patterns (per §4.4.2):
      Mr., Dr., Inc., e.g., i.e., etc. do not trigger sentence splits.
   3. Decimal points within numbers do not trigger splits.
   4. Per atom: creates SourceAtom with verbatim subset of parent Source.source_text.
 
-Default granularity rules (per Implementation Spec §4.4.1):
-  - Prose: sentence-end punctuation (. ! ?) followed by whitespace + capital.
-  - Structured (newline-delimited): line boundaries.
-  - Enumerated: list-item boundaries.
-
-Abbreviation handling strategy:
-  Replace known abbreviation dots with a placeholder BEFORE splitting,
-  split on remaining punctuation, then restore placeholders. This avoids
-  Python re lookbehind fixed-width restrictions entirely.
-
-Verification criteria per Implementation Spec §8.4:
-  - atom_text bytes are subset of parent Source.source_text.
+Verification criteria per Implementation Spec v0.4 §8.4:
+  - Default (produce_atoms_for_prose=False): empty list always returned.
+  - atom_text bytes are subset of parent Source.source_text (when atoms produced).
   - Position uniqueness: no two atoms share same position for one Source.
   - Determinism: same Source + same rules → identical atom content and positions.
   - Edge case: Source with no atom boundaries → zero atoms produced (not error).
@@ -34,7 +36,7 @@ import re
 from dataclasses import dataclass
 
 from core.modes import pass_mode
-from mechanisms.source_capture.pass_0b_source_capture import SourceSpec
+from mechanisms.source_capture.pass_0a_source_capture import SourceSpec
 
 ABBREVIATION_PATTERN = re.compile(
     r"\b(Mr|Dr|Prof|Sr|Jr|Mrs|Ms|St|vs|etc|Inc|Ltd|Corp|Co)\.",
@@ -45,7 +47,7 @@ EG_IE_PATTERN = re.compile(r"\b(e\.g|i\.e)\.", re.IGNORECASE)
 
 NUMBER_DECIMAL = re.compile(r"(\d)\.(\d)")
 
-SENTENCE_SPLIT = re.compile(r"([.!?])(\s+(?=[A-Z\"\'\(]))")
+SENTENCE_SPLIT = re.compile(r"([.!?])(\s+(?=[A-Z\"\'(]))")
 
 LIST_ITEM_PATTERN = re.compile(r"^\s*[-*•]\s+", re.MULTILINE)
 
@@ -65,16 +67,24 @@ class AtomSpec:
 @pass_mode("LPM")
 def run_pass_0c(
     source_specs: list[SourceSpec],
+    *,
+    produce_atoms_for_prose: bool = False,
 ) -> list[AtomSpec]:
     """
     Execute Pass 0C SourceAtom Splitting.
 
     Args:
-        source_specs: List of SourceSpec from Pass 0B.
+        source_specs: List of SourceSpec from Pass 0A.
+        produce_atoms_for_prose: If False (default), returns empty list immediately
+            per v1 default behaviour. If True, applies full sub-sentence splitting
+            logic. Reserved for future downstream mechanisms.
 
     Returns:
-        List of AtomSpec across all Sources. Empty list if no atom boundaries found.
+        Empty list (default) or list of AtomSpec across all Sources.
     """
+    if not produce_atoms_for_prose:
+        return []
+
     all_atoms: list[AtomSpec] = []
 
     for src_idx, source_spec in enumerate(source_specs):
@@ -112,6 +122,14 @@ def _split_source(source_text: str, source_index: int) -> list[AtomSpec]:
         raw_atoms = _split_lines(stripped)
     else:
         raw_atoms = _split_sentences(stripped)
+
+    # Zero-atom rule (extended): if splitting produced only 1 chunk, no sub-sentence
+    # boundary exists within this Source — return 0 atoms. The Source is already at
+    # its minimal unit. Covers both "no terminal punctuation" (caught above) and
+    # "single sentence with terminal punctuation but no internal boundary" (e.g.,
+    # sentence-level Sources from Pass 0A: "First sentence." → 0 atoms, not 1).
+    if len(raw_atoms) <= 1:
+        return []
 
     atoms = []
     position = 0
@@ -155,7 +173,6 @@ def _split_sentences(text: str) -> list[str]:
     last = 0
 
     for m in SENTENCE_SPLIT.finditer(protected):
-        end_of_punct = m.start(2)
         chunk = protected[last : m.end(1)]
         parts.append(chunk)
         last = m.start(2)

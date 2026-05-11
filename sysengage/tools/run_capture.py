@@ -46,17 +46,33 @@ def export_ledger(
 ) -> dict:
     """
     Query the database for all entities produced by this Source Capture execution
-    and assemble them into a canonical ledger JSON dict.
+    and assemble them into a canonical ledger JSON dict per spec v2.11.
 
     TRANSITIONAL UTILITY: this function is intentionally self-contained so it can
-    be reused by tests or by a future proper Ledger Export mechanism.  It is NOT
-    part of the Source Capture mechanism itself.  When a formal Ledger Export
+    be reused by tests or by a future proper Ledger Export mechanism. It is NOT
+    part of the Source Capture mechanism itself. When a formal Ledger Export
     mechanism is built, this function should be superseded by that mechanism's
     export logic.
 
+    Canonical attribute filtering (F24 resolution):
+      Source payload: {source_id, source_text, segmentation_context,
+                       input_material_ref, confidence, parent_source_ref}
+      Segment payload: {segment_id, title, description, source_refs,
+                        parent_segment_ref, confidence}
+      SourceAtom payload: {atom_id, atom_text, source_ref, segment_ref,
+                           parent_atom_ref, confidence, position}
+      AnalysisPass payload: {pass_id, pass_type, mechanism, execution_status,
+                              mode_active, declared_transformation_modes, outputs,
+                              evaluated_scope, pass_started_at, pass_completed_at,
+                              elapsed_ms, confidence}
+
+    Non-canonical attributes stripped at export (F24):
+      phase_id, practitioner_id, project_id, created_at, is_non_text,
+      has_decoding_issues.
+
     Scoping strategy:
     - AnalysisPass: fetched by pass_id (exact).
-    - project_id: sourced from the AnalysisPass row — used as an additional scope
+    - project_id: sourced from the AnalysisPass row — used as additional scope
       guard for all entity queries.
     - Sources: fetched by source_ids filtered to ap_row.project_id.
     - Segments: fetched by segment_ids filtered to ap_row.project_id.
@@ -69,7 +85,7 @@ def export_ledger(
         atom_ids:    List of SourceAtom identifiers produced by this execution.
 
     Returns:
-        Canonical ledger dict conforming to sysengage_ledger_version 2.10.
+        Canonical ledger dict conforming to sysengage_ledger_version 2.11.
     """
     _ensure_sysengage_on_path()
 
@@ -146,12 +162,7 @@ def export_ledger(
                         "segmentation_context": src.segmentation_context,
                         "input_material_ref": src.input_material_ref,
                         "confidence": src.confidence,
-                        "segment_id": src.segment_id,
                         "parent_source_ref": src.parent_source_ref,
-                        "is_non_text": src.is_non_text,
-                        "has_decoding_issues": src.has_decoding_issues,
-                        "project_id": src.project_id,
-                        "created_at": src.created_at.isoformat(),
                     },
                 }
             )
@@ -165,10 +176,9 @@ def export_ledger(
                         "segment_id": seg.segment_id,
                         "title": seg.title,
                         "description": seg.description,
+                        "source_refs": list(seg.source_refs or []),
                         "parent_segment_ref": seg.parent_segment_ref,
                         "confidence": seg.confidence,
-                        "project_id": seg.project_id,
-                        "created_at": seg.created_at.isoformat(),
                     },
                 }
             )
@@ -186,8 +196,6 @@ def export_ledger(
                         "parent_atom_ref": atom.parent_atom_ref,
                         "confidence": atom.confidence,
                         "position": atom.position,
-                        "project_id": atom.project_id,
-                        "created_at": atom.created_at.isoformat(),
                     },
                 }
             )
@@ -198,10 +206,13 @@ def export_ledger(
                 "element_type": "AnalysisPass",
                 "payload": {
                     "pass_id": ap_row.pass_id,
-                    "phase_id": ap_row.phase_id,
+                    "pass_type": ap_row.pass_type,
+                    "mechanism": ap_row.mechanism,
                     "execution_status": ap_row.execution_status,
                     "mode_active": ap_row.mode_active,
                     "declared_transformation_modes": ap_row.declared_transformation_modes,
+                    "outputs": ap_row.outputs,
+                    "evaluated_scope": ap_row.evaluated_scope,
                     "pass_started_at": ap_row.pass_started_at.isoformat(),
                     "pass_completed_at": (
                         ap_row.pass_completed_at.isoformat()
@@ -209,10 +220,7 @@ def export_ledger(
                         else None
                     ),
                     "elapsed_ms": ap_row.elapsed_ms,
-                    "practitioner_id": ap_row.practitioner_id,
-                    "project_id": ap_row.project_id,
-                    "outputs": ap_row.outputs,
-                    "created_at": ap_row.created_at.isoformat(),
+                    "confidence": ap_row.confidence,
                 },
             }
         )
@@ -221,12 +229,12 @@ def export_ledger(
         session.close()
 
     return {
-        "sysengage_ledger_version": "2.10",
-        "schema_id": "sysengage.ledger.instance.v2_10",
+        "sysengage_ledger_version": "2.11",
+        "schema_id": "sysengage.ledger.instance.v2_11",
         "row_target": None,
         "run_id": pass_id,
         "created_utc": datetime.now(timezone.utc).isoformat(),
-        "generator": "sysengage_source_capture_v0.1",
+        "generator": "sysengage_source_capture_v0.4",
         "elements": elements,
     }
 

@@ -1,12 +1,16 @@
 """
 Source ORM model — persistence for canonical Source entity.
 
-Per Implementation Spec §5.2: source table with FK to segment (nullable).
+Per Implementation Spec v0.4 §5.2 and canonical ledger spec v2.11.
 Sequence s_id_seq generates the numeric part of S### identifiers.
 
-Implementation note: segment_id FK is the DB-level representation of the
-context_id relationship (Pass 0B assigns each Source to its parent Segment).
-The canonical Segment.source_refs list is derived from this FK at query time.
+NO segment_id column on Source (F24 fix). The canonical Segment → Source
+relation is expressed via Segment.source_refs (ARRAY of source_id values).
+Source has no back-reference FK to Segment — removing segment_id eliminates
+the inverted non-canonical relation that contradicted v2.11.
+
+Non-canonical attributes (implementation-internal, stripped at export per F24):
+is_non_text, has_decoding_issues, project_id, created_at.
 """
 
 from datetime import datetime, timezone
@@ -28,11 +32,6 @@ class SourceModel(Base):
     )
     input_material_ref: Mapped[str] = mapped_column(String, nullable=False)
     confidence: Mapped[float] = mapped_column(Float, nullable=False, default=1.0)
-    segment_id: Mapped[str | None] = mapped_column(
-        String,
-        ForeignKey("segment.segment_id", ondelete="SET NULL"),
-        nullable=True,
-    )
     is_non_text: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     has_decoding_issues: Mapped[bool] = mapped_column(
         Boolean, nullable=False, default=False
@@ -47,7 +46,6 @@ class SourceModel(Base):
     )
 
     project = relationship("ProjectModel", back_populates="sources")
-    segment = relationship("SegmentModel", back_populates="sources")
     parent_source = relationship("SourceModel", remote_side="SourceModel.source_id")
     source_atoms = relationship(
         "SourceAtomModel", back_populates="source", cascade="all, delete-orphan"
