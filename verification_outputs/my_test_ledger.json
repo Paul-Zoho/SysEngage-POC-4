@@ -1,0 +1,218 @@
+{
+  "sysengage_ledger_version": "2.10",
+  "schema_id": "sysengage.ledger.instance.v2_10",
+  "row_target": null,
+  "run_id": "P142",
+  "created_utc": "2026-05-10T19:29:15.526081+00:00",
+  "generator": "sysengage_source_capture_v0.1",
+  "elements": [
+    {
+      "element_id": "S162",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S162",
+        "source_text": "The pocket money tracker system allows children to claim pocket money tasks as they are completed throughout the week. Parents can detail tasks that should be completed and the monetary amount earned for that task. As a task is completed it is linked to the child that completed it. The children should be able to see the available tasks and the tasks they have completed that week. At the end of each week the children can see the total amount they have earned that week. The Parents can also see a report of how much each child has earned and the tasks they completed so that they can provide the pocket money earned to each child. At the start of the next week all tasks become available again to be claimed. Historical task data shall be available. The resulting system shall be able to operate on iOS 16, Android 9 and Windows 11 or later.",
+        "segmentation_context": "section-content",
+        "input_material_ref": "verification_inputs/The Pocket Money Tracker System v1.docx",
+        "confidence": 1.0,
+        "segment_id": "SEG042",
+        "parent_source_ref": null,
+        "is_non_text": false,
+        "has_decoding_issues": false,
+        "project_id": "CLI_47BABA6E",
+        "created_at": "2026-05-10T19:29:13.784444+00:00"
+      }
+    },
+    {
+      "element_id": "SEG042",
+      "element_type": "Segment",
+      "payload": {
+        "segment_id": "SEG042",
+        "title": "High Level Description",
+        "description": "Section: High Level Description",
+        "parent_segment_ref": null,
+        "confidence": 1.0,
+        "project_id": "CLI_47BABA6E",
+        "created_at": "2026-05-10T19:29:13.637785+00:00"
+      }
+    },
+    {
+      "element_id": "SA7266",
+      "element_type": "SourceAtom",
+      "payload": {
+        "atom_id": "SA7266",
+        "atom_text": "The pocket money tracker system allows children to claim pocket money tasks as they are completed throughout the week.",
+        "source_ref": "S162",
+        "segment_ref": "SEG042",
+        "parent_atom_ref": null,
+        "confidence": 1.0,
+        "position": 0,
+        "project_id": "CLI_47BABA6E",
+        "created_at": "2026-05-10T19:29:14.057493+00:00"
+      }
+    },
+    {
+      "element_id": "SA7267",
+      "element_type": "SourceAtom",
+      "payload": {
+        "atom_id": "SA7267",
+        "atom_text": " Parents can detail tasks that should be completed and the monetary amount earned for that task.",
+        "source_ref": "S162",
+        "segment_ref": "SEG042",
+        "parent_atom_ref": null,
+        "confidence": 1.0,
+        "position": 1,
+        "project_id": "CLI_47BABA6E",
+        "created_at": "2026-05-10T19:29:14.057493+00:00"
+      }
+    },
+    {
+      "element_id": "SA7268",
+      "element_type": "SourceAtom",
+      "payload": {
+        "atom_id": "SA7268",
+        "atom_text": " As a task is completed it is linked to the child that completed it.",
+        "source_ref": "S162",
+        "segment_ref": "SEG042",
+        "parent_atom_ref": null,
+        "confidence": 1.0,
+        "position": 2,
+        "project_id": "CLI_47BABA6E",
+        "created_at": "2026-05-10T19:29:14.057493+00:00"
+      }
+    },
+    {
+      "element_id": "SA7269",
+      "element_type": "SourceAtom",
+      "payload": {
+        "atom_id": "SA7269",
+        "atom_text": " The children should be able to see the available tasks and the tasks they have completed that week.",
+        "source_ref": "S162",
+        "segment_ref": "SEG042",
+        "parent_atom_ref": null,
+        "confidence": 1.0,
+        "position": 3,
+        "project_id": "CLI_47BABA6E",
+        "created_at": "2026-05-10T19:29:14.057493+00:00"
+      }
+    },
+    {
+      "element_id": "SA7270",
+      "element_type": "SourceAtom",
+      "payload": {
+        "atom_id": "SA7270",
+        "atom_text": " At the end of each week the children can see the total amount they have earned that week.",
+        "source_ref": "S162",
+        "segment_ref": "SEG042",
+        "parent_atom_ref": null,
+        "confidence": 1.0,
+        "position": 4,
+        "project_id": "CLI_47BABA6E",
+        "created_at": "2026-05-10T19:29:14.057493+00:00"
+      }
+    },
+    {
+      "element_id": "SA7271",
+      "element_type": "SourceAtom",
+      "payload": {
+        "atom_id": "SA7271",
+        "atom_text": " The Parents can also see a report of how much each child has earned and the tasks they completed so that they can provide the pocket money earned to each child.",
+        "source_ref": "S162",
+        "segment_ref": "SEG042",
+        "parent_atom_ref": null,
+        "confidence": 1.0,
+        "position": 5,
+        "project_id": "CLI_47BABA6E",
+        "created_at": "2026-05-10T19:29:14.057493+00:00"
+      }
+    },
+    {
+      "element_id": "SA7272",
+      "element_type": "SourceAtom",
+      "payload": {
+        "atom_id": "SA7272",
+        "atom_text": " At the start of the next week all tasks become available again to be claimed.",
+        "source_ref": "S162",
+        "segment_ref": "SEG042",
+        "parent_atom_ref": null,
+        "confidence": 1.0,
+        "position": 6,
+        "project_id": "CLI_47BABA6E",
+        "created_at": "2026-05-10T19:29:14.057493+00:00"
+      }
+    },
+    {
+      "element_id": "SA7273",
+      "element_type": "SourceAtom",
+      "payload": {
+        "atom_id": "SA7273",
+        "atom_text": " Historical task data shall be available.",
+        "source_ref": "S162",
+        "segment_ref": "SEG042",
+        "parent_atom_ref": null,
+        "confidence": 1.0,
+        "position": 7,
+        "project_id": "CLI_47BABA6E",
+        "created_at": "2026-05-10T19:29:14.057493+00:00"
+      }
+    },
+    {
+      "element_id": "SA7274",
+      "element_type": "SourceAtom",
+      "payload": {
+        "atom_id": "SA7274",
+        "atom_text": " The resulting system shall be able to operate on iOS 16, Android 9 and Windows 11 or later.",
+        "source_ref": "S162",
+        "segment_ref": "SEG042",
+        "parent_atom_ref": null,
+        "confidence": 1.0,
+        "position": 8,
+        "project_id": "CLI_47BABA6E",
+        "created_at": "2026-05-10T19:29:14.057493+00:00"
+      }
+    },
+    {
+      "element_id": "P142",
+      "element_type": "AnalysisPass",
+      "payload": {
+        "pass_id": "P142",
+        "phase_id": "PH001",
+        "execution_status": "Success",
+        "mode_active": "LPM",
+        "declared_transformation_modes": [
+          "LPM"
+        ],
+        "pass_started_at": "2026-05-10T19:29:09.175459+00:00",
+        "pass_completed_at": "2026-05-10T19:29:14.201045+00:00",
+        "elapsed_ms": 5025,
+        "practitioner_id": "CLI_14153C1A",
+        "project_id": "CLI_47BABA6E",
+        "outputs": {
+          "read_witness": {
+            "file_path": "verification_inputs/The Pocket Money Tracker System v1.docx",
+            "read_mode": "Full",
+            "byte_count": 13803,
+            "input_hash": "5d66954e4d33dda146d247e09c75a371789b83e04396eb7f4d9b69f6996e35a0",
+            "character_count": 902,
+            "format_detected": "docx",
+            "partial_failure_detail": null,
+            "read_completion_status": true
+          },
+          "mechanism_data": {
+            "source_ids": [
+              "S162"
+            ],
+            "source_count": 1,
+            "segment_count": 1,
+            "source_atom_count": 9,
+            "non_text_source_ids": [],
+            "cross_source_ordering": [],
+            "source_with_decoding_issues_ids": []
+          },
+          "mode_violations": []
+        },
+        "created_at": "2026-05-10T19:29:14.333341+00:00"
+      }
+    }
+  ]
+}
