@@ -7,8 +7,6 @@ Never use Base.metadata.create_all() or raw schema-creating SQL directly.
 
 import os
 import sys
-import socket
-import re
 from logging.config import fileConfig
 from sqlalchemy import engine_from_config, pool
 from alembic import context
@@ -30,45 +28,7 @@ if config.config_file_name is not None:
 
 target_metadata = Base.metadata
 
-
-def _neon_reachable(url: str) -> bool:
-    """Return True if the host in *url* accepts a TCP connection on port 5432."""
-    m = re.search(r"@([^/:]+)(?::(\d+))?/", url)
-    if not m:
-        return False
-    host = m.group(1)
-    port = int(m.group(2)) if m.group(2) else 5432
-    try:
-        addrs = socket.getaddrinfo(host, port, socket.AF_INET)
-        ip = addrs[0][4][0]
-        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.settimeout(1)
-        s.connect((ip, port))
-        s.close()
-        return True
-    except Exception:
-        return False
-
-
-_neon_url = os.environ.get("NEON_DATABASE_URL", "")
-_local_url = os.environ.get("DATABASE_URL", "")
-
-if _neon_url and _neon_reachable(_neon_url):
-    _db_url = _neon_url
-elif _neon_url and _local_url:
-    print(
-        "WARNING: NEON_DATABASE_URL unreachable (port 5432 blocked). "
-        "Running migrations against DATABASE_URL (Helium) instead.",
-        file=sys.stderr,
-    )
-    _db_url = _local_url
-elif _local_url:
-    _db_url = _local_url
-elif _neon_url:
-    _db_url = _neon_url
-else:
-    _db_url = ""
-
+_db_url = os.environ.get("NEON_DATABASE_URL") or os.environ.get("DATABASE_URL")
 if _db_url:
     config.set_main_option("sqlalchemy.url", _db_url)
 

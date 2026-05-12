@@ -5,65 +5,19 @@ Architectural commitment: Neon PostgreSQL via SQLAlchemy 2.x.
 Per Row 4 Applied §5 — connection pool, session factory, engine configuration.
 
 Connection priority:
-  1. NEON_DATABASE_URL — external Neon project (canonical production target).
-  2. DATABASE_URL      — Replit-managed Helium Postgres (dev fallback).
+  1. NEON_DATABASE_URL — external Neon project (canonical target).
+  2. DATABASE_URL      — Replit-managed Helium Postgres (test/CI fallback only).
 
-The Replit dev environment blocks outbound TCP port 5432 to external hosts.
-A fast socket pre-check (1s timeout) detects this and falls back to
-DATABASE_URL automatically, printing a clear warning. The deployed app reaches
-Neon directly because Replit deployments have unrestricted outbound networking.
+NOTE: The Replit dev shell blocks outbound TCP port 5432 to external hosts.
+Run the CLI from your local machine where NEON_DATABASE_URL is reachable.
 """
 
 import os
-import socket
-import re
-import sys
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker, Session
 
-
-def _neon_reachable(url: str) -> bool:
-    """Return True if the host in *url* accepts a TCP connection on port 5432."""
-    m = re.search(r"@([^/:]+)(?::(\d+))?/", url)
-    if not m:
-        return False
-    host = m.group(1)
-    port = int(m.group(2)) if m.group(2) else 5432
-    try:
-        addrs = socket.getaddrinfo(host, port, socket.AF_INET)
-        ip = addrs[0][4][0]
-        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.settimeout(1)
-        s.connect((ip, port))
-        s.close()
-        return True
-    except Exception:
-        return False
-
-
-_neon_url = os.environ.get("NEON_DATABASE_URL", "")
-_local_url = os.environ.get("DATABASE_URL", "")
-
-if _neon_url and _neon_reachable(_neon_url):
-    _database_url = _neon_url
-    _db_label = "Neon (NEON_DATABASE_URL)"
-elif _neon_url and _local_url:
-    print(
-        "WARNING: NEON_DATABASE_URL is set but port 5432 is unreachable from this "
-        "environment (Replit dev blocks outbound TCP 5432). "
-        "Falling back to DATABASE_URL (Helium). "
-        "The deployed app will use Neon correctly.",
-        file=sys.stderr,
-    )
-    _database_url = _local_url
-    _db_label = "Helium fallback (DATABASE_URL)"
-elif _local_url:
-    _database_url = _local_url
-    _db_label = "Helium (DATABASE_URL)"
-elif _neon_url:
-    _database_url = _neon_url
-    _db_label = "Neon (NEON_DATABASE_URL)"
-else:
+_database_url = os.environ.get("NEON_DATABASE_URL") or os.environ.get("DATABASE_URL")
+if not _database_url:
     raise RuntimeError(
         "No database URL configured. Set NEON_DATABASE_URL (Neon) or DATABASE_URL."
     )

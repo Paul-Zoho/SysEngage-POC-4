@@ -2,15 +2,15 @@
   "sysengage_ledger_version": "2.11",
   "schema_id": "sysengage.ledger.instance.v2_11",
   "row_target": null,
-  "run_id": "P004",
-  "created_utc": "2026-05-12T20:31:41.467441+00:00",
+  "run_id": "P005",
+  "created_utc": "2026-05-12T20:32:46.718133+00:00",
   "generator": "sysengage_source_capture_v0.6",
   "elements": [
     {
-      "element_id": "S023",
+      "element_id": "S034",
       "element_type": "Source",
       "payload": {
-        "source_id": "S023",
+        "source_id": "S034",
         "source_text": "\nQUALITY POLICY STATEMENT\nNovus Mechanical Services Limited has established a Quality Policy to be consistent with the purpose and context of our organisation.",
         "segmentation_context": "multi-line block",
         "input_material_ref": "verification_inputs/Novus Quality Policy Statement v1.docx",
@@ -19,10 +19,10 @@
       }
     },
     {
-      "element_id": "S024",
+      "element_id": "S035",
       "element_type": "Source",
       "payload": {
-        "source_id": "S024",
+        "source_id": "S035",
         "source_text": " It provides a framework for the setting and review of objectives in addition to our commitment to satisfy applicable customers’, regulatory and legislative requirements as well as our commitment to continually improve our management system.",
         "segmentation_context": "sentence in prose",
         "input_material_ref": "verification_inputs/Novus Quality Policy Statement v1.docx",
@@ -31,10 +31,10 @@
       }
     },
     {
-      "element_id": "S025",
+      "element_id": "S036",
       "element_type": "Source",
       "payload": {
-        "source_id": "S025",
+        "source_id": "S036",
         "source_text": " \n\nCustomer focus: As an organisation we have made a commitment to understand our current and future customers’ needs; meet their requirements and strive to exceed their expectations.",
         "segmentation_context": "sentence in prose",
         "input_material_ref": "verification_inputs/Novus Quality Policy Statement v1.docx",
@@ -43,10 +43,10 @@
       }
     },
     {
-      "element_id": "S026",
+      "element_id": "S037",
       "element_type": "Source",
       "payload": {
-        "source_id": "S026",
+        "source_id": "S037",
         "source_text": " \nLeadership: Our Top Management have committed to creating and maintaining a working environment in which people become fully involved in achieving our objectives.",
         "segmentation_context": "sentence in prose",
         "input_material_ref": "verification_inputs/Novus Quality Policy Statement v1.docx",
@@ -55,10 +55,10 @@
       }
     },
     {
-      "element_id": "S027",
+      "element_id": "S038",
       "element_type": "Source",
       "payload": {
-        "source_id": "S027",
+        "source_id": "S038",
         "source_text": " \nEngagement of people: As an organisation we recognise that people are the essence of any good business and that their full involvement enables their abilities to be used for our benefit.",
         "segmentation_context": "sentence in prose",
         "input_material_ref": "verification_inputs/Novus Quality Policy Statement v1.docx",
@@ -67,10 +67,10 @@
       }
     },
     {
-      "element_id": "S028",
+      "element_id": "S039",
       "element_type": "Source",
       "payload": {
-        "source_id": "S028",
+        "source_id": "S039",
         "source_text": " \nProcess approach: As an organisation we understand that a desired result is achieved more efficiently when activities and related resources are managed as a process or series of interconnected processes.",
         "segmentation_context": "sentence in prose",
         "input_material_ref": "verification_inputs/Novus Quality Policy Statement v1.docx",
@@ -79,10 +79,10 @@
       }
     },
     {
-      "element_id": "S029",
+      "element_id": "S040",
       "element_type": "Source",
       "payload": {
-        "source_id": "S029",
+        "source_id": "S040",
         "source_text": " \nImprovement: We have committed to achieving continual improvement across all aspects of our quality management system; it is one of our main annual objectives.",
         "segmentation_context": "sentence in prose",
         "input_material_ref": "verification_inputs/Novus Quality Policy Statement v1.docx",
@@ -91,10 +91,10 @@
       }
     },
     {
-      "element_id": "S030",
+      "element_id": "S041",
       "element_type": "Source",
       "payload": {
-        "source_id": "S030",
+        "source_id": "S041",
         "source_text": " \nEvidence-based decision making: As an organisation we have committed to only make decisions relating to our QMS following an analysis of relevant data and information.",
         "segmentation_context": "sentence in prose",
         "input_material_ref": "verification_inputs/Novus Quality Policy Statement v1.docx",
@@ -103,10 +103,10 @@
       }
     },
     {
-      "element_id": "S031",
+      "element_id": "S042",
       "element_type": "Source",
       "payload": {
-        "source_id": "S031",
+        "source_id": "S042",
         "source_text": " \nRelationship management: We recognises that an organisation and the relationship it has with its external providers are interdependent and a mutually beneficial relationship enhances the ability of both to create value.",
         "segmentation_context": "sentence in prose",
         "input_material_ref": "verification_inputs/Novus Quality Policy Statement v1.docx",
@@ -115,10 +115,10 @@
       }
     },
     {
-      "element_id": "S032",
+      "element_id": "S043",
       "element_type": "Source",
       "payload": {
-        "source_id": "S032",
+        "source_id": "S043",
         "source_text": " \nOur policy is also to meet the requirements of our social, environmental, charitable and legislative responsibilities.",
         "segmentation_context": "sentence in prose",
         "input_material_ref": "verification_inputs/Novus Quality Policy Statement v1.docx",
@@ -127,10 +127,10 @@
       }
     },
     {
-      "element_id": "S033",
+      "element_id": "S044",
       "element_type": "Source",
       "payload": {
-        "source_id": "S033",
+        "source_id": "S044",
         "source_text": "\n\nSigned : \t\t\t\t\t\t\tDate: 22/4/2025\n           \t\nDamian Shacklock\nDirector\nNOVUS MECHANICAL SERVICES LTD.\n",
         "segmentation_context": "multi-line block",
         "input_material_ref": "verification_inputs/Novus Quality Policy Statement v1.docx",
@@ -139,10 +139,10 @@
       }
     },
     {
-      "element_id": "P004",
+      "element_id": "P005",
       "element_type": "AnalysisPass",
       "payload": {
-        "pass_id": "P004",
+        "pass_id": "P005",
         "pass_type": "Universal",
         "mechanism": "SourceCapture",
         "execution_status": "Success",
@@ -163,17 +163,17 @@
           },
           "mechanism_data": {
             "source_ids": [
-              "S023",
-              "S024",
-              "S025",
-              "S026",
-              "S027",
-              "S028",
-              "S029",
-              "S030",
-              "S031",
-              "S032",
-              "S033"
+              "S034",
+              "S035",
+              "S036",
+              "S037",
+              "S038",
+              "S039",
+              "S040",
+              "S041",
+              "S042",
+              "S043",
+              "S044"
             ],
             "source_count": 11,
             "segment_count": 0,
@@ -185,9 +185,9 @@
           "mode_violations": []
         },
         "evaluated_scope": "All input material in this project",
-        "pass_started_at": "2026-05-12T20:31:41.222240+00:00",
-        "pass_completed_at": "2026-05-12T20:31:41.452658+00:00",
-        "elapsed_ms": 230,
+        "pass_started_at": "2026-05-12T20:32:46.596168+00:00",
+        "pass_completed_at": "2026-05-12T20:32:46.706120+00:00",
+        "elapsed_ms": 109,
         "confidence": 1.0
       }
     }
