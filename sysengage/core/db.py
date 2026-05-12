@@ -23,7 +23,7 @@ engine = create_engine(
     pool_pre_ping=True,
     pool_size=5,
     max_overflow=10,
-    connect_args={"connect_timeout": 10},
+    connect_args={"connect_timeout": 30},
 )
 
 SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False)
