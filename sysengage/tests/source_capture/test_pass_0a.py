@@ -436,18 +436,19 @@ class TestPass0AClassifier:
     def test_signature_block_fixture(self, signature_block_path: Path):
         """
         Integration: signature_block.txt is a 4-line attribution block with no
-        sentence-ending punctuation. The single Source produced (the whole block,
-        since there are no sentence boundaries) must be 'multi-line block'.
+        sentence-ending punctuation followed by whitespace + capital. No sentence
+        boundary is detected → the entire block becomes exactly 1 Source with
+        segmentation_context == 'multi-line block'.
         """
         _, dr = run_pass_0(signature_block_path)
         sources = run_pass_0a(dr)
 
-        assert len(sources) >= 1
-        for src in sources:
-            assert src.segmentation_context == "multi-line block", (
-                f"Expected 'multi-line block' for signature fixture, "
-                f"got {src.segmentation_context!r} for: {src.source_text!r}"
-            )
+        assert len(sources) == 1, (
+            f"Expected exactly 1 Source for signature block fixture, got {len(sources)}"
+        )
+        assert sources[0].segmentation_context == "multi-line block", (
+            f"Expected 'multi-line block', got {sources[0].segmentation_context!r}"
+        )
 
     def test_classifier_determinism(self):
         """Same source_text always yields the same segmentation_context."""

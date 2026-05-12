@@ -148,6 +148,10 @@ def classify_segmentation_context(
     if has_table_marker:
         return "table row"
 
+    # Strip leading/trailing whitespace (including leading \n from sentence splits)
+    # before newline checks. An embedded \n — e.g. "Line one\nLine two" — survives
+    # strip() and still triggers the multi-line block fallback. Only boundary
+    # whitespace from the split algorithm is dropped; genuine block structure is kept.
     text_core = source_text.strip()
 
     if "\n" not in text_core and DEFINITION_LINE_PATTERN.match(text_core):
