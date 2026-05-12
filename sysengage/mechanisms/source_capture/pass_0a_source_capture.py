@@ -102,7 +102,7 @@ def classify_segmentation_context(
     has_table_marker: bool = False,
 ) -> str:
     """
-    Deterministic segmentation_context classifier per v0.5 §4.2.5 (F29 resolution).
+    Deterministic segmentation_context classifier per v0.6 §4.2.5 (F29/F31 resolution).
 
     Applies five rules in priority order; first matching rule wins.
 
@@ -114,17 +114,19 @@ def classify_segmentation_context(
         Pass 0 surfaced a table-row structural marker for this Source.
         In v1, has_table_marker is always False (decoders not yet extended).
 
-    Rule 3 — definition line:
-        source_text is a SINGLE logical line (no embedded newlines) matching
-        the pattern: alphabetic label + optional spaces + colon + value.
-        Example: "Date: 22/4/2025", "Owner : Damian Shacklock", "Title: Director".
-        Multi-line blocks that happen to contain definition-like lines do NOT
-        match — the \n check ensures the Source is exactly one logical line.
+    Rule 3 — sentence in prose (F31: moved up from position 4):
+        source_text contains a sentence terminator (.!?) and no embedded
+        newlines. This fires BEFORE the definition-line check so that prose
+        sentences with categorical label prefixes (e.g. "Customer focus: As an
+        organisation we have made a commitment to understand our current and
+        future customers' needs...") are correctly classified as prose, not
+        as definition lines.
 
-    Rule 4 — sentence in prose:
-        source_text contains a sentence terminator (.!?) AND does not contain
-        embedded newlines suggesting block structure. A single sentence like
-        "He is a clinician." passes; a multi-line attribution block does not.
+    Rule 4 — definition line (F31: moved down from position 3):
+        source_text is a SINGLE logical line (no embedded newlines) matching
+        the pattern: alphabetic label + optional spaces + colon + value, AND
+        has no sentence terminator (Rule 3 would have caught it otherwise).
+        Example: "Date: 22/4/2025", "Owner : Damian Shacklock", "Title: Director".
 
     Rule 5 — multi-line block (fallback):
         Source spans multiple lines without sentence punctuation, or is a
@@ -139,8 +141,8 @@ def classify_segmentation_context(
             table row. Always False in v1.
 
     Returns:
-        One of: "bullet item", "table row", "definition line",
-                "sentence in prose", "multi-line block".
+        One of: "bullet item", "table row", "sentence in prose",
+                "definition line", "multi-line block".
     """
     if has_bullet_marker:
         return "bullet item"
@@ -154,11 +156,11 @@ def classify_segmentation_context(
     # whitespace from the split algorithm is dropped; genuine block structure is kept.
     text_core = source_text.strip()
 
-    if "\n" not in text_core and DEFINITION_LINE_PATTERN.match(text_core):
-        return "definition line"
-
     if re.search(r"[.!?]", text_core) and "\n" not in text_core:
         return "sentence in prose"
+
+    if "\n" not in text_core and DEFINITION_LINE_PATTERN.match(text_core):
+        return "definition line"
 
     return "multi-line block"
 

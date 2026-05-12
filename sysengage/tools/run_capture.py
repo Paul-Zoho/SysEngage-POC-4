@@ -234,7 +234,7 @@ def export_ledger(
         "row_target": None,
         "run_id": pass_id,
         "created_utc": datetime.now(timezone.utc).isoformat(),
-        "generator": "sysengage_source_capture_v0.4",
+        "generator": "sysengage_source_capture_v0.6",
         "elements": elements,
     }
 

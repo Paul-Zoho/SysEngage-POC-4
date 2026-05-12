@@ -1,7 +1,7 @@
 """
 Tests for Pass 0A — Source Capture (sentence-level).
 
-Per Implementation Spec v0.5 §8.2 verification criteria and §9 test fixtures.
+Per Implementation Spec v0.6 §8.2 verification criteria and §9 test fixtures.
 
 Pass 0A is now Source Capture (sentence-level), replacing the old Pass 0A
 (Segment Construction). The old Segment Construction is now Pass 0B.
@@ -315,12 +315,19 @@ class TestPass0AErrorCases:
 
 class TestPass0AClassifier:
     """
-    Unit tests for classify_segmentation_context() per v0.5 §4.2.5 (F29).
+    Unit tests for classify_segmentation_context() per v0.6 §4.2.5 (F29/F31).
 
-    Tests cover all five classifier values and the priority-order rules.
+    Priority order (v0.6):
+      1. bullet item   — has_bullet_marker=True
+      2. table row     — has_table_marker=True
+      3. sentence in prose — has [.!?], no embedded \\n  (F31: moved up from position 4)
+      4. definition line   — label:value, no terminator, no \\n  (F31: moved down from position 3)
+      5. multi-line block  — fallback
+
     Rules 1-2 (bullet item / table row) are tested via marker flags.
-    Rules 3-5 (definition line / sentence in prose / multi-line block) are
-    content-based and tested via source_text content.
+    Rules 3-5 are content-based and tested via source_text content.
+    F31 regression: prose sentences with label-colon prefixes must classify as
+    "sentence in prose", NOT "definition line".
 
     Integration tests via fixture files verify that Pass 0A wires the
     classifier correctly for real inputs.
@@ -351,44 +358,67 @@ class TestPass0AClassifier:
         ) == "table row"
 
     def test_definition_line_single_line(self):
-        """Rule 3: single-line label:value → 'definition line'."""
+        """Rule 4: single-line label:value with no sentence terminator → 'definition line'."""
         assert classify_segmentation_context("Owner: Damian Shacklock") == "definition line"
 
     def test_definition_line_date(self):
-        """Rule 3: 'Date: 22/4/2025' → 'definition line'."""
+        """Rule 4: 'Date: 22/4/2025' has no sentence terminator → 'definition line'."""
         assert classify_segmentation_context("Date: 22/4/2025") == "definition line"
 
     def test_definition_line_with_space_before_colon(self):
-        """Rule 3: label with space before colon → 'definition line'."""
+        """Rule 4: label with space before colon, no terminator → 'definition line'."""
         assert classify_segmentation_context("Owner : Damian Shacklock") == "definition line"
 
     def test_definition_line_with_leading_spaces(self):
-        """Rule 3: leading whitespace does not prevent definition-line match."""
+        """Rule 4: leading whitespace does not prevent definition-line match."""
         assert classify_segmentation_context("   Title: Director") == "definition line"
 
     def test_multiline_block_is_not_definition_line(self):
         """
-        Rule 3 requires no embedded newlines.
+        Rule 4 requires no embedded newlines.
         Multi-line text containing definition-like lines falls through to Rule 5.
         """
         multiline = "Signed by\nDamian Shacklock\nDirector\nDate: 12 May 2026"
         assert classify_segmentation_context(multiline) == "multi-line block"
 
     def test_sentence_in_prose_simple(self):
-        """Rule 4: single sentence with terminal punctuation → 'sentence in prose'."""
+        """Rule 3: single sentence with terminal punctuation → 'sentence in prose'."""
         assert classify_segmentation_context("He is a clinician.") == "sentence in prose"
 
     def test_sentence_in_prose_with_question(self):
-        """Rule 4: question mark counts as terminal punctuation."""
+        """Rule 3: question mark counts as terminal punctuation."""
         assert classify_segmentation_context("Is this the system?") == "sentence in prose"
 
     def test_sentence_in_prose_with_exclamation(self):
-        """Rule 4: exclamation mark counts as terminal punctuation."""
+        """Rule 3: exclamation mark counts as terminal punctuation."""
         assert classify_segmentation_context("The system shall comply!") == "sentence in prose"
 
     def test_sentence_in_prose_does_not_fire_for_multiline(self):
-        """Rule 4 requires no embedded newline — multi-line text falls to Rule 5."""
+        """Rule 3 requires no embedded newline — multi-line text falls to Rule 5."""
         assert classify_segmentation_context("Line one.\nLine two.") == "multi-line block"
+
+    def test_f31_prose_with_label_colon_prefix_is_sentence_in_prose(self):
+        """
+        F31 regression: prose sentence beginning with a categorical label prefix
+        (e.g. 'Customer focus: As an organisation we have made a commitment...')
+        must classify as 'sentence in prose', NOT 'definition line'.
+
+        Rule 3 (sentence-in-prose) fires before Rule 4 (definition-line) per v0.6
+        §4.2.5. The sentence terminator at the end of the value wins.
+        """
+        policy_clause = (
+            "Customer focus: As an organisation we have made a commitment to "
+            "understand our current and future customers' needs."
+        )
+        assert classify_segmentation_context(policy_clause) == "sentence in prose"
+
+    def test_f31_short_label_colon_no_terminator_is_definition_line(self):
+        """
+        F31 complement: a label:value line WITHOUT a sentence terminator still
+        classifies as 'definition line'. Rule 3 does not fire (no terminator),
+        so Rule 4 catches it correctly.
+        """
+        assert classify_segmentation_context("Customer focus: continuous improvement") == "definition line"
 
     def test_multi_line_block_fallback_no_punctuation(self):
         """Rule 5: no terminal punctuation, no newline → 'multi-line block'."""
