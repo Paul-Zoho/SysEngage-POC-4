@@ -17,7 +17,8 @@ Non-canonical attributes (kept for operational use, stripped at export per F24):
 """
 
 from datetime import datetime, timezone
-from sqlalchemy import String, Integer, Float, DateTime, ForeignKey, JSON
+from sqlalchemy import String, Integer, Float, DateTime, ForeignKey
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from models.base import Base
 
@@ -42,7 +43,7 @@ class AnalysisPassModel(Base):
     execution_status: Mapped[str] = mapped_column(String, nullable=False)
     mode_active: Mapped[str] = mapped_column(String, nullable=False, default="LPM")
     declared_transformation_modes: Mapped[list] = mapped_column(
-        JSON, nullable=False, default=list
+        JSONB, nullable=False, default=list
     )
     elapsed_ms: Mapped[int | None] = mapped_column(Integer, nullable=True)
     practitioner_id: Mapped[str] = mapped_column(
@@ -51,7 +52,7 @@ class AnalysisPassModel(Base):
     project_id: Mapped[str] = mapped_column(
         String, ForeignKey("project.project_id"), nullable=False
     )
-    outputs: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    outputs: Mapped[dict] = mapped_column(JSONB, nullable=False, default=dict)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         nullable=False,

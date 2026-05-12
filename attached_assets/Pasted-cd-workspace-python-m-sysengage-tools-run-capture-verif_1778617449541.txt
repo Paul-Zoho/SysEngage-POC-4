@@ -1,0 +1,11 @@
+cd ~/workspace
+python -m sysengage.tools.run_capture \
+  "verification_inputs/Novus Quality Policy Statement v1.docx" \
+  "verification_outputs/TST-006-NovusQualityPolicyStatementv3.json"
+Error: Source Capture mechanism failed — (psycopg2.errors.UndefinedColumn) column "pass_type" of relation "analysis_pass" does not exist
+LINE 1: INSERT INTO analysis_pass (pass_id, phase_id, pass_type, mec...
+                                                      ^
+
+[SQL: INSERT INTO analysis_pass (pass_id, phase_id, pass_type, mechanism, evaluated_scope, confidence, pass_started_at, pass_completed_at, execution_status, mode_active, declared_transformation_modes, elapsed_ms, practitioner_id, project_id, outputs, created_at) VALUES (%(pass_id)s, %(phase_id)s, %(pass_type)s, %(mechanism)s, %(evaluated_scope)s, %(confidence)s, %(pass_started_at)s, %(pass_completed_at)s, %(execution_status)s, %(mode_active)s, %(declared_transformation_modes)s::JSON, %(elapsed_ms)s, %(practitioner_id)s, %(project_id)s, %(outputs)s::JSON, %(created_at)s)]
+[parameters: {'pass_id': 'P002', 'phase_id': 'PH001', 'pass_type': 'Universal', 'mechanism': 'SourceCapture', 'evaluated_scope': 'All input material in this project', 'confidence': 1.0, 'pass_started_at': datetime.datetime(2026, 5, 12, 20, 23, 5, 336339, tzinfo=datetime.timezone.utc), 'pass_completed_at': datetime.datetime(2026, 5, 12, 20, 23, 5, 954880, tzinfo=datetime.timezone.utc), 'execution_status': 'Failed', 'mode_active': 'LPM', 'declared_transformation_modes': '["LPM"]', 'elapsed_ms': 0, 'practitioner_id': 'CLI_FE27D615', 'project_id': 'CLI_B511A573', 'outputs': '{"failure_reason": "Unexpected error: (psycopg2.errors.UndefinedColumn) column \\"pass_type\\" of relation \\"analysis_pass\\" does not exist\\nLINE  ... (1799 characters truncated) ... 7, tzinfo=datetime.timezone.utc)}]\\n(Background on this error at: https://sqlalche.me/e/20/f405)", "failure_pass": "unknown", "mode_violations": []}', 'created_at': datetime.datetime(2026, 5, 12, 20, 23, 5, 956935, tzinfo=datetime.timezone.utc)}]
+(Background on this error at: https://sqlalche.me/e/20/f405)
