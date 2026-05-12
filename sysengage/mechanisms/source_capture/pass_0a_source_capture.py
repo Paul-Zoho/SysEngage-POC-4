@@ -1,7 +1,7 @@
 """
 Pass 0A — Source Capture (sentence-level).
 
-Per Implementation Spec v0.5 §4.2 and Row 4 Applied §9.
+Per Implementation Spec v0.6 §4.2 and Row 4 Applied §9.
 
 Mode: LPM — byte-for-byte verbatim content capture at sentence granularity.
 
@@ -17,10 +17,10 @@ What this Pass does:
   3. For structured formats (md/docx): pre-splits by heading lines so that
      heading-section membership is tracked via section_index (used by Pass 0B).
   4. segmentation_context populated via deterministic classifier per §4.2.5
-     (F29 resolution v0.5): one of "sentence in prose" / "bullet item" /
+     (F29/F31 resolution v0.6): one of "sentence in prose" / "bullet item" /
      "table row" / "definition line" / "multi-line block".
 
-Sentence boundary detection (per Implementation Spec v0.5 §4.2.2):
+Sentence boundary detection (per Implementation Spec v0.6 §4.2.2):
   - Sentence ends at [.!?] followed by whitespace + capital letter (or open quote).
   - TITLE_ABBRS (Mr., Dr., Prof., etc.) NEVER trigger sentence splits — they
     always precede a name, not a new sentence.
@@ -36,18 +36,22 @@ section_index on SourceSpec:
   0, 1, 2, ... = ordinal index of the heading section this Source belongs to.
   Pass 0B reads section_index to assign Sources to Segments.
 
-segmentation_context classifier (v0.5 §4.2.5 / F29):
-  classify_segmentation_context() applies five rules in priority order.
-  Rules 1-2 (bullet item / table row) require Pass 0 structural markers;
-  in v1 these are always False (decoders not yet extended). Rules 3-5
-  (definition line / sentence in prose / multi-line block) are content-based
-  and fully operational in v1.
+segmentation_context classifier (v0.6 §4.2.5 / F29 + F31):
+  classify_segmentation_context() applies five rules in priority order:
+    1. bullet item   — Pass 0 bullet-list marker (v1 stub, always False)
+    2. table row     — Pass 0 table-row marker (v1 stub, always False)
+    3. sentence in prose — contains [.!?], no embedded \\n (F31: moved up from v0.5 pos 4)
+    4. definition line   — label:value, no terminator, no \\n (F31: moved down from v0.5 pos 3)
+    5. multi-line block  — fallback
+  Rule 3 now fires before Rule 4 so prose sentences with categorical label
+  prefixes (e.g. "Customer focus: ...commitment...") classify correctly as prose.
 
-Verification criteria per Implementation Spec v0.5 §8.2:
+Verification criteria per Implementation Spec v0.6 §8.2:
   - At least one Source produced for non-empty, successfully-decoded input.
   - Source.source_text verbatim (byte-identical to decoded input portion).
   - segmentation_context is classifier-derived (non-empty string).
-  - Prose Sources → "sentence in prose"; signature/attribution blocks → "multi-line block".
+  - Prose Sources → "sentence in prose"; metadata-only lines → "definition line";
+    signature/attribution blocks → "multi-line block".
   - Determinism: same input → identical Source content, count, segmentation_context.
   - simple_paragraph.txt: exactly 4 Sources (F23 fix: sentence-level, not paragraph).
   - abbreviation_handling.txt: exactly 3 Sources, no false split on Dr./Inc./Mr.
