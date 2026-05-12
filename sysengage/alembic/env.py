@@ -28,7 +28,7 @@ if config.config_file_name is not None:
 
 target_metadata = Base.metadata
 
-_db_url = os.environ.get("NEON_DATABASE_URL") or os.environ.get("DATABASE_URL")
+_db_url = os.environ.get("DATABASE_URL") or os.environ.get("NEON_DATABASE_URL")
 if _db_url:
     config.set_main_option("sqlalchemy.url", _db_url)
 

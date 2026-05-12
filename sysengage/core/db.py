@@ -4,15 +4,15 @@ Database session management for SysEngage.
 Architectural commitment: Neon PostgreSQL via SQLAlchemy 2.x.
 Per Row 4 Applied §5 — connection pool, session factory, engine configuration.
 
-Build context note: NEON_DATABASE_URL env var holds the Neon connection string.
-Falls back to DATABASE_URL for Replit-managed Postgres in development.
+Build context note: DATABASE_URL (Replit-managed Helium Postgres) is preferred for
+development. Falls back to NEON_DATABASE_URL if DATABASE_URL is not set.
 """
 
 import os
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker, Session
 
-_database_url = os.environ.get("NEON_DATABASE_URL") or os.environ.get("DATABASE_URL")
+_database_url = os.environ.get("DATABASE_URL") or os.environ.get("NEON_DATABASE_URL")
 if not _database_url:
     raise RuntimeError(
         "No database URL configured. Set NEON_DATABASE_URL (Neon) or DATABASE_URL."
