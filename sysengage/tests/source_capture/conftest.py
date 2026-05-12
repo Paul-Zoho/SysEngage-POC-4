@@ -81,6 +81,16 @@ def abbreviation_path() -> Path:
 
 
 @pytest.fixture
+def signature_block_path() -> Path:
+    return fixture_path("edge_cases/signature_block.txt")
+
+
+@pytest.fixture
+def definition_line_path() -> Path:
+    return fixture_path("edge_cases/definition_line.txt")
+
+
+@pytest.fixture
 def simple_requirements_docx(tmp_path: Path) -> Path:
     """
     Generate simple_requirements.docx via python-docx.

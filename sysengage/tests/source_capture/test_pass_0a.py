@@ -1,7 +1,7 @@
 """
 Tests for Pass 0A — Source Capture (sentence-level).
 
-Per Implementation Spec v0.4 §8.2 verification criteria and §9 test fixtures.
+Per Implementation Spec v0.5 §8.2 verification criteria and §9 test fixtures.
 
 Pass 0A is now Source Capture (sentence-level), replacing the old Pass 0A
 (Segment Construction). The old Segment Construction is now Pass 0B.
@@ -13,7 +13,10 @@ Tests:
   - Happy path: 1 Source for single_short_statement.txt (no sentence boundary)
   - section_index is None for plain text (.txt)
   - section_index is int for structured text (.md) — matches heading ordinal
-  - segmentation_context == "sentence in prose" for all Sources
+  - segmentation_context == "sentence in prose" for prose Sources (F29: classifier-derived)
+  - segmentation_context == "definition line" for single label:value Sources (F29)
+  - segmentation_context == "multi-line block" for signature/attribution blocks (F29)
+  - segmentation_context == "bullet item" / "table row" when marker flags are True (F29)
   - source_text verbatim (found in decoded text for structured inputs)
   - source_text non-empty for all produced Sources
   - Determinism: same input + same policy → identical Source count and content
@@ -26,7 +29,11 @@ import pytest
 
 from mechanisms.source_capture.errors import SegmentationPolicyError
 from mechanisms.source_capture.pass_0_read_witness import run_pass_0
-from mechanisms.source_capture.pass_0a_source_capture import run_pass_0a, SourceSpec
+from mechanisms.source_capture.pass_0a_source_capture import (
+    run_pass_0a,
+    SourceSpec,
+    classify_segmentation_context,
+)
 
 
 class TestPass0AHappyPath:
@@ -304,3 +311,155 @@ class TestPass0AErrorCases:
         _, decode_result = run_pass_0(simple_paragraph_path)
         sources = run_pass_0a(decode_result, policy="default")
         assert len(sources) >= 1
+
+
+class TestPass0AClassifier:
+    """
+    Unit tests for classify_segmentation_context() per v0.5 §4.2.5 (F29).
+
+    Tests cover all five classifier values and the priority-order rules.
+    Rules 1-2 (bullet item / table row) are tested via marker flags.
+    Rules 3-5 (definition line / sentence in prose / multi-line block) are
+    content-based and tested via source_text content.
+
+    Integration tests via fixture files verify that Pass 0A wires the
+    classifier correctly for real inputs.
+    """
+
+    def test_bullet_marker_returns_bullet_item(self):
+        """Rule 1: has_bullet_marker=True → 'bullet item' regardless of text."""
+        assert classify_segmentation_context(
+            "any text", has_bullet_marker=True
+        ) == "bullet item"
+
+    def test_bullet_marker_takes_priority_over_definition_line(self):
+        """Rule 1 has highest priority — even a definition-line text yields 'bullet item'."""
+        assert classify_segmentation_context(
+            "Owner: Damian Shacklock", has_bullet_marker=True
+        ) == "bullet item"
+
+    def test_table_marker_returns_table_row(self):
+        """Rule 2: has_table_marker=True → 'table row'."""
+        assert classify_segmentation_context(
+            "any text", has_table_marker=True
+        ) == "table row"
+
+    def test_table_marker_priority_over_sentence_in_prose(self):
+        """Rule 2 takes priority over prose detection."""
+        assert classify_segmentation_context(
+            "He is a clinician.", has_table_marker=True
+        ) == "table row"
+
+    def test_definition_line_single_line(self):
+        """Rule 3: single-line label:value → 'definition line'."""
+        assert classify_segmentation_context("Owner: Damian Shacklock") == "definition line"
+
+    def test_definition_line_date(self):
+        """Rule 3: 'Date: 22/4/2025' → 'definition line'."""
+        assert classify_segmentation_context("Date: 22/4/2025") == "definition line"
+
+    def test_definition_line_with_space_before_colon(self):
+        """Rule 3: label with space before colon → 'definition line'."""
+        assert classify_segmentation_context("Owner : Damian Shacklock") == "definition line"
+
+    def test_definition_line_with_leading_spaces(self):
+        """Rule 3: leading whitespace does not prevent definition-line match."""
+        assert classify_segmentation_context("   Title: Director") == "definition line"
+
+    def test_multiline_block_is_not_definition_line(self):
+        """
+        Rule 3 requires no embedded newlines.
+        Multi-line text containing definition-like lines falls through to Rule 5.
+        """
+        multiline = "Signed by\nDamian Shacklock\nDirector\nDate: 12 May 2026"
+        assert classify_segmentation_context(multiline) == "multi-line block"
+
+    def test_sentence_in_prose_simple(self):
+        """Rule 4: single sentence with terminal punctuation → 'sentence in prose'."""
+        assert classify_segmentation_context("He is a clinician.") == "sentence in prose"
+
+    def test_sentence_in_prose_with_question(self):
+        """Rule 4: question mark counts as terminal punctuation."""
+        assert classify_segmentation_context("Is this the system?") == "sentence in prose"
+
+    def test_sentence_in_prose_with_exclamation(self):
+        """Rule 4: exclamation mark counts as terminal punctuation."""
+        assert classify_segmentation_context("The system shall comply!") == "sentence in prose"
+
+    def test_sentence_in_prose_does_not_fire_for_multiline(self):
+        """Rule 4 requires no embedded newline — multi-line text falls to Rule 5."""
+        assert classify_segmentation_context("Line one.\nLine two.") == "multi-line block"
+
+    def test_multi_line_block_fallback_no_punctuation(self):
+        """Rule 5: no terminal punctuation, no newline → 'multi-line block'."""
+        assert classify_segmentation_context("Damian Shacklock") == "multi-line block"
+
+    def test_multi_line_block_signature_block(self):
+        """Rule 5: multi-line attribution block → 'multi-line block'."""
+        sig = "Signed by\nDamian Shacklock\nDirector\nDate: 12 May 2026"
+        assert classify_segmentation_context(sig) == "multi-line block"
+
+    def test_multi_line_block_no_sentence_terminator_multiline(self):
+        """Rule 5: multiple lines without sentence-end punctuation → 'multi-line block'."""
+        assert classify_segmentation_context("Line one\nLine two") == "multi-line block"
+
+    def test_prose_fixture_all_sentence_in_prose(
+        self, simple_paragraph_path: Path
+    ):
+        """
+        Integration: simple_paragraph.txt is all prose sentences.
+        All Sources must have segmentation_context == 'sentence in prose' (F29).
+        """
+        _, dr = run_pass_0(simple_paragraph_path)
+        sources = run_pass_0a(dr)
+
+        assert len(sources) == 4
+        for src in sources:
+            assert src.segmentation_context == "sentence in prose", (
+                f"Expected 'sentence in prose' for prose fixture, "
+                f"got {src.segmentation_context!r} for: {src.source_text!r}"
+            )
+
+    def test_definition_line_fixture(self, definition_line_path: Path):
+        """
+        Integration: definition_line.txt contains a single 'Owner: ...' line.
+        The one Source produced must have segmentation_context == 'definition line'.
+        """
+        _, dr = run_pass_0(definition_line_path)
+        sources = run_pass_0a(dr)
+
+        assert len(sources) == 1
+        assert sources[0].segmentation_context == "definition line", (
+            f"Expected 'definition line', got {sources[0].segmentation_context!r}"
+        )
+
+    def test_signature_block_fixture(self, signature_block_path: Path):
+        """
+        Integration: signature_block.txt is a 4-line attribution block with no
+        sentence-ending punctuation. The single Source produced (the whole block,
+        since there are no sentence boundaries) must be 'multi-line block'.
+        """
+        _, dr = run_pass_0(signature_block_path)
+        sources = run_pass_0a(dr)
+
+        assert len(sources) >= 1
+        for src in sources:
+            assert src.segmentation_context == "multi-line block", (
+                f"Expected 'multi-line block' for signature fixture, "
+                f"got {src.segmentation_context!r} for: {src.source_text!r}"
+            )
+
+    def test_classifier_determinism(self):
+        """Same source_text always yields the same segmentation_context."""
+        text = "The system shall comply with all applicable standards."
+        result1 = classify_segmentation_context(text)
+        result2 = classify_segmentation_context(text)
+        assert result1 == result2
+
+    def test_all_five_values_reachable(self):
+        """Every classifier value is reachable via the appropriate input."""
+        assert classify_segmentation_context("x", has_bullet_marker=True) == "bullet item"
+        assert classify_segmentation_context("x", has_table_marker=True) == "table row"
+        assert classify_segmentation_context("Owner: Alice") == "definition line"
+        assert classify_segmentation_context("This is prose.") == "sentence in prose"
+        assert classify_segmentation_context("No punctuation here") == "multi-line block"

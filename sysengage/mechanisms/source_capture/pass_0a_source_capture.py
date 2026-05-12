@@ -1,7 +1,7 @@
 """
 Pass 0A — Source Capture (sentence-level).
 
-Per Implementation Spec v0.4 §4.2 and Row 4 Applied §9.
+Per Implementation Spec v0.5 §4.2 and Row 4 Applied §9.
 
 Mode: LPM — byte-for-byte verbatim content capture at sentence granularity.
 
@@ -16,9 +16,11 @@ What this Pass does:
      one SourceSpec with verbatim source_text.
   3. For structured formats (md/docx): pre-splits by heading lines so that
      heading-section membership is tracked via section_index (used by Pass 0B).
-  4. segmentation_context = "sentence in prose" for all Sources.
+  4. segmentation_context populated via deterministic classifier per §4.2.5
+     (F29 resolution v0.5): one of "sentence in prose" / "bullet item" /
+     "table row" / "definition line" / "multi-line block".
 
-Sentence boundary detection (per Implementation Spec v0.4 §4.2.2):
+Sentence boundary detection (per Implementation Spec v0.5 §4.2.2):
   - Sentence ends at [.!?] followed by whitespace + capital letter (or open quote).
   - TITLE_ABBRS (Mr., Dr., Prof., etc.) NEVER trigger sentence splits — they
     always precede a name, not a new sentence.
@@ -34,11 +36,19 @@ section_index on SourceSpec:
   0, 1, 2, ... = ordinal index of the heading section this Source belongs to.
   Pass 0B reads section_index to assign Sources to Segments.
 
-Verification criteria per Implementation Spec v0.4 §8.2:
+segmentation_context classifier (v0.5 §4.2.5 / F29):
+  classify_segmentation_context() applies five rules in priority order.
+  Rules 1-2 (bullet item / table row) require Pass 0 structural markers;
+  in v1 these are always False (decoders not yet extended). Rules 3-5
+  (definition line / sentence in prose / multi-line block) are content-based
+  and fully operational in v1.
+
+Verification criteria per Implementation Spec v0.5 §8.2:
   - At least one Source produced for non-empty, successfully-decoded input.
   - Source.source_text verbatim (byte-identical to decoded input portion).
-  - segmentation_context = "sentence in prose" for all Sources.
-  - Determinism: same input → identical Source content and count.
+  - segmentation_context is classifier-derived (non-empty string).
+  - Prose Sources → "sentence in prose"; signature/attribution blocks → "multi-line block".
+  - Determinism: same input → identical Source content, count, segmentation_context.
   - simple_paragraph.txt: exactly 4 Sources (F23 fix: sentence-level, not paragraph).
   - abbreviation_handling.txt: exactly 3 Sources, no false split on Dr./Inc./Mr.
   - very_long_sentence.txt: exactly 1 Source.
@@ -61,6 +71,11 @@ TITLE_ABBRS = frozenset({
 
 EG_IE_PATTERN = re.compile(r"\b(e\.g|i\.e)\.", re.IGNORECASE)
 
+DEFINITION_LINE_PATTERN = re.compile(
+    r"^\s*[A-Za-z][A-Za-z\s]*\s*:\s*.+$",
+    re.DOTALL,
+)
+
 
 @dataclass
 class SourceSpec:
@@ -78,6 +93,70 @@ class SourceSpec:
     section_index: int | None = None
     is_non_text: bool = False
     has_decoding_issues: bool = False
+
+
+def classify_segmentation_context(
+    source_text: str,
+    *,
+    has_bullet_marker: bool = False,
+    has_table_marker: bool = False,
+) -> str:
+    """
+    Deterministic segmentation_context classifier per v0.5 §4.2.5 (F29 resolution).
+
+    Applies five rules in priority order; first matching rule wins.
+
+    Rule 1 — bullet item:
+        Pass 0 surfaced a bullet-list structural marker for this Source.
+        In v1, has_bullet_marker is always False (decoders not yet extended).
+
+    Rule 2 — table row:
+        Pass 0 surfaced a table-row structural marker for this Source.
+        In v1, has_table_marker is always False (decoders not yet extended).
+
+    Rule 3 — definition line:
+        source_text is a SINGLE logical line (no embedded newlines) matching
+        the pattern: alphabetic label + optional spaces + colon + value.
+        Example: "Date: 22/4/2025", "Owner : Damian Shacklock", "Title: Director".
+        Multi-line blocks that happen to contain definition-like lines do NOT
+        match — the \n check ensures the Source is exactly one logical line.
+
+    Rule 4 — sentence in prose:
+        source_text contains a sentence terminator (.!?) AND does not contain
+        embedded newlines suggesting block structure. A single sentence like
+        "He is a clinician." passes; a multi-line attribution block does not.
+
+    Rule 5 — multi-line block (fallback):
+        Source spans multiple lines without sentence punctuation, or is a
+        structured non-prose block (signature blocks, attribution blocks,
+        address blocks). Conservative fallback per §4.2.5 bias guidance.
+
+    Args:
+        source_text: verbatim source_text of the captured Source.
+        has_bullet_marker: True when Pass 0 flagged this Source as from a
+            bulleted list. Always False in v1.
+        has_table_marker: True when Pass 0 flagged this Source as from a
+            table row. Always False in v1.
+
+    Returns:
+        One of: "bullet item", "table row", "definition line",
+                "sentence in prose", "multi-line block".
+    """
+    if has_bullet_marker:
+        return "bullet item"
+
+    if has_table_marker:
+        return "table row"
+
+    text_core = source_text.strip()
+
+    if "\n" not in text_core and DEFINITION_LINE_PATTERN.match(text_core):
+        return "definition line"
+
+    if re.search(r"[.!?]", text_core) and "\n" not in text_core:
+        return "sentence in prose"
+
+    return "multi-line block"
 
 
 @pass_mode("LPM")
@@ -136,7 +215,7 @@ def _split_plain_text(text: str, has_decoding_issues: bool) -> list[SourceSpec]:
         if chunk.strip():
             sources.append(SourceSpec(
                 source_text=chunk,
-                segmentation_context="sentence in prose",
+                segmentation_context=classify_segmentation_context(chunk),
                 section_index=None,
                 has_decoding_issues=has_decoding_issues,
             ))
@@ -207,7 +286,7 @@ def _split_section_content(
         if stripped:
             sources.append(SourceSpec(
                 source_text=stripped,
-                segmentation_context="sentence in prose",
+                segmentation_context=classify_segmentation_context(stripped),
                 section_index=section_index,
                 has_decoding_issues=has_decoding_issues,
             ))

@@ -26,6 +26,10 @@ Non-Empty-Segment rule (Implementation Spec v0.4 §4.3.2):
 
 Plain text inputs (fmt starts with "txt"): zero Segments always returned.
 
+Visually-styled headings deliberately not detected per F27 / Row 4 v0.5 §4.3.5;
+future evolution gated on Path A spec amendment. Only genuine structural markers
+(Word Heading styles, Markdown #/##, PDF outline entries) produce Segments.
+
 Verification criteria per Implementation Spec v0.4 §8.3:
   - Zero or more Segments returned.
   - Each Segment has non-empty title and description.
