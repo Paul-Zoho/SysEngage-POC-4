@@ -2,15 +2,15 @@
   "sysengage_ledger_version": "2.11",
   "schema_id": "sysengage.ledger.instance.v2_11",
   "row_target": null,
-  "run_id": "P119",
-  "created_utc": "2026-05-11T19:48:47.556705+00:00",
-  "generator": "sysengage_source_capture_v0.4",
+  "run_id": "P254",
+  "created_utc": "2026-05-13T05:52:28.692103+00:00",
+  "generator": "sysengage_source_capture_v0.6",
   "elements": [
     {
-      "element_id": "S361",
+      "element_id": "S804",
       "element_type": "Source",
       "payload": {
-        "source_id": "S361",
+        "source_id": "S804",
         "source_text": "The pocket money tracker system allows children to claim pocket money tasks as they are completed throughout the week.",
         "segmentation_context": "sentence in prose",
         "input_material_ref": "verification_inputs/The Pocket Money Tracker System v1.docx",
@@ -19,10 +19,10 @@
       }
     },
     {
-      "element_id": "S362",
+      "element_id": "S805",
       "element_type": "Source",
       "payload": {
-        "source_id": "S362",
+        "source_id": "S805",
         "source_text": " Parents can detail tasks that should be completed and the monetary amount earned for that task.",
         "segmentation_context": "sentence in prose",
         "input_material_ref": "verification_inputs/The Pocket Money Tracker System v1.docx",
@@ -31,10 +31,10 @@
       }
     },
     {
-      "element_id": "S363",
+      "element_id": "S806",
       "element_type": "Source",
       "payload": {
-        "source_id": "S363",
+        "source_id": "S806",
         "source_text": " As a task is completed it is linked to the child that completed it.",
         "segmentation_context": "sentence in prose",
         "input_material_ref": "verification_inputs/The Pocket Money Tracker System v1.docx",
@@ -43,10 +43,10 @@
       }
     },
     {
-      "element_id": "S364",
+      "element_id": "S807",
       "element_type": "Source",
       "payload": {
-        "source_id": "S364",
+        "source_id": "S807",
         "source_text": " The children should be able to see the available tasks and the tasks they have completed that week.",
         "segmentation_context": "sentence in prose",
         "input_material_ref": "verification_inputs/The Pocket Money Tracker System v1.docx",
@@ -55,10 +55,10 @@
       }
     },
     {
-      "element_id": "S365",
+      "element_id": "S808",
       "element_type": "Source",
       "payload": {
-        "source_id": "S365",
+        "source_id": "S808",
         "source_text": " At the end of each week the children can see the total amount they have earned that week.",
         "segmentation_context": "sentence in prose",
         "input_material_ref": "verification_inputs/The Pocket Money Tracker System v1.docx",
@@ -67,10 +67,10 @@
       }
     },
     {
-      "element_id": "S366",
+      "element_id": "S809",
       "element_type": "Source",
       "payload": {
-        "source_id": "S366",
+        "source_id": "S809",
         "source_text": " The Parents can also see a report of how much each child has earned and the tasks they completed so that they can provide the pocket money earned to each child.",
         "segmentation_context": "sentence in prose",
         "input_material_ref": "verification_inputs/The Pocket Money Tracker System v1.docx",
@@ -79,10 +79,10 @@
       }
     },
     {
-      "element_id": "S367",
+      "element_id": "S810",
       "element_type": "Source",
       "payload": {
-        "source_id": "S367",
+        "source_id": "S810",
         "source_text": " At the start of the next week all tasks become available again to be claimed.",
         "segmentation_context": "sentence in prose",
         "input_material_ref": "verification_inputs/The Pocket Money Tracker System v1.docx",
@@ -91,10 +91,10 @@
       }
     },
     {
-      "element_id": "S368",
+      "element_id": "S811",
       "element_type": "Source",
       "payload": {
-        "source_id": "S368",
+        "source_id": "S811",
         "source_text": " Historical task data shall be available.",
         "segmentation_context": "sentence in prose",
         "input_material_ref": "verification_inputs/The Pocket Money Tracker System v1.docx",
@@ -103,10 +103,10 @@
       }
     },
     {
-      "element_id": "S369",
+      "element_id": "S812",
       "element_type": "Source",
       "payload": {
-        "source_id": "S369",
+        "source_id": "S812",
         "source_text": " The resulting system shall be able to operate on iOS 16, Android 9 and Windows 11 or later.",
         "segmentation_context": "sentence in prose",
         "input_material_ref": "verification_inputs/The Pocket Money Tracker System v1.docx",
@@ -115,32 +115,32 @@
       }
     },
     {
-      "element_id": "SEG043",
+      "element_id": "SEG089",
       "element_type": "Segment",
       "payload": {
-        "segment_id": "SEG043",
+        "segment_id": "SEG089",
         "title": "High Level Description",
         "description": "Section: High Level Description",
         "source_refs": [
-          "S361",
-          "S362",
-          "S363",
-          "S364",
-          "S365",
-          "S366",
-          "S367",
-          "S368",
-          "S369"
+          "S804",
+          "S805",
+          "S806",
+          "S807",
+          "S808",
+          "S809",
+          "S810",
+          "S811",
+          "S812"
         ],
         "parent_segment_ref": null,
         "confidence": 1.0
       }
     },
     {
-      "element_id": "P119",
+      "element_id": "P254",
       "element_type": "AnalysisPass",
       "payload": {
-        "pass_id": "P119",
+        "pass_id": "P254",
         "pass_type": "Universal",
         "mechanism": "SourceCapture",
         "execution_status": "Success",
@@ -150,40 +150,40 @@
         ],
         "outputs": {
           "read_witness": {
-            "input_hash": "5d66954e4d33dda146d247e09c75a371789b83e04396eb7f4d9b69f6996e35a0",
-            "byte_count": 13803,
-            "character_count": 902,
+            "file_path": "verification_inputs/The Pocket Money Tracker System v1.docx",
             "read_mode": "Full",
-            "read_completion_status": true,
-            "partial_failure_detail": null,
+            "byte_count": 13803,
+            "input_hash": "5d66954e4d33dda146d247e09c75a371789b83e04396eb7f4d9b69f6996e35a0",
+            "character_count": 902,
             "format_detected": "docx",
-            "file_path": "verification_inputs/The Pocket Money Tracker System v1.docx"
+            "partial_failure_detail": null,
+            "read_completion_status": true
           },
           "mechanism_data": {
+            "source_ids": [
+              "S804",
+              "S805",
+              "S806",
+              "S807",
+              "S808",
+              "S809",
+              "S810",
+              "S811",
+              "S812"
+            ],
             "source_count": 9,
             "segment_count": 1,
             "source_atom_count": 0,
-            "source_ids": [
-              "S361",
-              "S362",
-              "S363",
-              "S364",
-              "S365",
-              "S366",
-              "S367",
-              "S368",
-              "S369"
-            ],
-            "cross_source_ordering": [],
             "non_text_source_ids": [],
+            "cross_source_ordering": [],
             "source_with_decoding_issues_ids": []
           },
           "mode_violations": []
         },
         "evaluated_scope": "All input material in this project",
-        "pass_started_at": "2026-05-11T19:48:40.594560+00:00",
-        "pass_completed_at": "2026-05-11T19:48:46.347594+00:00",
-        "elapsed_ms": 5753,
+        "pass_started_at": "2026-05-13T05:52:22.415749+00:00",
+        "pass_completed_at": "2026-05-13T05:52:27.517664+00:00",
+        "elapsed_ms": 5101,
         "confidence": 1.0
       }
     }
