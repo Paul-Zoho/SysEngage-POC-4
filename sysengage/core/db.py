@@ -5,107 +5,106 @@ Architectural commitment: Neon PostgreSQL via SQLAlchemy 2.x.
 Per Row 4 Applied §5 — connection pool, session factory, engine configuration.
 
 Connection priority:
-  1. NEON_DATABASE_URL — external Neon project (canonical target).
-  2. DATABASE_URL      — Replit-managed Helium Postgres (test/CI fallback only).
+  1. NEON_DATABASE_URL — original Replit-managed Neon instance (canonical data).
+  2. DATABASE_URL      — Replit Helium Postgres (fallback only).
+
+DSN sanitisation:
+  NEON_DATABASE_URL (set by Replit's Neon→Helium migration) contains
+  channel_binding=require.  Neon's PgBouncer pooler supports only
+  SCRAM-SHA-256, not SCRAM-SHA-256-PLUS (the channel-binding variant).
+  libpq ≥ 14 enforces require strictly, so the auth handshake fails.
+  We normalise to channel_binding=prefer, which uses the upgrade when
+  the server supports it but does not fail when it does not.
 
 Cold-start handling:
-  Neon free tier suspends after 5 minutes of inactivity. When suspended, the
-  HTTP proxy (port 443) responds immediately but port 5432 on the pooler can
-  take up to 60s to come back up. _wake_neon() sends an HTTP wake request then
-  polls port 5432 until available, so the first CLI run after a suspend works
-  without manual retries.
+  When Neon's compute is suspended the pooler accepts the TCP connection
+  but PostgreSQL takes 15-30 s to wake. We retry actual SELECT 1 calls
+  (not raw socket probes) for up to 60 s before giving up.
 """
 
 import os
 import sys
+import time
+import re
+import urllib.parse
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker, Session
 
-_database_url = os.environ.get("NEON_DATABASE_URL") or os.environ.get("DATABASE_URL")
-if not _database_url:
+import psycopg2  # noqa: F401 — imported here for libpq version log below
+
+
+def _sanitise_dsn(url: str) -> str:
+    """
+    Rewrite channel_binding=require → channel_binding=prefer in *url*.
+
+    Neon's PgBouncer pooler does not support SCRAM-SHA-256-PLUS (the
+    channel-binding variant of SCRAM). libpq ≥ 14 enforces 'require'
+    strictly, causing auth to fail against the pooler. 'prefer' retains
+    the security upgrade when the server supports it.
+    """
+    if "channel_binding=require" not in url:
+        return url
+    return url.replace("channel_binding=require", "channel_binding=prefer")
+
+
+def _wait_for_db(url: str, timeout_s: int = 60) -> None:
+    """
+    Retry a real SELECT 1 connection until Neon's compute is ready or
+    *timeout_s* expires.  Raw socket probing is not a valid DB-readiness
+    check (the pooler accepts TCP while PostgreSQL is still starting),
+    so we test an actual authenticated query here.
+
+    Raises nothing — if Neon is still starting when the timeout expires
+    we let SQLAlchemy's create_engine do its own connect_timeout handling.
+    """
+    from sqlalchemy import create_engine as _ce, text as _t
+
+    probe_engine = _ce(url, pool_size=1, max_overflow=0,
+                       connect_args={"connect_timeout": 5})
+    deadline = time.time() + timeout_s
+    attempt = 0
+    while time.time() < deadline:
+        attempt += 1
+        try:
+            with probe_engine.connect() as conn:
+                conn.execute(_t("SELECT 1"))
+            probe_engine.dispose()
+            if attempt > 1:
+                print(f"Neon ready after {attempt} probe(s).", file=sys.stderr)
+            return
+        except Exception:
+            time.sleep(3)
+    probe_engine.dispose()
+    print("Neon probe timed out — proceeding anyway.", file=sys.stderr)
+
+
+# ── select database URL ────────────────────────────────────────────────────────
+
+_raw_url = os.environ.get("NEON_DATABASE_URL") or os.environ.get("DATABASE_URL")
+if not _raw_url:
     raise RuntimeError(
         "No database URL configured. Set NEON_DATABASE_URL (Neon) or DATABASE_URL."
     )
 
+_database_url = _sanitise_dsn(_raw_url)
 
-def _wake_neon(url: str) -> None:
-    """
-    If the Neon pooler is suspended, send an HTTP wake request then poll
-    port 5432 until it accepts connections (up to 60s).
+# Log libpq version once at startup — helps diagnose future auth issues.
+import psycopg2 as _pg2
+print(
+    f"[db] libpq {_pg2.__libpq_version__} | "
+    f"{'Neon (NEON_DATABASE_URL)' if os.environ.get('NEON_DATABASE_URL') and _raw_url == os.environ['NEON_DATABASE_URL'] else 'Helium (DATABASE_URL)'}",
+    file=sys.stderr,
+)
 
-    Only called when NEON_DATABASE_URL is in use. Safe to call when Neon is
-    already awake — the initial socket probe returns immediately and no HTTP
-    request is made.
-    """
-    import re
-    import urllib.parse
-    import json
-    import http.client
-    import ssl
-    import socket
-    import time
+# Warm Neon before the persistent engine is created so the first CLI
+# run after a suspend succeeds without a manual retry.
+if (
+    os.environ.get("NEON_DATABASE_URL")
+    and _raw_url == os.environ["NEON_DATABASE_URL"]
+):
+    _wait_for_db(_database_url)
 
-    m = re.match(r"postgresql://([^:]+):([^@]+)@([^/]+)/([^?]+)", url)
-    if not m:
-        return
-    user, pw_enc, host, db_name = m.groups()
-    pw = urllib.parse.unquote(pw_enc)
-
-    # Resolve once; reuse for polling.
-    try:
-        ip = socket.getaddrinfo(host, 5432, socket.AF_INET)[0][4][0]
-    except Exception:
-        return
-
-    def _port_open(timeout: float = 2.0) -> bool:
-        try:
-            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            s.settimeout(timeout)
-            s.connect((ip, 5432))
-            s.close()
-            return True
-        except Exception:
-            return False
-
-    # Fast path: already awake.
-    if _port_open():
-        return
-
-    # Send HTTP wake request via Neon's serverless proxy.
-    print("Neon suspended — waking via HTTP proxy...", file=sys.stderr)
-    conn_str = f"postgresql://{user}:{pw}@{host}/{db_name}?sslmode=require"
-    try:
-        ctx = ssl.create_default_context()
-        c = http.client.HTTPSConnection(host, 443, context=ctx, timeout=30)
-        c.request(
-            "POST",
-            "/sql",
-            body=json.dumps({"query": "SELECT 1"}).encode(),
-            headers={
-                "Content-Type": "application/json",
-                "Neon-Connection-String": conn_str,
-            },
-        )
-        resp = c.getresponse()
-        resp.read()
-        c.close()
-    except Exception:
-        pass  # HTTP wake failed — let psycopg2 try anyway.
-
-    # Poll port 5432 for up to 60 s.
-    deadline = time.time() + 60
-    while time.time() < deadline:
-        time.sleep(3)
-        if _port_open():
-            print("Neon compute ready.", file=sys.stderr)
-            return
-
-    print("Neon port 5432 still starting — proceeding anyway.", file=sys.stderr)
-
-
-# Wake Neon before the engine is created so the first connection succeeds.
-if os.environ.get("NEON_DATABASE_URL") and _database_url == os.environ.get("NEON_DATABASE_URL"):
-    _wake_neon(_database_url)
+# ── persistent engine ─────────────────────────────────────────────────────────
 
 engine = create_engine(
     _database_url,
@@ -135,9 +134,9 @@ def get_next_n_sequence_values(
     """
     Fetch n consecutive values from a named Postgres sequence in ONE round trip.
 
-    Uses generate_series to call nextval n times server-side, avoiding n individual
-    round trips.  Critical for bulk-inserting large atom sets (e.g. 1000-atom
-    single-paragraph inputs) within the 10-second latency budget.
+    Uses generate_series to call nextval n times server-side, avoiding n
+    individual round trips.  Critical for bulk-inserting large atom sets
+    (e.g. 1000-atom single-paragraph inputs) within the 10-second latency budget.
     """
     if n <= 0:
         return []
