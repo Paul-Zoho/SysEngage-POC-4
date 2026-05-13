@@ -127,27 +127,44 @@ class TestPass0BSourceSpecIndices:
                     f"{idx} (valid range: 0..{n_sources - 1})"
                 )
 
-    def test_section_one_has_three_source_indices(self, multi_section_path: Path):
+    def test_section_one_has_four_source_indices(self, multi_section_path: Path):
         """
-        Section One in multi_section.md has 3 sentences → 3 source_spec_indices.
+        Section One in multi_section.md: 1 heading Source + 3 body Sources → 4 source_spec_indices (v0.7).
         """
         _, dr = run_pass_0(multi_section_path)
         source_specs = run_pass_0a(dr)
         segments = run_pass_0b(dr, source_specs)
 
         section_one = next(s for s in segments if s.title == "Section One")
-        assert len(section_one.source_spec_indices) == 3
+        assert len(section_one.source_spec_indices) == 4
 
-    def test_section_two_has_one_source_index(self, multi_section_path: Path):
+    def test_section_two_has_two_source_indices(self, multi_section_path: Path):
         """
-        Section Two in multi_section.md has 1 sentence → 1 source_spec_index.
+        Section Two in multi_section.md: 1 heading Source + 1 body Source → 2 source_spec_indices (v0.7).
         """
         _, dr = run_pass_0(multi_section_path)
         source_specs = run_pass_0a(dr)
         segments = run_pass_0b(dr, source_specs)
 
         section_two = next(s for s in segments if s.title == "Section Two")
-        assert len(section_two.source_spec_indices) == 1
+        assert len(section_two.source_spec_indices) == 2
+
+    def test_heading_source_is_first_in_source_spec_indices(self, multi_section_path: Path):
+        """
+        Per v0.7 §4.3.2 (F32): source_spec_indices[0] must point to a heading Source
+        (is_heading=True) for every Segment produced from a structured document.
+        """
+        _, dr = run_pass_0(multi_section_path)
+        source_specs = run_pass_0a(dr)
+        segments = run_pass_0b(dr, source_specs)
+
+        for seg in segments:
+            first_idx = seg.source_spec_indices[0]
+            assert source_specs[first_idx].is_heading, (
+                f"Segment '{seg.title}': source_spec_indices[0]={first_idx} "
+                f"is not a heading Source (is_heading=False). "
+                f"source_text={source_specs[first_idx].source_text!r}"
+            )
 
     def test_all_source_indices_covered(self, multi_section_path: Path):
         """

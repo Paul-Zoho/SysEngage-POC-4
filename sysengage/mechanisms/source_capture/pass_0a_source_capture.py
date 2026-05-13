@@ -1,7 +1,7 @@
 """
 Pass 0A — Source Capture (sentence-level).
 
-Per Implementation Spec v0.6 §4.2 and Row 4 Applied §9.
+Per Implementation Spec v0.7 §4.2 and Row 4 Applied §9.
 
 Mode: LPM — byte-for-byte verbatim content capture at sentence granularity.
 
@@ -14,13 +14,16 @@ What this Pass does:
   1. Scans decoded character stream for sentence boundaries.
   2. For each sentence (or fragment without terminal punctuation): creates
      one SourceSpec with verbatim source_text.
-  3. For structured formats (md/docx): pre-splits by heading lines so that
-     heading-section membership is tracked via section_index (used by Pass 0B).
-  4. segmentation_context populated via deterministic classifier per §4.2.5
-     (F29/F31 resolution v0.6): one of "sentence in prose" / "bullet item" /
-     "table row" / "definition line" / "multi-line block".
+  3. For structured formats (md/docx): when a structural heading is detected,
+     produces a dedicated heading Source (is_heading=True) BEFORE body Sources
+     for that section (F32 v0.7 Non-Loss Principle fix).
+  4. section_index tracks which heading section each Source belongs to (used
+     by Pass 0B to group Sources into Segments).
+  5. segmentation_context populated via deterministic classifier per §4.2.5
+     (F29/F31/F32 resolution v0.7): one of "heading" / "sentence in prose" /
+     "bullet item" / "table row" / "definition line" / "multi-line block".
 
-Sentence boundary detection (per Implementation Spec v0.6 §4.2.2):
+Sentence boundary detection (per Implementation Spec v0.7 §4.2.2):
   - Sentence ends at [.!?] followed by whitespace + capital letter (or open quote).
   - TITLE_ABBRS (Mr., Dr., Prof., etc.) NEVER trigger sentence splits — they
     always precede a name, not a new sentence.
@@ -36,22 +39,21 @@ section_index on SourceSpec:
   0, 1, 2, ... = ordinal index of the heading section this Source belongs to.
   Pass 0B reads section_index to assign Sources to Segments.
 
-segmentation_context classifier (v0.6 §4.2.5 / F29 + F31):
-  classify_segmentation_context() applies five rules in priority order:
+segmentation_context classifier (v0.7 §4.2.5 / F29 + F31 + F32):
+  classify_segmentation_context() applies six rules in priority order:
+    0. heading       — Pass 0 surfaced a structural heading marker (F32 v0.7)
     1. bullet item   — Pass 0 bullet-list marker (v1 stub, always False)
     2. table row     — Pass 0 table-row marker (v1 stub, always False)
     3. sentence in prose — contains [.!?], no embedded \\n (F31: moved up from v0.5 pos 4)
     4. definition line   — label:value, no terminator, no \\n (F31: moved down from v0.5 pos 3)
     5. multi-line block  — fallback
-  Rule 3 now fires before Rule 4 so prose sentences with categorical label
-  prefixes (e.g. "Customer focus: ...commitment...") classify correctly as prose.
 
-Verification criteria per Implementation Spec v0.6 §8.2:
+Verification criteria per Implementation Spec v0.7 §8.2:
   - At least one Source produced for non-empty, successfully-decoded input.
   - Source.source_text verbatim (byte-identical to decoded input portion).
   - segmentation_context is classifier-derived (non-empty string).
-  - Prose Sources → "sentence in prose"; metadata-only lines → "definition line";
-    signature/attribution blocks → "multi-line block".
+  - Heading Sources → "heading"; prose Sources → "sentence in prose".
+  - Non-Loss: heading text preserved in heading Sources (not discarded to Segment.title).
   - Determinism: same input → identical Source content, count, segmentation_context.
   - simple_paragraph.txt: exactly 4 Sources (F23 fix: sentence-level, not paragraph).
   - abbreviation_handling.txt: exactly 3 Sources, no false split on Dr./Inc./Mr.
@@ -66,6 +68,8 @@ from mechanisms.source_capture.decoders import DecodeResult
 from mechanisms.source_capture.errors import SegmentationPolicyError
 
 HEADING_LINE_PATTERN = re.compile(r"^#{1,6}\s+.+$")
+
+HEADING_TEXT_PATTERN = re.compile(r"^#{1,6}\s+(.+)$")
 
 TITLE_ABBRS = frozenset({
     "Mr", "Mrs", "Ms", "Dr", "Prof", "Sr", "Jr", "St", "Gov",
@@ -97,18 +101,24 @@ class SourceSpec:
     section_index: int | None = None
     is_non_text: bool = False
     has_decoding_issues: bool = False
+    is_heading: bool = False
 
 
 def classify_segmentation_context(
     source_text: str,
     *,
+    has_heading_marker: bool = False,
     has_bullet_marker: bool = False,
     has_table_marker: bool = False,
 ) -> str:
     """
-    Deterministic segmentation_context classifier per v0.6 §4.2.5 (F29/F31 resolution).
+    Deterministic segmentation_context classifier per v0.7 §4.2.5 (F29/F31/F32 resolution).
 
-    Applies five rules in priority order; first matching rule wins.
+    Applies six rules in priority order; first matching rule wins.
+
+    Rule 0 — heading (F32 v0.7):
+        Pass 0 surfaced a structural heading marker for this Source.
+        Highest priority — fires before all other rules.
 
     Rule 1 — bullet item:
         Pass 0 surfaced a bullet-list structural marker for this Source.
@@ -139,15 +149,20 @@ def classify_segmentation_context(
 
     Args:
         source_text: verbatim source_text of the captured Source.
+        has_heading_marker: True when Pass 0 flagged this Source as a structural
+            heading. Set to True by _split_structured_text() for heading Sources.
         has_bullet_marker: True when Pass 0 flagged this Source as from a
             bulleted list. Always False in v1.
         has_table_marker: True when Pass 0 flagged this Source as from a
             table row. Always False in v1.
 
     Returns:
-        One of: "bullet item", "table row", "sentence in prose",
+        One of: "heading", "bullet item", "table row", "sentence in prose",
                 "definition line", "multi-line block".
     """
+    if has_heading_marker:
+        return "heading"
+
     if has_bullet_marker:
         return "bullet item"
 
@@ -237,9 +252,16 @@ def _split_structured_text(text: str, has_decoding_issues: bool) -> list[SourceS
     """
     Split structured text (md/docx/pdf) into sentence-level Sources.
 
-    Headings are NOT captured as Sources — they become Segment titles in Pass 0B.
-    Each Source carries section_index indicating which heading section it belongs to.
-    Structural whitespace (blank lines between heading and content) is stripped.
+    Per v0.7 F32 Non-Loss Principle: each structural heading now produces a
+    dedicated heading Source (is_heading=True, segmentation_context="heading")
+    BEFORE the body Sources for that section. Heading text is captured verbatim
+    (stripped of the Markdown `#` prefix that was added by the decoder).
+
+    Emission order per section:
+      [heading Source, body Source 0, body Source 1, ...]
+
+    This guarantees the heading Source appears at index 0 in the section's
+    source_spec_indices list in Pass 0B (since indices are collected in list order).
     """
     lines = text.split("\n")
     sources: list[SourceSpec] = []
@@ -248,7 +270,8 @@ def _split_structured_text(text: str, has_decoding_issues: bool) -> list[SourceS
     found_heading = False
 
     for line in lines:
-        if HEADING_LINE_PATTERN.match(line):
+        m = HEADING_TEXT_PATTERN.match(line)
+        if m:
             if found_heading and current_section_lines:
                 section_text = "\n".join(current_section_lines)
                 section_sources = _split_section_content(
@@ -257,6 +280,16 @@ def _split_structured_text(text: str, has_decoding_issues: bool) -> list[SourceS
                 sources.extend(section_sources)
             section_index += 1
             found_heading = True
+            heading_text = m.group(1).strip()
+            sources.append(SourceSpec(
+                source_text=heading_text,
+                segmentation_context=classify_segmentation_context(
+                    heading_text, has_heading_marker=True
+                ),
+                section_index=section_index,
+                has_decoding_issues=has_decoding_issues,
+                is_heading=True,
+            ))
             current_section_lines = []
         else:
             if found_heading:

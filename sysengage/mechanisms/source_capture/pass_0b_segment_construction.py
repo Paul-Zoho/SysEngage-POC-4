@@ -135,6 +135,11 @@ def _build_segment_specs(
     For each heading, collects source_specs whose section_index matches.
     Only creates a Segment if at least one Source belongs to that section
     (Non-Empty-Segment rule per Implementation Spec v0.4 §4.3.2).
+
+    Per v0.7 §4.3.2 (F32): the heading Source (is_heading=True) is placed at
+    position 0 of source_spec_indices. Pass 0A already emits heading Sources
+    before body Sources so this is guaranteed by list order; the explicit sort
+    makes it contract-level and robust to future reordering.
     """
     section_to_source_indices: dict[int, list[int]] = {}
     for src_idx, src_spec in enumerate(source_specs):
@@ -148,10 +153,16 @@ def _build_segment_specs(
         if not indices:
             continue
 
+        # Guarantee heading Source at position 0 per v0.7 §4.3.2.
+        sorted_indices = sorted(
+            indices,
+            key=lambda i: (0 if source_specs[i].is_heading else 1, i),
+        )
+
         segment_specs.append(SegmentSpec(
             title=title,
             description=f"Section: {title}",
-            source_spec_indices=indices,
+            source_spec_indices=sorted_indices,
         ))
 
     return segment_specs

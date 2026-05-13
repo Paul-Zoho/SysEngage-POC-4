@@ -49,17 +49,17 @@ class TestPass0AHappyPath:
 
         assert len(sources) == 4
 
-    def test_multi_section_produces_four_sources(self, multi_section_path: Path):
+    def test_multi_section_produces_six_sources(self, multi_section_path: Path):
         """
-        4 Sources expected for multi_section.md per §9.1.2.
-        Section One: 3 sentences → 3 Sources.
-        Section Two: 1 sentence → 1 Source.
-        Total: 4 Sources.
+        6 Sources expected for multi_section.md per §9.1.2 (v0.7 F32).
+        Section One: 1 heading Source + 3 body Sources = 4.
+        Section Two: 1 heading Source + 1 body Source = 2.
+        Total: 6 Sources.
         """
         _, dr = run_pass_0(multi_section_path)
         sources = run_pass_0a(dr)
 
-        assert len(sources) == 4
+        assert len(sources) == 6
 
     def test_abbreviation_produces_three_sources(self, abbreviation_path: Path):
         """
@@ -144,25 +144,25 @@ class TestPass0ASectionIndex:
         assert 0 in section_indices, "section_index=0 expected for Section One"
         assert 1 in section_indices, "section_index=1 expected for Section Two"
 
-    def test_section_one_has_three_sources(self, multi_section_path: Path):
+    def test_section_one_has_four_sources(self, multi_section_path: Path):
         """
-        Section One in multi_section.md has 3 sentences → 3 Sources with section_index=0.
+        Section One in multi_section.md: 1 heading Source + 3 body Sources = 4 with section_index=0 (v0.7).
         """
         _, dr = run_pass_0(multi_section_path)
         sources = run_pass_0a(dr)
 
         section_0_sources = [s for s in sources if s.section_index == 0]
-        assert len(section_0_sources) == 3
+        assert len(section_0_sources) == 4
 
-    def test_section_two_has_one_source(self, multi_section_path: Path):
+    def test_section_two_has_two_sources(self, multi_section_path: Path):
         """
-        Section Two in multi_section.md has 1 sentence → 1 Source with section_index=1.
+        Section Two in multi_section.md: 1 heading Source + 1 body Source = 2 with section_index=1 (v0.7).
         """
         _, dr = run_pass_0(multi_section_path)
         sources = run_pass_0a(dr)
 
         section_1_sources = [s for s in sources if s.section_index == 1]
-        assert len(section_1_sources) == 1
+        assert len(section_1_sources) == 2
 
 
 class TestPass0ASegmentationContext:
@@ -179,11 +179,24 @@ class TestPass0ASegmentationContext:
             )
 
     def test_segmentation_context_for_structured_text(self, multi_section_path: Path):
+        """
+        Body Sources in multi_section.md are prose → 'sentence in prose'.
+        Heading Sources are structural → 'heading'. (v0.7 F32)
+        """
         _, dr = run_pass_0(multi_section_path)
         sources = run_pass_0a(dr)
 
         for src in sources:
-            assert src.segmentation_context == "sentence in prose"
+            if src.is_heading:
+                assert src.segmentation_context == "heading", (
+                    f"Heading Source must have segmentation_context='heading', "
+                    f"got {src.segmentation_context!r} for: {src.source_text!r}"
+                )
+            else:
+                assert src.segmentation_context == "sentence in prose", (
+                    f"Body Source must have segmentation_context='sentence in prose', "
+                    f"got {src.segmentation_context!r} for: {src.source_text!r}"
+                )
 
 
 class TestPass0ABytePreservation:
@@ -487,10 +500,106 @@ class TestPass0AClassifier:
         result2 = classify_segmentation_context(text)
         assert result1 == result2
 
-    def test_all_five_values_reachable(self):
-        """Every classifier value is reachable via the appropriate input."""
+    def test_all_six_values_reachable(self):
+        """Every classifier value is reachable via the appropriate input (v0.7: 6 values)."""
+        assert classify_segmentation_context("x", has_heading_marker=True) == "heading"
         assert classify_segmentation_context("x", has_bullet_marker=True) == "bullet item"
         assert classify_segmentation_context("x", has_table_marker=True) == "table row"
         assert classify_segmentation_context("Owner: Alice") == "definition line"
         assert classify_segmentation_context("This is prose.") == "sentence in prose"
         assert classify_segmentation_context("No punctuation here") == "multi-line block"
+
+    def test_heading_marker_returns_heading(self):
+        """Rule 0: has_heading_marker=True → 'heading' regardless of text content."""
+        assert classify_segmentation_context(
+            "Section One", has_heading_marker=True
+        ) == "heading"
+
+    def test_heading_marker_beats_bullet(self):
+        """Rule 0 fires before Rule 1 — heading marker takes priority over bullet marker."""
+        assert classify_segmentation_context(
+            "x", has_heading_marker=True, has_bullet_marker=True
+        ) == "heading"
+
+    def test_heading_marker_beats_table(self):
+        """Rule 0 fires before Rule 2 — heading marker takes priority over table marker."""
+        assert classify_segmentation_context(
+            "x", has_heading_marker=True, has_table_marker=True
+        ) == "heading"
+
+    def test_heading_marker_beats_definition_line(self):
+        """Rule 0 fires before Rule 4 — heading marker beats definition-line content."""
+        assert classify_segmentation_context(
+            "Owner: Alice", has_heading_marker=True
+        ) == "heading"
+
+    def test_heading_marker_beats_sentence_in_prose(self):
+        """Rule 0 fires before Rule 3 — heading marker beats prose sentence content."""
+        assert classify_segmentation_context(
+            "He is a clinician.", has_heading_marker=True
+        ) == "heading"
+
+    def test_heading_sources_have_is_heading_true(self, multi_section_path: Path):
+        """
+        Integration (v0.7 F32): all Sources emitted for structural headings must
+        have is_heading=True and segmentation_context='heading'.
+        """
+        _, dr = run_pass_0(multi_section_path)
+        sources = run_pass_0a(dr)
+
+        heading_sources = [s for s in sources if s.is_heading]
+        assert len(heading_sources) == 2, (
+            f"multi_section.md has 2 headings, expected 2 heading Sources, got {len(heading_sources)}"
+        )
+        for src in heading_sources:
+            assert src.segmentation_context == "heading", (
+                f"is_heading Source must have segmentation_context='heading', "
+                f"got {src.segmentation_context!r} for: {src.source_text!r}"
+            )
+
+    def test_heading_source_text_strips_hash_prefix(self, multi_section_path: Path):
+        """
+        Integration (v0.7 F32): heading Source.source_text must NOT include the
+        Markdown `## ` prefix. The decoder emits `## Section One`; the heading
+        Source must capture `Section One` only.
+        """
+        _, dr = run_pass_0(multi_section_path)
+        sources = run_pass_0a(dr)
+
+        heading_texts = {s.source_text for s in sources if s.is_heading}
+        assert "Section One" in heading_texts, (
+            f"Expected 'Section One' in heading source_text values, got {heading_texts!r}"
+        )
+        assert "Section Two" in heading_texts, (
+            f"Expected 'Section Two' in heading source_text values, got {heading_texts!r}"
+        )
+        for text in heading_texts:
+            assert not text.startswith("#"), (
+                f"Heading source_text must not include '#' prefix, got {text!r}"
+            )
+
+    def test_heading_source_is_first_in_its_section(self, multi_section_path: Path):
+        """
+        Integration (v0.7 F32): for each section_index, the heading Source must
+        appear before all body Sources in the returned list order.
+        """
+        _, dr = run_pass_0(multi_section_path)
+        sources = run_pass_0a(dr)
+
+        for section_idx in (0, 1):
+            section_sources = [
+                (pos, s) for pos, s in enumerate(sources) if s.section_index == section_idx
+            ]
+            assert section_sources, f"No sources for section_index={section_idx}"
+            heading_positions = [pos for pos, s in section_sources if s.is_heading]
+            body_positions = [pos for pos, s in section_sources if not s.is_heading]
+            assert len(heading_positions) == 1, (
+                f"section_index={section_idx}: expected exactly 1 heading Source, "
+                f"got {len(heading_positions)}"
+            )
+            if body_positions:
+                assert heading_positions[0] < min(body_positions), (
+                    f"section_index={section_idx}: heading Source at list position "
+                    f"{heading_positions[0]} must precede first body Source at "
+                    f"{min(body_positions)}"
+                )

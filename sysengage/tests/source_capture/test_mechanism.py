@@ -211,8 +211,9 @@ class TestEndToEndHappyPath:
     ):
         """
         Full mechanism run for multi_section.md.
-        Expected per §9.1.2 (v0.4): 4 Sources, 2 Segments, 0 SourceAtoms.
-        Section One: 3 sentences → 3 Sources. Section Two: 1 sentence → 1 Source.
+        Expected per §9.1.2 (v0.7 F32): 6 Sources, 2 Segments, 0 SourceAtoms.
+        Section One: 1 heading + 3 body = 4 Sources (section_index=0).
+        Section Two: 1 heading + 1 body = 2 Sources (section_index=1).
         """
         result = run_source_capture(
             multi_section_path,
@@ -221,7 +222,7 @@ class TestEndToEndHappyPath:
         )
 
         assert result.execution_status == "Success"
-        assert result.source_count == 4
+        assert result.source_count == 6
         assert result.segment_count == 2
         assert result.source_atom_count == 0
 
