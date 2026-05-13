@@ -1,0 +1,4575 @@
+{
+  "sysengage_ledger_version": "2.11",
+  "schema_id": "sysengage.ledger.instance.v2_11",
+  "row_target": null,
+  "run_id": "P255",
+  "created_utc": "2026-05-13T06:03:17.134740+00:00",
+  "generator": "sysengage_source_capture_v0.6",
+  "elements": [
+    {
+      "element_id": "S813",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S813",
+        "source_text": "Scope & Context Document\nVersion: 1.1\nDate: 24 April 2026\nChanges from v1.0:\nRestructured around the six Zachman interrogatives (What, How, Where, Who, When, Why) per the Zachman Row 1 Planner research document\nRewritten to operate at executive/strategic level rather than product-feature level\nAdded explicit distinction between internal data model (ledger) and external Viewpoints\nRow 6 detail relocated to future Row 6 Understanding exercise\nRegulated-industry markets added as explicit strategic scope\nImplementation-phasing \"out of scope in v1\" items removed — those are Row 3/4 decisions\n21 v1.0 review comments resolved (see Appendix A for disposition)",
+        "segmentation_context": "multi-line block",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S814",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S814",
+        "source_text": "This document describes SysEngage at Zachman Row 1 (Planner / Contextual) level.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S815",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S815",
+        "source_text": " Per the Zachman Row 1 Planner research document (Zachman_Framework_Row_1_Planner.docx), Row 1 provides an executive, strategic view of the enterprise — its business purpose, scope, and context.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S816",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S816",
+        "source_text": " It does not address implementation, physical deployment, or detailed design; those belong to Rows 2 through 5.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S817",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S817",
+        "source_text": "The document follows the standard Zachman interrogative order (What, How, Where, Who, When, Why) with two framing sections:\nSection 1 — Purpose: a concise mission statement orienting the reader\nSections 2–7 — the six Zachman interrogatives at Row 1 level\nSection 8 — Row 1 Design Principles: cross-cutting strategic principles\nSection 9 — Transition to Row 2\nSection 10 — Strategic Risks\nSection 11 — Glossary\nAppendix A — Disposition of v1.0 review comments\nAppendix B — Open Decisions\n\nContent classes:\n [SOURCED] Content directly supported by Cluster A source material, the Zachman Row 1 Planner research doc, or the Row 1 Where column research paper.",
+        "segmentation_context": "multi-line block",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S818",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S818",
+        "source_text": " [INFERRED] Content not explicitly stated but drawn as reasonable inference, with rationale.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S819",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S819",
+        "source_text": " [RESOLVED] Content where sources contradicted; one position adopted with rationale.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S820",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S820",
+        "source_text": " [OPEN] Content flagged for explicit decision.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S821",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S821",
+        "source_text": " [REVISED v1.1] Content newly written or substantially changed in v1.1 in response to v1.0 review comments.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S822",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S822",
+        "source_text": " [SOURCED] SysEngage is a tool that takes unstructured input describing a system or product, transforms it into a structured specification expressed across the Zachman Framework, and generates recommendations or information requests to fully define the described product.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S823",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S823",
+        "source_text": "Source: sys_engage_specification_v2.md line 3, with minor editing.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S824",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S824",
+        "source_text": " [INFERRED] Systems engineering practice requires turning natural-language descriptions of intended systems into structured, traceable, validated requirements.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S825",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S825",
+        "source_text": " This is historically labour-intensive, skill-sensitive, and produces inconsistent coverage across practitioners.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S826",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S826",
+        "source_text": " SysEngage exists to automate and systematise this transformation while preserving the rigour of the Zachman Framework and keeping the engineer in control of judgement and iteration.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S827",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S827",
+        "source_text": " [REVISED v1.1] Response to v1.0 comments C1 and C6.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S828",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S828",
+        "source_text": "SysEngage makes a fundamental distinction between what the tool stores internally and what the user sees:\n\n [INFERRED] This distinction matters at Row 1 because it bounds what is strategic-intent versus what is implementation-detail.",
+        "segmentation_context": "multi-line block",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S829",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S829",
+        "source_text": " Row 1 commits to: (a) a structured internal data model exists, and (b) multiple user-facing Viewpoints are produced from it.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S830",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S830",
+        "source_text": " Rows 3–5 decide the physical realisation of both.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S831",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S831",
+        "source_text": " [SOURCED] Per Zachman Row 1 Planner research: the What interrogative identifies the primary objectives, scope, and high-level data domains of the enterprise or system.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S832",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S832",
+        "source_text": " [INFERRED] SysEngage exists to:\nReduce variability in the systems-engineering artefacts produced from unstructured input\nImprove completeness of architectural coverage by surfacing gaps systematically rather than relying on reviewer memory\nProvide a machine-readable canonical record of analyses, making systems-engineering work auditable\nLower the cost of systems-engineering rigour for organisations that cannot afford extensive specialist labour\nEnable iterative refinement of requirements through human-in-the-loop dialogue",
+        "segmentation_context": "multi-line block",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S833",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S833",
+        "source_text": " [REVISED v1.1] Per v1.0 comment C6: data domains at Row 1 are conceptual deliverable types, not ledger elements.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S834",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S834",
+        "source_text": " Ledger element listings belong at Row 3 (Designer) level.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S835",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S835",
+        "source_text": "The conceptual data domains SysEngage processes and produces:",
+        "segmentation_context": "multi-line block",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S836",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S836",
+        "source_text": " [REVISED v1.1] Per v1.0 comments C7, C9, C10, C12, C14: the long list of implementation exclusions in v1.0 was wrong for Row 1.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S837",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S837",
+        "source_text": " Those belong at Row 3 (Designer) or Row 4 (Builder).",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S838",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S838",
+        "source_text": " At Row 1, strategic out-of-scope items are much narrower.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S839",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S839",
+        "source_text": "At the strategic level, SysEngage does not:\nDesign the subject system itself.",
+        "segmentation_context": "multi-line block",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S840",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S840",
+        "source_text": " SysEngage analyses and structures; the design of the system being described is the practitioner's responsibility (Row 1 spec v1.6 §1).",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S841",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S841",
+        "source_text": "Replace the practitioner's judgement on iteration sufficiency.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S842",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S842",
+        "source_text": " SysEngage supports the decision of when a design is sufficiently complete to stop iterating, but does not make it autonomously (v1.0 comment C8).",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S843",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S843",
+        "source_text": "Correct the practitioner's input.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S844",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S844",
+        "source_text": " Where input is contradictory or ambiguous, SysEngage surfaces the ambiguity rather than resolving it silently (Review Process v2.0 Non-Intervention Principle).",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S845",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S845",
+        "source_text": " [INFERRED] All implementation-level choices (which ledger backend, what integrations, what platforms, code generation versus specification-only output) are deferred to Row 3/4/5 decisions.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S846",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S846",
+        "source_text": " They are not strategic exclusions at Row 1.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S847",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S847",
+        "source_text": " [SOURCED] Per Zachman Row 1 Planner research: the How interrogative describes strategic methods and business rules at the high level.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S848",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S848",
+        "source_text": " Not business processes (Row 2) or logical design (Row 3).",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S849",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S849",
+        "source_text": " [SOURCED] SysEngage's strategic method is governed AI-driven transformation of unstructured input into structured specifications, using the Zachman Framework as the internal classification taxonomy, with explicit human-in-the-loop refinement cycles.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S850",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S850",
+        "source_text": "Strategic methodology elements:\nIterative, not one-shot.",
+        "segmentation_context": "multi-line block",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S851",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S851",
+        "source_text": " Quality improves through refinement cycles rather than first-pass completeness.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S852",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S852",
+        "source_text": " (v9.md Process Characteristics)\nGoverned transformation.",
+        "segmentation_context": "multi-line block",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S853",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S853",
+        "source_text": " Every step declares its mode (Interpretive, Canonicalisation, Derivation, Literal Persistence).",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S854",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S854",
+        "source_text": " Uncontrolled AI normalisation is prevented by design.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S855",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S855",
+        "source_text": " (SE-TMS-001)\nProvenance-anchored.",
+        "segmentation_context": "multi-line block",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S856",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S856",
+        "source_text": " Every derived artefact traces to verbatim source text.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S857",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S857",
+        "source_text": " Row context is established through shared provenance, not manual linking.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S858",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S858",
+        "source_text": " (Major Issues Q1)\nHuman-in-the-loop by design.",
+        "segmentation_context": "multi-line block",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S859",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S859",
+        "source_text": " The practitioner is not supervising the tool, they are collaborating with it.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S860",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S860",
+        "source_text": " Phase 10 user review is first-class, not an afterthought.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S861",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S861",
+        "source_text": " (v9.md Phase 10)",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S862",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S862",
+        "source_text": " [SOURCED] The following rules are strategic (they frame how SysEngage operates at all rows) and appear consistently across source material:\nNo source statement is silently discarded (Non-Loss)\nSource text is preserved verbatim, byte-for-byte (Literal Persistence when required)\nEvery transformation declares an active mode (SE-TMS-001)\nAmbiguity in input is preserved, not resolved arbitrarily\nThe same input produces the same output under the same model (Determinism)\nThe entire input is read (Whole-Document Coverage).",
+        "segmentation_context": "multi-line block",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S863",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S863",
+        "source_text": " Partial processing is a defect.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S864",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S864",
+        "source_text": "Review of outputs is non-interventionist — observed issues are framed as process signals, not output corrections (Review Process v2.0 §4.1)",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S865",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S865",
+        "source_text": " [REVISED v1.1] Response to v1.0 comment C8: this was misframed in v1.0 as \"not replace engineering judgement.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S866",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S866",
+        "source_text": "\" The real Row 1 question is \"when is iteration sufficient?",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S867",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S867",
+        "source_text": "\"\nSysEngage supports, but does not autonomously make, the decision of when iterative refinement may terminate.",
+        "segmentation_context": "multi-line block",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S868",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S868",
+        "source_text": " Strategic principle: iteration ends when the practitioner judges the specification is good enough for its intended downstream purpose, not when SysEngage detects zero remaining Gaps.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S869",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S869",
+        "source_text": " The definition of \"good enough\" is a practitioner-owned strategic judgement; the tool provides the evidence (coverage, gaps, quality scores) to inform it.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S870",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S870",
+        "source_text": " [OPEN] OD-R1-01: what evidence does SysEngage surface to support the iteration-sufficiency decision?",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S871",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S871",
+        "source_text": " Candidate set: coverage percentage, unresolved-Gap count by severity, quality-score distribution, stakeholder-Question backlog.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S872",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S872",
+        "source_text": " Exact set to be resolved during Phase 2 process specification.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S873",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S873",
+        "source_text": " [SOURCED] Per Zachman Row 1 Where column research paper: Row 1 Where defines the enterprise's operational context — geographic regions, regulated industries, and organisational boundaries.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S874",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S874",
+        "source_text": " Explicitly excluded at Row 1: physical locations, technical environments, deployment platforms, network topologies (those are Row 3+ concerns).",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S875",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S875",
+        "source_text": " [REVISED v1.1] Response to v1.0 comments.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S876",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S876",
+        "source_text": " Where was essentially absent in v1.0.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S877",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S877",
+        "source_text": " [INFERRED] SysEngage is strategically scoped for global operation.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S878",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S878",
+        "source_text": " It imposes no inherent geographic restrictions on the systems it analyses or on where it operates.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S879",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S879",
+        "source_text": " This is consistent with a tool designed to ingest natural-language input without region-specific assumptions.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S880",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S880",
+        "source_text": " [OPEN] OD-R1-02: confirm global-scope interpretation.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S881",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S881",
+        "source_text": " Alternative would be to scope for specific regional markets in v1 (e.g., UK/EU initially).",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S882",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S882",
+        "source_text": " Global scope is the less-restrictive default.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S883",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S883",
+        "source_text": " [REVISED v1.1] Response to v1.0 comment C5: compliance with regulated industries is in scope.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S884",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S884",
+        "source_text": " Standards discovery is a tool capability.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S885",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S885",
+        "source_text": " [SOURCED] SysEngage operates in regulated-industry markets.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S886",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S886",
+        "source_text": " Per the Where research paper, this aligns with TOGAF / FEAF / ISO-IEC-IEEE 15288 strategic-context definitions.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S887",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S887",
+        "source_text": "Regulated industries explicitly in strategic scope:\nHealthcare (e.g., GDPR, HIPAA, MHRA, FDA, IEC 62304 and equivalents)\nDefense (e.g., ITAR, DEF STAN, DO-178C, DO-254, MIL-STD-498)\nFinance (e.g., SOX, Basel III, GDPR-financial, FCA conduct requirements)\nSafety-critical (e.g., ISO 26262 automotive, IEC 61508 industrial, EN 50128 rail)\nAny other regulated industry the user's input concerns\n\n [REVISED v1.1] Compliance-standards discovery is a tool capability.",
+        "segmentation_context": "multi-line block",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S888",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S888",
+        "source_text": " SysEngage detects regulatory references in user input and identifies applicable standards as an analytical output, rather than hard-coding a fixed list of supported regimes.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S889",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S889",
+        "source_text": " This makes SysEngage extensible to new industries as input demands.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S890",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S890",
+        "source_text": " [INFERRED] SysEngage operates within the enterprise scope defined by its user.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S891",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S891",
+        "source_text": " It does not assume a specific organisational setting (government, commercial, academic, hybrid).",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S892",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S892",
+        "source_text": " It does assume the user has authority to supply input describing their intended system and to receive the analytical outputs.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S893",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S893",
+        "source_text": " [SOURCED] Per the Where column research paper, Row 1 Where explicitly excludes:\nPhysical deployment locations (data centres, server rooms, cloud regions)\nTechnical environment choices (cloud versus on-premise versus edge)\nNetwork topology (public cloud, VPN, air-gap)\nSpecific cloud providers or platforms\n\nThese are Row 3 (Designer) and Row 4 (Builder) concerns.",
+        "segmentation_context": "multi-line block",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S894",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S894",
+        "source_text": " They are deferred intentionally at Row 1.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S895",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S895",
+        "source_text": " [SOURCED] Per Zachman Row 1 Planner research: Who at Row 1 defines stakeholder groups and high-level roles at the strategic level, not detailed roles and responsibilities (Row 2) or user-interface specifics (Row 5).",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S896",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S896",
+        "source_text": " [OPEN] Response to v1.0 comments C15, C16: the following stakeholder groups were flagged for explicit discussion.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S897",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S897",
+        "source_text": " [SOURCED] Per Zachman Row 1 Planner research: When at Row 1 defines high-level timelines and key milestones at the strategic level.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S898",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S898",
+        "source_text": " Not project schedules (Row 2) or runtime scheduling (Row 4).",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S899",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S899",
+        "source_text": " [INFERRED] SysEngage is an iterative, session-spanning tool.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S900",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S900",
+        "source_text": " Temporal characteristics at the strategic level:\nA single analysis typically spans multiple interaction sessions, not a single one-shot conversation.",
+        "segmentation_context": "multi-line block",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S901",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S901",
+        "source_text": "State persists between sessions, carried by the canonical data model.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S902",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S902",
+        "source_text": "A complete analysis of a substantial system is measured in hours to days of practitioner effort, not minutes.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S903",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S903",
+        "source_text": "Analyses may be reopened long after initial completion to incorporate new inputs or observations from Row 6 operational feedback.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S904",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S904",
+        "source_text": " [REVISED v1.1] Response to v1.0 comment C8: iteration termination is a strategic When concern, not a Row 1 \"non-purpose.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S905",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S905",
+        "source_text": "\"\n [INFERRED] SysEngage iteration terminates when the practitioner judges \"good enough for the intended downstream use.",
+        "segmentation_context": "multi-line block",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S906",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S906",
+        "source_text": "\" Good enough is not a fixed metric; it depends on what the Row N output will feed.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S907",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S907",
+        "source_text": "For early-stage concept exploration, high-level coverage may be sufficient.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S908",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S908",
+        "source_text": "For regulated-industry requirement handover to design, completeness and audit coverage become tighter.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S909",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S909",
+        "source_text": "For late-stage consolidation before implementation, essentially all gaps must be closed or explicitly accepted.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S910",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S910",
+        "source_text": "SysEngage provides the evidence (gap count by severity, coverage percentages, quality distributions) to support this decision.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S911",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S911",
+        "source_text": " Row 1 commits to \"SysEngage informs iteration sufficiency\" — the specific metric set lives at Row 2 (Owner) process decisions.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S912",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S912",
+        "source_text": " [INFERRED] SysEngage is intended to be used over a multi-year timeframe per installed instance.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S913",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S913",
+        "source_text": " Analyses and their source ledgers are long-lived records, not transient computations.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S914",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S914",
+        "source_text": " This implies:\nLedger schema versioning must be forward/backward compatible (this has already surfaced as risk RK-02)\nMode semantics must be stable across tool versions, or explicitly versioned\nStored analyses from a prior tool version must remain readable / processable by later versions",
+        "segmentation_context": "multi-line block",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S915",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S915",
+        "source_text": " [SOURCED] Per Zachman Row 1 Planner research: Why at Row 1 explains the reasons and motivations behind the enterprise objectives and strategies.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S916",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S916",
+        "source_text": " Provides rationale and justification for the existence of the tool itself.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S917",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S917",
+        "source_text": " [INFERRED] SysEngage exists because:\nThe gap between natural-language descriptions of intended systems and rigorous, structured, Zachman-framed specifications is large and persistent.",
+        "segmentation_context": "multi-line block",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S918",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S918",
+        "source_text": "Practitioners producing specifications manually exhibit significant variance in coverage, rigour, and structural choices — even with the same input and the same framework.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S919",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S919",
+        "source_text": "Recent advances in AI language models make automated systematic transformation feasible in a way that was not practical a decade ago.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S920",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S920",
+        "source_text": "However, AI default behaviour (normalise, summarise, \"improve\") is counter to the systems-engineering requirement of preservation, rigour, and auditable provenance.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S921",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S921",
+        "source_text": " A governed methodology is needed.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S922",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S922",
+        "source_text": "An iterative human-in-the-loop approach, governed by explicit transformation modes, preserves practitioner control while amplifying practitioner output.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S923",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S923",
+        "source_text": " [INFERRED] Expected benefits at Row 1 level:\nConsistency — the same input, same model, same run produces the same outputs (Determinism principle)\nCompleteness — gaps are surfaced systematically rather than emerging during downstream rework\nAuditability — every artefact traces to verbatim source text; every decision records its mode and rationale\nReduced practitioner variance — less skill-sensitive than manual Zachman analysis\nFaster iteration — the cost of running the analysis again after input refinement is much lower than manual re-analysis",
+        "segmentation_context": "multi-line block",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S924",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S924",
+        "source_text": " [INFERRED] Why would an enterprise adopt SysEngage?",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S925",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S925",
+        "source_text": "Reduced rework cost in downstream design and build phases, because gaps are found earlier\nHigher audit defensibility in regulated industries, because provenance is preserved\nLower talent barrier — practitioners need less Zachman-specific expertise to produce Zachman-quality output\nConsistent artefact structure across projects, improving portfolio comparability and reviewability",
+        "segmentation_context": "multi-line block",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S926",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S926",
+        "source_text": "See Section 10 (Strategic Risks).",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S927",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S927",
+        "source_text": "These principles cross-cut all six interrogatives and govern behaviour at all rows.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S928",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S928",
+        "source_text": " They are Row 1 (strategic) content because they shape the tool's fundamental character, not its implementation details.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S929",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S929",
+        "source_text": " [SOURCED] No source statement is silently discarded.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S930",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S930",
+        "source_text": " Every statement results in classification, traceability, gap capture, or explicit rejection with rationale.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S931",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S931",
+        "source_text": " (Row 1 spec v1.6 §2.2)",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S932",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S932",
+        "source_text": " [SOURCED] Source text from the user's input is preserved exactly.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S933",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S933",
+        "source_text": " No paraphrasing, summarisation, or normalisation.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S934",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S934",
+        "source_text": " (Row 1 spec v1.6 §4.1; SE-TMS-001 Literal Persistence Mode)",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S935",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S935",
+        "source_text": " [SOURCED] Every transformation declares an explicit mode.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S936",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S936",
+        "source_text": " Uncontrolled transformation is a defect.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S937",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S937",
+        "source_text": " This principle exists because AI default behaviour is to normalise content, which violates preservation.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S938",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S938",
+        "source_text": " (SE-TMS-001; Major Issues Q1)",
+        "segmentation_context": "multi-line block",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S939",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S939",
+        "source_text": " [SOURCED] Ambiguity in user input is preserved, not resolved arbitrarily.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S940",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S940",
+        "source_text": " If a statement has two possible interpretations, both are represented with appropriate confidence.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S941",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S941",
+        "source_text": " (Row 1 spec v1.6 §2.3)\n[REFINED v1.2]  Per R1-AMEND-5 / D1 (Strand C) / R2-AMEND-1: this strategic commitment is operationalised at Row 2 by the Concern entity (CON-NNN), which captures ambiguous source content as a distinct lifecycle artefact requiring Practitioner clarification before classification proceeds.",
+        "segmentation_context": "multi-line block",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S942",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S942",
+        "source_text": " The Concern entity is mutually exclusive with Signal at production time — a piece of source content produces either a Signal (clear, ready for classification) or a Concern (blocked on Practitioner clarification).",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S943",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S943",
+        "source_text": " Row 1's strategic commitment is unchanged; Row 2 makes it operationally enforceable.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S944",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S944",
+        "source_text": " [REVISED v1.1] Response to v1.0 comment C18: this principle was incomplete in v1.0.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S945",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S945",
+        "source_text": " Cross-row relationships use two mechanisms, not only one.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S946",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S946",
+        "source_text": "[REFINED v1.2]  Per R1-AMEND-6 / R2-AMEND-3: a third cross-row mechanism is added — independent source re-analysis at every row.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S947",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S947",
+        "source_text": " Top-down elaboration alone is insufficient; each row engages with the original source directly to surface what its analytical lens uniquely reveals.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S948",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S948",
+        "source_text": "[SOURCED] Cross-row relationships are established through:\nShared provenance — rows analysing the same original source material share provenance-based lineage (verbatim text matching, segmentation anchors).",
+        "segmentation_context": "multi-line block",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S949",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S949",
+        "source_text": " (Major Issues Q1)\nUpper-row signal feed — requirements produced at Row N act as additional Signals feeding analysis at Row N+1.",
+        "segmentation_context": "multi-line block",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S950",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S950",
+        "source_text": " This means Row N+1 analyses the original source material AND the structured output of Row N.\nCross-row linkage is never established through manually authored hard links.",
+        "segmentation_context": "multi-line block",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S951",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S951",
+        "source_text": " The system remains deterministic, re-analysable, and drift-detectable.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S952",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S952",
+        "source_text": " [SOURCED] When SysEngage behaviour is reviewed, observed issues are framed as process signals (the process could do better), not as defects requiring output correction.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S953",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S953",
+        "source_text": " Correction is out of scope for review; improvement is in scope.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S954",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S954",
+        "source_text": " (Review Process v2.0 §4.1)",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S955",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S955",
+        "source_text": " [SOURCED] Given the same input and model version, SysEngage produces the same output.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S956",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S956",
+        "source_text": " Non-determinism is either (a) bounded to semantically equivalent variants recognised as equivalent, or (b) a defect.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S957",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S957",
+        "source_text": " (Row 1 spec v1.6 §4.1; POC v5 Signal Verbatim Equivalence)",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S958",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S958",
+        "source_text": " [SOURCED] The entire input is read.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S959",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S959",
+        "source_text": " Partial processing is a defect.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S960",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S960",
+        "source_text": " Sampling is permissible only under an explicitly-invoked mode.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S961",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S961",
+        "source_text": " A Read Witness proves coverage.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S962",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S962",
+        "source_text": " (Row 1 spec v1.6 Pass 0 and Pass 0A)",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S963",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S963",
+        "source_text": " [SOURCED] SysEngage is not fully autonomous.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S964",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S964",
+        "source_text": " User review is first-class.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S965",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S965",
+        "source_text": " Questions and Answers are first-class data-model elements.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S966",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S966",
+        "source_text": " (v9.md Process Characteristics).",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S967",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S967",
+        "source_text": "[REFINED v1.2]  Per R1-AMEND-7 / D4 (Strand C) / R2-AMEND-7: human-in-the-loop is sharpened to require explicit Practitioner acts at row close.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S968",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S968",
+        "source_text": " Silence on closure decision is not permitted.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S969",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S969",
+        "source_text": "Strategic commitment: the Practitioner is not merely a supervisor whose absence implies consent — the Practitioner is the explicit authority whose acts close (or do not close) each row's analytical work.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S970",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S970",
+        "source_text": " At every row close, the Practitioner provides an explicit Closure Decision with one of three outcomes:\nAccept — row closes; analytical work progresses to the next row\nReject — row close suspended; analytical work does not progress without escalation\nIterate — row close suspended; further iteration explicitly scoped\nWhy explicit acts matter: implicit consent (silence-equals-acceptance) treats the Practitioner as supervisory rather than authoritative.",
+        "segmentation_context": "multi-line block",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S971",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S971",
+        "source_text": " The strategic commitment is that SysEngage trusts explicit Practitioner judgment, not implicit signals.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S972",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S972",
+        "source_text": " This is consistent with §3.3 Iteration Sufficiency (the Practitioner judges \"good enough\") and §8.6 Process-Signal Framing (the Practitioner, not the tool, decides corrective response).",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S973",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S973",
+        "source_text": " The Closure Decision is the operational form of these strategic commitments at row boundaries.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S974",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S974",
+        "source_text": "Operationalisation: Row 2 v1.1 §8.15 Explicit Closure Principle and the ClosureDecision entity (CD-NNN) operationalise this strategic commitment.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S975",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S975",
+        "source_text": " Closure Decision is recorded as a first-class audit event at every row close, with diagnostics presented to the Practitioner before the decision is requested.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S976",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S976",
+        "source_text": " Per Strand C empirical evidence (R3-HOW-013 / R3-WHEN-010): without explicit closure discipline, rows can close on Gate verdict alone — bypassing Practitioner authority over project quality.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S977",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S977",
+        "source_text": "Statement: Actor roles in SysEngage are defined by the function they fulfil within the process, not by actor nature (human, AI, hybrid) or organisational position (internal, external).",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S978",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S978",
+        "source_text": " The same role function may be fulfilled by different kinds of actors provided the actor's contribution conforms to the role's expected output.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S979",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S979",
+        "source_text": " SysEngage evaluates the contribution, not the contributor.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S980",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S980",
+        "source_text": "Strategic significance: this principle commits SysEngage to a function-based actor model rather than a nature-based or boundary-based one.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S981",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S981",
+        "source_text": " The strategic implication is that actor abstractions remain stable as the tool's deployment context evolves — for example, a mechanism-perspective role can be fulfilled by AI in v1, by a human expert in v2, or by a hybrid configuration in v3, without changing the role's process-level definition.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S982",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S982",
+        "source_text": " The architectural insight: stability lives in role functions; configurability lives in actor natures.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S983",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S983",
+        "source_text": "Why this principle now: during Strand C reconciliation, Strand A v2.14 proposed introducing an External Actor parent role using the internal/external axis.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S984",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S984",
+        "source_text": " The Practitioner identified that internal/external is the wrong axis of categorisation — the role-function axis is what matters.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S985",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S985",
+        "source_text": " This principle captures that insight at strategic level so future actor-model decisions at any row inherit the function-based discipline.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S986",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S986",
+        "source_text": " Strand A's External Actor proposal is explicitly NOT adopted.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S987",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S987",
+        "source_text": "Operationalisation: Row 2 v1.1 §8.14 Actor Function Principle.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S988",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S988",
+        "source_text": " SG-04 (Mechanism Stakeholder, renamed from \"Internal Mechanism Stakeholders\") gains an actor_nature attribute (Human/AI/Hybrid; v1 default = AI; reserved for future configurability).",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S989",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S989",
+        "source_text": " Future versions may admit human or hybrid actors fulfilling SG-04's role function without changing the role definition.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S990",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S990",
+        "source_text": "(Source: Strand C D3 lock; Strand A R3-HOW-013 evidence about actor abstraction failure modes at Row 5; v1.2 R1-AMEND-1.)",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S991",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S991",
+        "source_text": "Statement: Anything SysEngage commits to do reliably must leave an artefact behind.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S992",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S992",
+        "source_text": " Every normative commitment declared at one row is realised at downstream rows by a designed artefact and enforcement gate, or explicitly dispositioned at the relevant row with rationale.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S993",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S993",
+        "source_text": " Silent skipping of declared commitments is not permitted.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S994",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S994",
+        "source_text": "Strategic significance: this is a meta-principle about how SysEngage governs its own cross-row work.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S995",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S995",
+        "source_text": " The strategic commitment is that declared governance is insufficient — the tool's own governance must be artefact-backed, with realisation evidence persisted in the canonical record.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S996",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S996",
+        "source_text": " Without this principle, declared obligations become silent assumptions that may go unmet without detection.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S997",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S997",
+        "source_text": "Why this principle now: Strand A's empirical evidence (§12.1) demonstrated that R2-HOW-008 (mandatory source re-analysis) was declared at Row 2, not realised at Row 3, faithfully implemented at Row 4, and only caught by human review.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S998",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S998",
+        "source_text": " The principle Strand A derived from this failure: \"Anything you want a system to do reliably must leave an artefact behind.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S999",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S999",
+        "source_text": "\" The Practitioner accepted this as a Row 1 strategic commitment because it speaks to how SysEngage thinks about its own governance, not just how a particular obligation is enforced.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S1000",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S1000",
+        "source_text": "Relationship to other principles: this principle reinforces §8.1 Non-Loss (no source content silently discarded) and §8.2 Verbatim Preservation (no transformation silently mutates content) by extending the no-silence discipline to cross-row commitments themselves. §8.13 Schema Governance (below) is one specific instance of artefact-backed governance applied to the canonical schema.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S1001",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S1001",
+        "source_text": "Operationalisation: Row 2 v1.1 §8.16 Artefact-Backed Obligation Principle.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S1002",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S1002",
+        "source_text": " Row 3 inherits the Obligation Coverage Map deliverable per Strand C absorption A-2; closure gate logic at Row 3 Phase 9 blocks row closure if any upstream obligation lacks coverage or disposition.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S1003",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S1003",
+        "source_text": " The OCT (Obligation Coverage Trace) trace type backs the Map.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S1004",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S1004",
+        "source_text": "(Source: Strand C R2-AMEND-2; Strand A §12.1 empirical evidence; v1.2 R1-AMEND-2.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S1005",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S1005",
+        "source_text": " Strategic-name variant per Q1 lock — \"Artefact-Backed Governance\" reads more strategic than the operational \"Artefact-Backed Obligation\".)",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S1006",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S1006",
+        "source_text": "Statement: SysEngage is permitted and expected to surface logical constructs implied by reference, influence, or lifecycle semantics in the source — even when the user did not articulate them explicitly.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S1007",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S1007",
+        "source_text": " Latent constructs are first-class analytical content; the absence of upstream articulation is not justification for silently omitting them.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S1008",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S1008",
+        "source_text": "Strategic significance: this principle commits SysEngage to active inference about implicit content, not just passive processing of explicit statements.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S1009",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S1009",
+        "source_text": " The strategic implication is that SysEngage's analytical depth is determined by what the source implies, not just what the source says.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S1010",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S1010",
+        "source_text": " Without this principle, SysEngage would be restricted to user-explicit content and would produce systematically incomplete analyses for any source where significant content is implicit (which is most natural-language inputs).",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S1011",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S1011",
+        "source_text": "Why this principle now: Strand A v2.0 demonstrated the failure mode in the opposite direction — over-normalisation that lost source content.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S1012",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S1012",
+        "source_text": " Strand A v1.x demonstrated the failure mode of under-discovery — missing implicit content that the source clearly implied.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S1013",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S1013",
+        "source_text": " Strand A v2.4 surfaced four logical artefacts via Promotion Rules (Analysed System, Answer, Concern Category, Artefact State) that earlier versions had silently missed.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S1014",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S1014",
+        "source_text": " The Promotion Rules are operational mechanism; the strategic principle is that SysEngage commits to surfacing such constructs, with the discipline that the surfacing must itself be artefact-backed (per §8.11).",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S1015",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S1015",
+        "source_text": "Relationship to other principles: this principle is distinct from §8.4 Ambiguity Preservation.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S1016",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S1016",
+        "source_text": " Ambiguity Preservation deals with multiple valid interpretations of explicit content.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S1017",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S1017",
+        "source_text": " Latent Construct Surfacing deals with implicit content that has no explicit form in the source but is implied by it.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S1018",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S1018",
+        "source_text": " Both reject premature resolution — Ambiguity Preservation rejects forced choice between alternatives, Latent Construct Surfacing rejects silent omission of implicit content.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S1019",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S1019",
+        "source_text": "Operationalisation: Row 2 v1.1 §8.18 Latent Discovery Principle.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S1020",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S1020",
+        "source_text": " Row 3 and downstream rows operationalise via Promotion Rules (PR-R3-01 Implied Reference Anchor; PR-R3-02 Behaviour-Influencing Input; PR-R3-03 Behaviourally Distinct Epistemic Differentiation; PR-R3-04 Logical State vs Baseline Separation).",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S1021",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S1021",
+        "source_text": " Each surfaced construct gains a GT (Gap Trace) trace type recording that the construct was discovered through latent surfacing rather than upstream articulation.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S1022",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S1022",
+        "source_text": "(Source: Strand C R2-AMEND-4; Strand A §2.3 + PR-R3-01..04 evidence; v1.2 R1-AMEND-3.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S1023",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S1023",
+        "source_text": " Strategic-name variant per Q1 lock — \"Latent Construct Surfacing\" reads as active strategic commitment; Row 2's \"Latent Discovery\" is the operational form.)",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S1024",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S1024",
+        "source_text": "Statement: The canonical ledger schema is itself a first-class governed artefact within the SysEngage process.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S1025",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S1025",
+        "source_text": " The schema is not a passive data-model boundary but an actively-governed dependency.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S1026",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S1026",
+        "source_text": " Every row's output validates against the schema before closure; schema compliance is an explicit closure check, not an external responsibility.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S1027",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S1027",
+        "source_text": "Strategic significance: this principle clarifies a meta-level question about scope. §1.3 Internal Data Model vs External Outputs commits SysEngage to a structured internal data model existing — but did not say whether the schema defining that data model is inside or outside the process's governance scope. v1.2 commits to inside scope.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S1028",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S1028",
+        "source_text": " The schema is something the process binds to and validates against, not a passive definition that lives elsewhere.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S1029",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S1029",
+        "source_text": "Why this principle now: Strand A v2.13/v2.14 patch surfaced empirical evidence — schema treated as loose convention had drift between specification and ledger output.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S1030",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S1030",
+        "source_text": " Treating the schema as governed (inside-scope) enables the closure-time discipline that detects drift; treating it as ungoverned (outside-scope) leaves drift silent.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S1031",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S1031",
+        "source_text": " The Practitioner accepted this as a Row 1 strategic commitment because it answers a scope question (\"is the schema governed by the process or external to it?",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S1032",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S1032",
+        "source_text": "\") that has implications for every row's closure discipline.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S1033",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S1033",
+        "source_text": "Relationship to §8.11: Schema Governance is a specific instance of Artefact-Backed Governance — schema compliance is one of the artefact-backed obligations that every row must discharge.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S1034",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S1034",
+        "source_text": " Stating this as a separate principle gives schema governance its own strategic visibility because the data-model boundary (§1.3) is itself a strategic concern.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S1035",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S1035",
+        "source_text": "Relationship to §1.3: this principle completes the §1.3 Internal Data Model boundary statement. §1.3 commits to a structured internal data model; §8.13 commits to the schema defining that data model being inside the process's governance scope.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S1036",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S1036",
+        "source_text": " Together they establish: there is a schema; the schema is governed; the schema's evolution is controlled within the process.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S1037",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S1037",
+        "source_text": "Operationalisation: Row 2 v1.1 §8.19 Schema Governance Principle and the Schema Compliance Check at Row 2 §3.6.6.1b. Every row's Phase 9 Readiness Gate runs the Schema Compliance Check against the canonical v2.10+v1.1 ledger schema; row close is hard-blocked on validation failures.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S1038",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S1038",
+        "source_text": " Row 3 produces a SchemaComplianceResult deliverable entity capturing the validation evidence.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S1039",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S1039",
+        "source_text": "(Source: Strand C R2-AMEND-5; Strand A §11 / R3-WHAT-017 / R3-HOW-017 / R3-WHEN-009 evidence about schema treated as loose convention with drift; v1.2 R1-AMEND-4.)",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S1040",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S1040",
+        "source_text": "The 13 v1.2 principles cluster into three governance areas, useful for navigation:",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S1063",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S1063",
+        "source_text": " This was identified during the Row 2 v1.1 amendment cycle as the operational risk OR-12; the strategic-level counterpart at Row 1 captures it as a strategic concern about adoption barrier.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S1041",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S1041",
+        "source_text": "§8.1 Non-Loss — no source content silently discarded\n§8.2 Verbatim Preservation — source text preserved exactly\n§8.4 Ambiguity Preservation — ambiguity preserved, not resolved arbitrarily\n§8.8 Whole-Document Coverage — entire input read",
+        "segmentation_context": "multi-line block",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S1042",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S1042",
+        "source_text": "§8.3 Transformation Governance — every transformation declares its mode\n§8.5 Derivation Lineage with Row-to-Row Signal Feed [REFINED] — three cross-row mechanisms\n§8.7 Determinism — same input + model → same output (semantic equivalence)\n§8.10 Actor Function Principle [NEW] — roles defined by function, not nature\n§8.12 Latent Construct Surfacing Principle [NEW] — implicit content actively surfaced",
+        "segmentation_context": "multi-line block",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S1043",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S1043",
+        "source_text": "§8.6 Process-Signal Framing — observed issues are process signals, not output corrections\n§8.9 Human-in-the-Loop By Design [REFINED] — explicit Practitioner acts at closure\n§8.11 Artefact-Backed Governance Principle [NEW] — committed work leaves artefacts\n§8.13 Schema Governance Principle [NEW] — schema is governed, validated, in-scope\nThis grouping is informational only — the canonical numbering (§8.1-§8.13 in current order) is preserved.",
+        "segmentation_context": "multi-line block",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S1044",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S1044",
+        "source_text": " [SOURCED] Per Zachman Row 1 Planner research: Row 1 establishes the strategic foundation; Row 2 (Owner) translates that foundation into detailed business processes and operational models.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S1045",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S1045",
+        "source_text": " This document does not define Row 2 content — that is the next document in the Row-by-Row Understanding series.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S1046",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S1046",
+        "source_text": "What Row 1 hands to Row 2:\nA mission statement and strategic objectives\nA high-level data-domain map\nA strategic-method commitment (governed AI transformation, human-in-the-loop, Zachman-internal)\nGeographic and regulatory scope commitments\nStakeholder-group identifications\nTemporal expectations (multi-session iteration, multi-year tool life)\nMotivational justifications for the enterprise-level use\nCross-cutting design principles that bound Row 2 and beyond\n\n [REVISED v1.1] Response to v1.0 comment C19: Row 6 detail has been removed from Row 1 Understanding.",
+        "segmentation_context": "multi-line block",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S1047",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S1047",
+        "source_text": " Row 6 (Operating Enterprise) will be addressed in its own Row 6 Understanding document when that work is undertaken.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S1048",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S1048",
+        "source_text": " That is the correct place to reason about operational telemetry, deployment feedback loops, and runtime reality checks.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S1049",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S1049",
+        "source_text": "Risks to SysEngage at the strategic level (not risks to systems SysEngage analyses):\n[REVISED v1.2]  Two new strategic risks added (RK-09, RK-10) propagated from the Row 2 v1.0 → v1.1 amendment cycle.",
+        "segmentation_context": "multi-line block",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S1050",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S1050",
+        "source_text": " Three existing risks (RK-01, RK-02, RK-06) gain refined mitigation notes reflecting v1.1 Row 2 mechanisms.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S1051",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S1051",
+        "source_text": " Five existing risks (RK-03, RK-04, RK-05, RK-07, RK-08) preserved verbatim.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S1052",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S1052",
+        "source_text": "RK-01 (AI model drift): v1.2 adds the ai_model_fingerprints audit foundation as the new mitigation mechanism.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S1053",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S1053",
+        "source_text": " Previously, the strategic mitigation rested on SE-TMS-001 mode discipline (preventing inappropriate normalisation) and the Literal Persistence Mode override. v1.1 Row 2 added a complementary detection mechanism — model identity recorded per execution.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S1054",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S1054",
+        "source_text": " The strategic effect: drift is no longer just prevented (by mode discipline); it is also detectable (by fingerprint comparison).",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S1055",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S1055",
+        "source_text": "RK-02 (Schema evolution drift): v1.2 adds the Schema Governance Principle (new §8.13) as a strategic discipline complementing Canonicalisation Mode.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S1056",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S1056",
+        "source_text": " Previously, schema migration was handled by Canonicalisation Mode for explicit migration tasks; this addressed the migration event but not ongoing schema-vs-output drift between migrations.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S1057",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S1057",
+        "source_text": " The Schema Governance Principle adds continuous discipline — every row's output validates against the schema at row close, so drift is detected when it happens rather than at the next migration.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S1058",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S1058",
+        "source_text": "RK-06 (AI-vendor concentration): v1.2 adds ai_model_fingerprints as supporting evidence for the model-agnostic strategic stance.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S1059",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S1059",
+        "source_text": " Previously, the model-agnostic stance was a process commitment (\"specs are model-agnostic\") with no audit trail enabling cross-vendor verification. v1.1 captures actual model identity per execution, making the audit trail itself portable across vendors.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S1060",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S1060",
+        "source_text": " The strategic effect: the model-agnostic claim is now empirically verifiable, not just declared.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S1061",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S1061",
+        "source_text": "RK-09 (Practitioner workload from explicit-decision discipline): Surfaces a strategic-level cost of the §8.9 Human-in-the-Loop refinement.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S1062",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S1062",
+        "source_text": " SysEngage's strategic commitment to explicit Practitioner authority — sharpened in v1.2 to require explicit Closure Decisions at every row, explicit Concern dispositions before row close, explicit Override rationales when Gate verdicts are overridden — creates a Practitioner-side workload that scales with project complexity.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S1064",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S1064",
+        "source_text": " Important: the principle (§8.9) is unchanged — what changes is visibility of its cumulative cost.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S1065",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S1065",
+        "source_text": " The four mitigation paths in the register (Suggestion-accompanies-Question, threshold tuning, fast-path dispositions, future UX) preserve the principle while reducing burden.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S1066",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S1066",
+        "source_text": "RK-10 (AI ensemble determinism boundary): Surfaces a forward-strategic risk visible from the OD-R2-27 resolution path. v1's commitment to ensemble-of-size-1 schema (with semantic-equivalence determinism) is a defensible v1 commitment but does not yet reach the byte-determinism that some regulated profiles may require.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S1067",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S1067",
+        "source_text": " The risk is not a v1 defect — it is a known boundary of v1's commitments, with v2 enhancement candidates queued (model pin/float, ensemble operational shape, byte-determinism modes for regulated profiles).",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S1068",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S1068",
+        "source_text": " Strategic significance: this risk is forward-looking.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S1069",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S1069",
+        "source_text": " It says \"here is what v1 does not yet support, and here is the design pressure for v2.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S1070",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S1070",
+        "source_text": "\" Adoption in safety-critical domains may be constrained until v2 work is undertaken; the risk register makes this constraint visible at strategic level.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S1071",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S1071",
+        "source_text": "v1.2 risk register is consistent with v1.2's strategic principle additions.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S1072",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S1072",
+        "source_text": " Every new principle (§8.10-§8.13) and every refinement (§8.4, §8.5, §8.9) has been examined for risk implications.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S1073",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S1073",
+        "source_text": " New risks identified at strategic level (RK-09 from §8.9 refinement; RK-10 from §8.7 alignment context with OD-R2-27 deferred items) appear in the register.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S1074",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S1074",
+        "source_text": " Mitigation refinements (RK-01, RK-02, RK-06) reflect the v1.1 Row 2 mechanisms now available to support strategic-level mitigation.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S1075",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S1075",
+        "source_text": " The Artefact-Backed Governance Principle (§8.11) applied to the risk register itself: declared strategic mechanisms produce identifiable failure modes, which are catalogued and mitigated.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S1076",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S1076",
+        "source_text": "[REVISED v1.2]  §11 v1.2 retains all 9 v1.1 entries verbatim and adds 6 strategic-level entries reflecting v1.2 principle additions and refinements.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S1077",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S1077",
+        "source_text": " Each new entry captures the term's strategic meaning at Row 1 — operational definitions belong at Row 2 §11.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S1078",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S1078",
+        "source_text": "[INFERRED] Each v1.2 entry uses Row 1 strategic-meaning phrasing — what the term means at strategic level for SysEngage.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S1079",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S1079",
+        "source_text": " Operational mechanics (ClosureDecision entity attributes, RowScopedSourceFindings entity, Schema Compliance Check semantics, etc.) are defined in Row 2 §11 Glossary.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S1080",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S1080",
+        "source_text": " The two glossaries are complementary — Row 1 captures strategic intent; Row 2 captures operational form.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S1081",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S1081",
+        "source_text": "Each of the 21 review comments raised against v1.0 is addressed below with the action taken in v1.1.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S1082",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S1082",
+        "source_text": "Open decisions remaining after the v1.0→v1.1 revision.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S1083",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S1083",
+        "source_text": " All are genuinely Row 1 (strategic) decisions, not implementation-phasing.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S1084",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S1084",
+        "source_text": "Open Decisions removed between v1.0 and v1.1:\nOD-01 (deployment model), OD-02 (user persona), OD-03 (input scope), OD-05 (ledger persistence), OD-06 (commercial positioning), OD-07 (regulated-domain handling), OD-08 (AI dependency), OD-09 (determinism expectation), OD-10 (Row 6 depth) — all either incorporated into the interrogative sections as Row 1 strategic content, or removed as implementation-phasing decisions that belong at Row 3/4.",
+        "segmentation_context": "multi-line block",
+        "input_material_ref": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "SEG090",
+      "element_type": "Segment",
+      "payload": {
+        "segment_id": "SEG090",
+        "title": "SysEngage Row 1 Understanding",
+        "description": "Section: SysEngage Row 1 Understanding",
+        "source_refs": [
+          "S813"
+        ],
+        "parent_segment_ref": null,
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_id": "SEG091",
+      "element_type": "Segment",
+      "payload": {
+        "segment_id": "SEG091",
+        "title": "About This Document",
+        "description": "Section: About This Document",
+        "source_refs": [
+          "S814",
+          "S815",
+          "S816",
+          "S817",
+          "S818",
+          "S819",
+          "S820",
+          "S821"
+        ],
+        "parent_segment_ref": null,
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_id": "SEG092",
+      "element_type": "Segment",
+      "payload": {
+        "segment_id": "SEG092",
+        "title": "1.1 Mission Statement",
+        "description": "Section: 1.1 Mission Statement",
+        "source_refs": [
+          "S822",
+          "S823"
+        ],
+        "parent_segment_ref": null,
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_id": "SEG093",
+      "element_type": "Segment",
+      "payload": {
+        "segment_id": "SEG093",
+        "title": "1.2 The Strategic Problem SysEngage Addresses",
+        "description": "Section: 1.2 The Strategic Problem SysEngage Addresses",
+        "source_refs": [
+          "S824",
+          "S825",
+          "S826"
+        ],
+        "parent_segment_ref": null,
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_id": "SEG094",
+      "element_type": "Segment",
+      "payload": {
+        "segment_id": "SEG094",
+        "title": "1.3 Internal Data Model vs External Outputs (Critical Boundary)",
+        "description": "Section: 1.3 Internal Data Model vs External Outputs (Critical Boundary)",
+        "source_refs": [
+          "S827",
+          "S828",
+          "S829",
+          "S830"
+        ],
+        "parent_segment_ref": null,
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_id": "SEG095",
+      "element_type": "Segment",
+      "payload": {
+        "segment_id": "SEG095",
+        "title": "2. What (Data) at Row 1",
+        "description": "Section: 2. What (Data) at Row 1",
+        "source_refs": [
+          "S831"
+        ],
+        "parent_segment_ref": null,
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_id": "SEG096",
+      "element_type": "Segment",
+      "payload": {
+        "segment_id": "SEG096",
+        "title": "2.1 Strategic Objectives",
+        "description": "Section: 2.1 Strategic Objectives",
+        "source_refs": [
+          "S832"
+        ],
+        "parent_segment_ref": null,
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_id": "SEG097",
+      "element_type": "Segment",
+      "payload": {
+        "segment_id": "SEG097",
+        "title": "2.2 High-Level Data Domains",
+        "description": "Section: 2.2 High-Level Data Domains",
+        "source_refs": [
+          "S833",
+          "S834",
+          "S835"
+        ],
+        "parent_segment_ref": null,
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_id": "SEG098",
+      "element_type": "Segment",
+      "payload": {
+        "segment_id": "SEG098",
+        "title": "2.3 What is Explicitly Out-of-Scope at Row 1 (Strategic)",
+        "description": "Section: 2.3 What is Explicitly Out-of-Scope at Row 1 (Strategic)",
+        "source_refs": [
+          "S836",
+          "S837",
+          "S838",
+          "S839",
+          "S840",
+          "S841",
+          "S842",
+          "S843",
+          "S844",
+          "S845",
+          "S846"
+        ],
+        "parent_segment_ref": null,
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_id": "SEG099",
+      "element_type": "Segment",
+      "payload": {
+        "segment_id": "SEG099",
+        "title": "3. How (Function) at Row 1",
+        "description": "Section: 3. How (Function) at Row 1",
+        "source_refs": [
+          "S847",
+          "S848"
+        ],
+        "parent_segment_ref": null,
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_id": "SEG100",
+      "element_type": "Segment",
+      "payload": {
+        "segment_id": "SEG100",
+        "title": "3.1 Strategic Approach",
+        "description": "Section: 3.1 Strategic Approach",
+        "source_refs": [
+          "S849",
+          "S850",
+          "S851",
+          "S852",
+          "S853",
+          "S854",
+          "S855",
+          "S856",
+          "S857",
+          "S858",
+          "S859",
+          "S860",
+          "S861"
+        ],
+        "parent_segment_ref": null,
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_id": "SEG101",
+      "element_type": "Segment",
+      "payload": {
+        "segment_id": "SEG101",
+        "title": "3.2 High-Level Business Rules",
+        "description": "Section: 3.2 High-Level Business Rules",
+        "source_refs": [
+          "S862",
+          "S863",
+          "S864"
+        ],
+        "parent_segment_ref": null,
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_id": "SEG102",
+      "element_type": "Segment",
+      "payload": {
+        "segment_id": "SEG102",
+        "title": "3.3 Iteration Sufficiency",
+        "description": "Section: 3.3 Iteration Sufficiency",
+        "source_refs": [
+          "S865",
+          "S866",
+          "S867",
+          "S868",
+          "S869",
+          "S870",
+          "S871",
+          "S872"
+        ],
+        "parent_segment_ref": null,
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_id": "SEG103",
+      "element_type": "Segment",
+      "payload": {
+        "segment_id": "SEG103",
+        "title": "4. Where (Network) at Row 1",
+        "description": "Section: 4. Where (Network) at Row 1",
+        "source_refs": [
+          "S873",
+          "S874"
+        ],
+        "parent_segment_ref": null,
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_id": "SEG104",
+      "element_type": "Segment",
+      "payload": {
+        "segment_id": "SEG104",
+        "title": "4.1 Geographic Scope",
+        "description": "Section: 4.1 Geographic Scope",
+        "source_refs": [
+          "S875",
+          "S876",
+          "S877",
+          "S878",
+          "S879",
+          "S880",
+          "S881",
+          "S882"
+        ],
+        "parent_segment_ref": null,
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_id": "SEG105",
+      "element_type": "Segment",
+      "payload": {
+        "segment_id": "SEG105",
+        "title": "4.2 Organisational Scope (Regulated Industries)",
+        "description": "Section: 4.2 Organisational Scope (Regulated Industries)",
+        "source_refs": [
+          "S883",
+          "S884",
+          "S885",
+          "S886",
+          "S887",
+          "S888",
+          "S889"
+        ],
+        "parent_segment_ref": null,
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_id": "SEG106",
+      "element_type": "Segment",
+      "payload": {
+        "segment_id": "SEG106",
+        "title": "4.3 Enterprise Boundaries",
+        "description": "Section: 4.3 Enterprise Boundaries",
+        "source_refs": [
+          "S890",
+          "S891",
+          "S892"
+        ],
+        "parent_segment_ref": null,
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_id": "SEG107",
+      "element_type": "Segment",
+      "payload": {
+        "segment_id": "SEG107",
+        "title": "4.4 What Row 1 Where is NOT",
+        "description": "Section: 4.4 What Row 1 Where is NOT",
+        "source_refs": [
+          "S893",
+          "S894"
+        ],
+        "parent_segment_ref": null,
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_id": "SEG108",
+      "element_type": "Segment",
+      "payload": {
+        "segment_id": "SEG108",
+        "title": "5. Who (People) at Row 1",
+        "description": "Section: 5. Who (People) at Row 1",
+        "source_refs": [
+          "S895"
+        ],
+        "parent_segment_ref": null,
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_id": "SEG109",
+      "element_type": "Segment",
+      "payload": {
+        "segment_id": "SEG109",
+        "title": "5.3 Stakeholder Groups Under Discussion",
+        "description": "Section: 5.3 Stakeholder Groups Under Discussion",
+        "source_refs": [
+          "S896"
+        ],
+        "parent_segment_ref": null,
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_id": "SEG110",
+      "element_type": "Segment",
+      "payload": {
+        "segment_id": "SEG110",
+        "title": "6. When (Time) at Row 1",
+        "description": "Section: 6. When (Time) at Row 1",
+        "source_refs": [
+          "S897",
+          "S898"
+        ],
+        "parent_segment_ref": null,
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_id": "SEG111",
+      "element_type": "Segment",
+      "payload": {
+        "segment_id": "SEG111",
+        "title": "6.1 Temporal Nature of SysEngage Use",
+        "description": "Section: 6.1 Temporal Nature of SysEngage Use",
+        "source_refs": [
+          "S899",
+          "S900",
+          "S901",
+          "S902",
+          "S903"
+        ],
+        "parent_segment_ref": null,
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_id": "SEG112",
+      "element_type": "Segment",
+      "payload": {
+        "segment_id": "SEG112",
+        "title": "6.2 Iteration Termination (Strategic Criterion)",
+        "description": "Section: 6.2 Iteration Termination (Strategic Criterion)",
+        "source_refs": [
+          "S904",
+          "S905",
+          "S906",
+          "S907",
+          "S908",
+          "S909",
+          "S910",
+          "S911"
+        ],
+        "parent_segment_ref": null,
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_id": "SEG113",
+      "element_type": "Segment",
+      "payload": {
+        "segment_id": "SEG113",
+        "title": "6.3 Temporal Scope of the Tool Itself",
+        "description": "Section: 6.3 Temporal Scope of the Tool Itself",
+        "source_refs": [
+          "S912",
+          "S913",
+          "S914"
+        ],
+        "parent_segment_ref": null,
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_id": "SEG114",
+      "element_type": "Segment",
+      "payload": {
+        "segment_id": "SEG114",
+        "title": "7. Why (Motivation) at Row 1",
+        "description": "Section: 7. Why (Motivation) at Row 1",
+        "source_refs": [
+          "S915",
+          "S916"
+        ],
+        "parent_segment_ref": null,
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_id": "SEG115",
+      "element_type": "Segment",
+      "payload": {
+        "segment_id": "SEG115",
+        "title": "7.1 Rationale for SysEngage's Existence",
+        "description": "Section: 7.1 Rationale for SysEngage's Existence",
+        "source_refs": [
+          "S917",
+          "S918",
+          "S919",
+          "S920",
+          "S921",
+          "S922"
+        ],
+        "parent_segment_ref": null,
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_id": "SEG116",
+      "element_type": "Segment",
+      "payload": {
+        "segment_id": "SEG116",
+        "title": "7.2 Strategic Benefits",
+        "description": "Section: 7.2 Strategic Benefits",
+        "source_refs": [
+          "S923"
+        ],
+        "parent_segment_ref": null,
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_id": "SEG117",
+      "element_type": "Segment",
+      "payload": {
+        "segment_id": "SEG117",
+        "title": "7.3 Strategic Justification at Enterprise Level",
+        "description": "Section: 7.3 Strategic Justification at Enterprise Level",
+        "source_refs": [
+          "S924",
+          "S925"
+        ],
+        "parent_segment_ref": null,
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_id": "SEG118",
+      "element_type": "Segment",
+      "payload": {
+        "segment_id": "SEG118",
+        "title": "7.4 Strategic Risks Justifying Caution",
+        "description": "Section: 7.4 Strategic Risks Justifying Caution",
+        "source_refs": [
+          "S926"
+        ],
+        "parent_segment_ref": null,
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_id": "SEG119",
+      "element_type": "Segment",
+      "payload": {
+        "segment_id": "SEG119",
+        "title": "8. Row 1 Design Principles",
+        "description": "Section: 8. Row 1 Design Principles",
+        "source_refs": [
+          "S927",
+          "S928"
+        ],
+        "parent_segment_ref": null,
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_id": "SEG120",
+      "element_type": "Segment",
+      "payload": {
+        "segment_id": "SEG120",
+        "title": "8.1 Non-Loss",
+        "description": "Section: 8.1 Non-Loss",
+        "source_refs": [
+          "S929",
+          "S930",
+          "S931"
+        ],
+        "parent_segment_ref": null,
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_id": "SEG121",
+      "element_type": "Segment",
+      "payload": {
+        "segment_id": "SEG121",
+        "title": "8.2 Verbatim Preservation",
+        "description": "Section: 8.2 Verbatim Preservation",
+        "source_refs": [
+          "S932",
+          "S933",
+          "S934"
+        ],
+        "parent_segment_ref": null,
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_id": "SEG122",
+      "element_type": "Segment",
+      "payload": {
+        "segment_id": "SEG122",
+        "title": "8.3 Transformation Governance",
+        "description": "Section: 8.3 Transformation Governance",
+        "source_refs": [
+          "S935",
+          "S936",
+          "S937",
+          "S938"
+        ],
+        "parent_segment_ref": null,
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_id": "SEG123",
+      "element_type": "Segment",
+      "payload": {
+        "segment_id": "SEG123",
+        "title": "8.4 Ambiguity Preservation",
+        "description": "Section: 8.4 Ambiguity Preservation",
+        "source_refs": [
+          "S939",
+          "S940",
+          "S941",
+          "S942",
+          "S943"
+        ],
+        "parent_segment_ref": null,
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_id": "SEG124",
+      "element_type": "Segment",
+      "payload": {
+        "segment_id": "SEG124",
+        "title": "8.5 Derivation Lineage with Row-to-Row Signal Feed",
+        "description": "Section: 8.5 Derivation Lineage with Row-to-Row Signal Feed",
+        "source_refs": [
+          "S944",
+          "S945",
+          "S946",
+          "S947",
+          "S948",
+          "S949",
+          "S950",
+          "S951"
+        ],
+        "parent_segment_ref": null,
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_id": "SEG125",
+      "element_type": "Segment",
+      "payload": {
+        "segment_id": "SEG125",
+        "title": "8.6 Process-Signal Framing",
+        "description": "Section: 8.6 Process-Signal Framing",
+        "source_refs": [
+          "S952",
+          "S953",
+          "S954"
+        ],
+        "parent_segment_ref": null,
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_id": "SEG126",
+      "element_type": "Segment",
+      "payload": {
+        "segment_id": "SEG126",
+        "title": "8.7 Determinism",
+        "description": "Section: 8.7 Determinism",
+        "source_refs": [
+          "S955",
+          "S956",
+          "S957"
+        ],
+        "parent_segment_ref": null,
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_id": "SEG127",
+      "element_type": "Segment",
+      "payload": {
+        "segment_id": "SEG127",
+        "title": "8.8 Whole-Document Coverage",
+        "description": "Section: 8.8 Whole-Document Coverage",
+        "source_refs": [
+          "S958",
+          "S959",
+          "S960",
+          "S961",
+          "S962"
+        ],
+        "parent_segment_ref": null,
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_id": "SEG128",
+      "element_type": "Segment",
+      "payload": {
+        "segment_id": "SEG128",
+        "title": "8.9 Human-in-the-Loop By Design",
+        "description": "Section: 8.9 Human-in-the-Loop By Design",
+        "source_refs": [
+          "S963",
+          "S964",
+          "S965",
+          "S966",
+          "S967",
+          "S968",
+          "S969",
+          "S970",
+          "S971",
+          "S972",
+          "S973",
+          "S974",
+          "S975",
+          "S976"
+        ],
+        "parent_segment_ref": null,
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_id": "SEG129",
+      "element_type": "Segment",
+      "payload": {
+        "segment_id": "SEG129",
+        "title": "8.10 Actor Function Principle [NEW v1.2]",
+        "description": "Section: 8.10 Actor Function Principle [NEW v1.2]",
+        "source_refs": [
+          "S977",
+          "S978",
+          "S979",
+          "S980",
+          "S981",
+          "S982",
+          "S983",
+          "S984",
+          "S985",
+          "S986",
+          "S987",
+          "S988",
+          "S989",
+          "S990"
+        ],
+        "parent_segment_ref": null,
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_id": "SEG130",
+      "element_type": "Segment",
+      "payload": {
+        "segment_id": "SEG130",
+        "title": "8.11 Artefact-Backed Governance Principle [NEW v1.2]",
+        "description": "Section: 8.11 Artefact-Backed Governance Principle [NEW v1.2]",
+        "source_refs": [
+          "S991",
+          "S992",
+          "S993",
+          "S994",
+          "S995",
+          "S996",
+          "S997",
+          "S998",
+          "S999",
+          "S1000",
+          "S1001",
+          "S1002",
+          "S1003",
+          "S1004",
+          "S1005"
+        ],
+        "parent_segment_ref": null,
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_id": "SEG131",
+      "element_type": "Segment",
+      "payload": {
+        "segment_id": "SEG131",
+        "title": "8.12 Latent Construct Surfacing Principle [NEW v1.2]",
+        "description": "Section: 8.12 Latent Construct Surfacing Principle [NEW v1.2]",
+        "source_refs": [
+          "S1006",
+          "S1007",
+          "S1008",
+          "S1009",
+          "S1010",
+          "S1011",
+          "S1012",
+          "S1013",
+          "S1014",
+          "S1015",
+          "S1016",
+          "S1017",
+          "S1018",
+          "S1019",
+          "S1020",
+          "S1021",
+          "S1022",
+          "S1023"
+        ],
+        "parent_segment_ref": null,
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_id": "SEG132",
+      "element_type": "Segment",
+      "payload": {
+        "segment_id": "SEG132",
+        "title": "8.13 Schema Governance Principle [NEW v1.2]",
+        "description": "Section: 8.13 Schema Governance Principle [NEW v1.2]",
+        "source_refs": [
+          "S1024",
+          "S1025",
+          "S1026",
+          "S1027",
+          "S1028",
+          "S1029",
+          "S1030",
+          "S1031",
+          "S1032",
+          "S1033",
+          "S1034",
+          "S1035",
+          "S1036",
+          "S1037",
+          "S1038",
+          "S1039"
+        ],
+        "parent_segment_ref": null,
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_id": "SEG133",
+      "element_type": "Segment",
+      "payload": {
+        "segment_id": "SEG133",
+        "title": "8.14 Principle architecture",
+        "description": "Section: 8.14 Principle architecture",
+        "source_refs": [
+          "S1040"
+        ],
+        "parent_segment_ref": null,
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_id": "SEG134",
+      "element_type": "Segment",
+      "payload": {
+        "segment_id": "SEG134",
+        "title": "8.14.1Source-faithfulness principles (4)",
+        "description": "Section: 8.14.1Source-faithfulness principles (4)",
+        "source_refs": [
+          "S1041"
+        ],
+        "parent_segment_ref": null,
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_id": "SEG135",
+      "element_type": "Segment",
+      "payload": {
+        "segment_id": "SEG135",
+        "title": "18.4.2 Process-discipline principles (5)",
+        "description": "Section: 18.4.2 Process-discipline principles (5)",
+        "source_refs": [
+          "S1042"
+        ],
+        "parent_segment_ref": null,
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_id": "SEG136",
+      "element_type": "Segment",
+      "payload": {
+        "segment_id": "SEG136",
+        "title": "18.4.3 Authority and governance principles (4)",
+        "description": "Section: 18.4.3 Authority and governance principles (4)",
+        "source_refs": [
+          "S1043"
+        ],
+        "parent_segment_ref": null,
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_id": "SEG137",
+      "element_type": "Segment",
+      "payload": {
+        "segment_id": "SEG137",
+        "title": "9. Transition to Row 2 (Owner)",
+        "description": "Section: 9. Transition to Row 2 (Owner)",
+        "source_refs": [
+          "S1044",
+          "S1045",
+          "S1046",
+          "S1047",
+          "S1048"
+        ],
+        "parent_segment_ref": null,
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_id": "SEG138",
+      "element_type": "Segment",
+      "payload": {
+        "segment_id": "SEG138",
+        "title": "10. Strategic Risks",
+        "description": "Section: 10. Strategic Risks",
+        "source_refs": [
+          "S1049",
+          "S1050",
+          "S1051"
+        ],
+        "parent_segment_ref": null,
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_id": "SEG139",
+      "element_type": "Segment",
+      "payload": {
+        "segment_id": "SEG139",
+        "title": "10.2.1 Refinements (RK-01, RK-02, RK-06)",
+        "description": "Section: 10.2.1 Refinements (RK-01, RK-02, RK-06)",
+        "source_refs": [
+          "S1052",
+          "S1053",
+          "S1054",
+          "S1055",
+          "S1056",
+          "S1057",
+          "S1058",
+          "S1059",
+          "S1060"
+        ],
+        "parent_segment_ref": null,
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_id": "SEG140",
+      "element_type": "Segment",
+      "payload": {
+        "segment_id": "SEG140",
+        "title": "10.2.2 New risks (RK-09, RK-10)",
+        "description": "Section: 10.2.2 New risks (RK-09, RK-10)",
+        "source_refs": [
+          "S1061",
+          "S1062",
+          "S1063",
+          "S1064",
+          "S1065",
+          "S1066",
+          "S1067",
+          "S1068",
+          "S1069",
+          "S1070"
+        ],
+        "parent_segment_ref": null,
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_id": "SEG141",
+      "element_type": "Segment",
+      "payload": {
+        "segment_id": "SEG141",
+        "title": "10.2.3 Risk register integrity",
+        "description": "Section: 10.2.3 Risk register integrity",
+        "source_refs": [
+          "S1071",
+          "S1072",
+          "S1073",
+          "S1074",
+          "S1075"
+        ],
+        "parent_segment_ref": null,
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_id": "SEG142",
+      "element_type": "Segment",
+      "payload": {
+        "segment_id": "SEG142",
+        "title": "11. Glossary (Row 1 minimum)",
+        "description": "Section: 11. Glossary (Row 1 minimum)",
+        "source_refs": [
+          "S1076",
+          "S1077",
+          "S1078",
+          "S1079",
+          "S1080"
+        ],
+        "parent_segment_ref": null,
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_id": "SEG143",
+      "element_type": "Segment",
+      "payload": {
+        "segment_id": "SEG143",
+        "title": "Appendix A. Disposition of v1.0 Review Comments",
+        "description": "Section: Appendix A. Disposition of v1.0 Review Comments",
+        "source_refs": [
+          "S1081"
+        ],
+        "parent_segment_ref": null,
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_id": "SEG144",
+      "element_type": "Segment",
+      "payload": {
+        "segment_id": "SEG144",
+        "title": "Appendix B. Open Decisions",
+        "description": "Section: Appendix B. Open Decisions",
+        "source_refs": [
+          "S1082",
+          "S1083",
+          "S1084"
+        ],
+        "parent_segment_ref": null,
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_id": "P255",
+      "element_type": "AnalysisPass",
+      "payload": {
+        "pass_id": "P255",
+        "pass_type": "Universal",
+        "mechanism": "SourceCapture",
+        "execution_status": "Success",
+        "mode_active": "LPM",
+        "declared_transformation_modes": [
+          "LPM"
+        ],
+        "outputs": {
+          "read_witness": {
+            "file_path": "verification_inputs/SysEngage_Row_1_Understanding_v1_2.docx",
+            "read_mode": "Full",
+            "byte_count": 50477,
+            "input_hash": "970838b5a6191dc33d2c2af34458d1df4625cbc410338a062f68265fef2627f2",
+            "character_count": 39785,
+            "format_detected": "docx",
+            "partial_failure_detail": null,
+            "read_completion_status": true
+          },
+          "mechanism_data": {
+            "source_ids": [
+              "S813",
+              "S814",
+              "S815",
+              "S816",
+              "S817",
+              "S818",
+              "S819",
+              "S820",
+              "S821",
+              "S822",
+              "S823",
+              "S824",
+              "S825",
+              "S826",
+              "S827",
+              "S828",
+              "S829",
+              "S830",
+              "S831",
+              "S832",
+              "S833",
+              "S834",
+              "S835",
+              "S836",
+              "S837",
+              "S838",
+              "S839",
+              "S840",
+              "S841",
+              "S842",
+              "S843",
+              "S844",
+              "S845",
+              "S846",
+              "S847",
+              "S848",
+              "S849",
+              "S850",
+              "S851",
+              "S852",
+              "S853",
+              "S854",
+              "S855",
+              "S856",
+              "S857",
+              "S858",
+              "S859",
+              "S860",
+              "S861",
+              "S862",
+              "S863",
+              "S864",
+              "S865",
+              "S866",
+              "S867",
+              "S868",
+              "S869",
+              "S870",
+              "S871",
+              "S872",
+              "S873",
+              "S874",
+              "S875",
+              "S876",
+              "S877",
+              "S878",
+              "S879",
+              "S880",
+              "S881",
+              "S882",
+              "S883",
+              "S884",
+              "S885",
+              "S886",
+              "S887",
+              "S888",
+              "S889",
+              "S890",
+              "S891",
+              "S892",
+              "S893",
+              "S894",
+              "S895",
+              "S896",
+              "S897",
+              "S898",
+              "S899",
+              "S900",
+              "S901",
+              "S902",
+              "S903",
+              "S904",
+              "S905",
+              "S906",
+              "S907",
+              "S908",
+              "S909",
+              "S910",
+              "S911",
+              "S912",
+              "S913",
+              "S914",
+              "S915",
+              "S916",
+              "S917",
+              "S918",
+              "S919",
+              "S920",
+              "S921",
+              "S922",
+              "S923",
+              "S924",
+              "S925",
+              "S926",
+              "S927",
+              "S928",
+              "S929",
+              "S930",
+              "S931",
+              "S932",
+              "S933",
+              "S934",
+              "S935",
+              "S936",
+              "S937",
+              "S938",
+              "S939",
+              "S940",
+              "S941",
+              "S942",
+              "S943",
+              "S944",
+              "S945",
+              "S946",
+              "S947",
+              "S948",
+              "S949",
+              "S950",
+              "S951",
+              "S952",
+              "S953",
+              "S954",
+              "S955",
+              "S956",
+              "S957",
+              "S958",
+              "S959",
+              "S960",
+              "S961",
+              "S962",
+              "S963",
+              "S964",
+              "S965",
+              "S966",
+              "S967",
+              "S968",
+              "S969",
+              "S970",
+              "S971",
+              "S972",
+              "S973",
+              "S974",
+              "S975",
+              "S976",
+              "S977",
+              "S978",
+              "S979",
+              "S980",
+              "S981",
+              "S982",
+              "S983",
+              "S984",
+              "S985",
+              "S986",
+              "S987",
+              "S988",
+              "S989",
+              "S990",
+              "S991",
+              "S992",
+              "S993",
+              "S994",
+              "S995",
+              "S996",
+              "S997",
+              "S998",
+              "S999",
+              "S1000",
+              "S1001",
+              "S1002",
+              "S1003",
+              "S1004",
+              "S1005",
+              "S1006",
+              "S1007",
+              "S1008",
+              "S1009",
+              "S1010",
+              "S1011",
+              "S1012",
+              "S1013",
+              "S1014",
+              "S1015",
+              "S1016",
+              "S1017",
+              "S1018",
+              "S1019",
+              "S1020",
+              "S1021",
+              "S1022",
+              "S1023",
+              "S1024",
+              "S1025",
+              "S1026",
+              "S1027",
+              "S1028",
+              "S1029",
+              "S1030",
+              "S1031",
+              "S1032",
+              "S1033",
+              "S1034",
+              "S1035",
+              "S1036",
+              "S1037",
+              "S1038",
+              "S1039",
+              "S1040",
+              "S1041",
+              "S1042",
+              "S1043",
+              "S1044",
+              "S1045",
+              "S1046",
+              "S1047",
+              "S1048",
+              "S1049",
+              "S1050",
+              "S1051",
+              "S1052",
+              "S1053",
+              "S1054",
+              "S1055",
+              "S1056",
+              "S1057",
+              "S1058",
+              "S1059",
+              "S1060",
+              "S1061",
+              "S1062",
+              "S1063",
+              "S1064",
+              "S1065",
+              "S1066",
+              "S1067",
+              "S1068",
+              "S1069",
+              "S1070",
+              "S1071",
+              "S1072",
+              "S1073",
+              "S1074",
+              "S1075",
+              "S1076",
+              "S1077",
+              "S1078",
+              "S1079",
+              "S1080",
+              "S1081",
+              "S1082",
+              "S1083",
+              "S1084"
+            ],
+            "source_count": 272,
+            "segment_count": 55,
+            "source_atom_count": 0,
+            "non_text_source_ids": [],
+            "cross_source_ordering": [],
+            "source_with_decoding_issues_ids": []
+          },
+          "mode_violations": []
+        },
+        "evaluated_scope": "All input material in this project",
+        "pass_started_at": "2026-05-13T06:02:28.988644+00:00",
+        "pass_completed_at": "2026-05-13T06:03:15.654611+00:00",
+        "elapsed_ms": 46665,
+        "confidence": 1.0
+      }
+    }
+  ]
+}
