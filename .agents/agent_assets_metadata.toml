@@ -54,3 +54,21 @@ id = "pl87bRdRM0d8yUPDF0WJt"
 uri = "file://verification_outputs/Row1_Understanding_E2E_Post_Row3.json"
 type = "unspecified"
 title = "Row1_Understanding_E2E_Post_Row3 — Canonical Ledger (spec v2.12)"
+
+[[outputs]]
+id = "IWBhYadkRx3HnFvWpdULM"
+uri = "file://verification_outputs/PMT_E2E_Post_Row4.json"
+type = "unspecified"
+title = "PMT_E2E_Post_Row4 — Canonical Ledger (spec v2.12)"
+
+[[outputs]]
+id = "EX0dUA_Wh14-9N4VAbGAm"
+uri = "file://verification_outputs/NQPS_E2E_Post_Row4.json"
+type = "unspecified"
+title = "NQPS_E2E_Post_Row4 — Canonical Ledger (spec v2.12)"
+
+[[outputs]]
+id = "IM8H35ukDCAfTfHbxY1NW"
+uri = "file://verification_outputs/Row1_Understanding_E2E_Post_Row4.json"
+type = "unspecified"
+title = "Row1_Understanding_E2E_Post_Row4 — Canonical Ledger (spec v2.12)"
