@@ -1,0 +1,466 @@
+"""
+Ledger Export — Canonical JSON Builder.
+
+Builds a spec-v2.12-conformant canonical JSON ledger dict from ProjectData.
+Applies:
+  - Non-canonical attribute stripping (project_id, created_at, phase_id, etc.)
+  - execution_status normalisation (DB values → canonical enum)
+  - Deterministic element ordering (per Appendix B.2)
+  - Register construction for all element types present
+  - content_hash computation (SHA-256 over canonicalised payload)
+  - row_target derivation from live element data
+"""
+
+from __future__ import annotations
+
+import hashlib
+import json
+import uuid
+from datetime import datetime, timezone
+from typing import Any
+
+from mechanisms.ledger_export.db_reader import ProjectData
+
+SPEC_VERSION = "2.12"
+SCHEMA_ID = "sysengage.ledger.instance.v2_11"
+GENERATOR_NAME = "sysengage-ledger-export"
+GENERATOR_VERSION = "1.0"
+
+_ELEMENT_TYPE_ORDER: list[str] = [
+    "Source",
+    "Register",
+    "SourceRegister",
+    "AnalysisPass",
+    "Gap",
+    "GapRegister",
+    "ZachmanCell",
+    "ZachmanCellRegister",
+    "CellContentItem",
+    "Domain",
+    "DomainRegister",
+    "Requirement",
+    "RequirementRegister",
+    "Question",
+    "QuestionRegister",
+    "Answer",
+    "AnswerRegister",
+    "Suggestion",
+    "SuggestionRegister",
+    "CoverageItem",
+    "CoverageRegister",
+    "Segment",
+    "SegmentRegister",
+    "SourceAtom",
+    "SourceAtomRegister",
+    "Signal",
+    "SignalRegister",
+    "Risk",
+    "RiskRegister",
+    "Stakeholder",
+    "StakeholderRegister",
+    "Concern",
+    "ConcernRegister",
+]
+
+_TYPE_RANK: dict[str, int] = {t: i for i, t in enumerate(_ELEMENT_TYPE_ORDER)}
+
+_EXECUTION_STATUS_MAP: dict[str, str] = {
+    "Success": "Success",
+    "Completed": "Success",
+    "CompletedWithWarnings": "PartialSuccess",
+    "PartialSuccess": "PartialSuccess",
+    "Failed": "Failed",
+}
+
+
+def _map_execution_status(raw: str) -> str:
+    return _EXECUTION_STATUS_MAP.get(raw, "Success")
+
+
+def _iso(dt: datetime | None) -> str | None:
+    if dt is None:
+        return None
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=timezone.utc)
+    return dt.isoformat()
+
+
+def _sort_list(lst: list[str]) -> list[str]:
+    return sorted(lst)
+
+
+def _build_source_element(src) -> dict[str, Any]:
+    payload: dict[str, Any] = {
+        "source_id": src.source_id,
+        "source_text": src.source_text,
+        "segmentation_context": src.segmentation_context,
+        "input_material_ref": src.input_material_ref,
+        "confidence": src.confidence,
+    }
+    if src.parent_source_ref is not None:
+        payload["parent_source_ref"] = src.parent_source_ref
+    return {"element_type": "Source", "element_id": src.source_id, "payload": payload}
+
+
+def _build_segment_element(seg) -> dict[str, Any]:
+    payload: dict[str, Any] = {
+        "segment_id": seg.segment_id,
+        "title": seg.title,
+        "source_refs": _sort_list(list(seg.source_refs or [])),
+        "confidence": seg.confidence,
+    }
+    if seg.description is not None:
+        payload["description"] = seg.description
+    if seg.parent_segment_ref is not None:
+        payload["parent_segment_ref"] = seg.parent_segment_ref
+    return {
+        "element_type": "Segment",
+        "element_id": seg.segment_id,
+        "payload": payload,
+    }
+
+
+def _build_source_atom_element(atom) -> dict[str, Any]:
+    payload: dict[str, Any] = {
+        "atom_id": atom.atom_id,
+        "atom_text": atom.atom_text,
+        "source_ref": atom.source_ref,
+        "confidence": atom.confidence,
+    }
+    if atom.segment_ref is not None:
+        payload["segment_ref"] = atom.segment_ref
+    if atom.parent_atom_ref is not None:
+        payload["parent_atom_ref"] = atom.parent_atom_ref
+    return {
+        "element_type": "SourceAtom",
+        "element_id": atom.atom_id,
+        "payload": payload,
+    }
+
+
+def _build_signal_element(sig) -> dict[str, Any]:
+    payload: dict[str, Any] = {
+        "signal_id": sig.signal_id,
+        "signal_type": sig.signal_type,
+        "row_target": sig.row_target,
+        "description": sig.description,
+        "source_refs": _sort_list(list(sig.source_refs or [])),
+        "confidence": sig.confidence,
+    }
+    if sig.sourceatom_refs:
+        payload["sourceatom_refs"] = _sort_list(list(sig.sourceatom_refs))
+    if sig.derived_from_concern_id is not None:
+        payload["derived_from_concern_id"] = sig.derived_from_concern_id
+    return {
+        "element_type": "Signal",
+        "element_id": sig.signal_id,
+        "payload": payload,
+    }
+
+
+def _build_concern_element(cn) -> dict[str, Any]:
+    payload: dict[str, Any] = {
+        "concern_id": cn.concern_id,
+        "source_refs": _sort_list(list(cn.source_refs or [])),
+        "description": cn.description,
+        "state": cn.state,
+        "produced_in_row": cn.produced_in_row,
+        "practitioner_id": cn.practitioner_id,
+        "confidence": cn.confidence,
+    }
+    if cn.dispositioned_with_outcome is not None:
+        payload["dispositioned_with_outcome"] = cn.dispositioned_with_outcome
+    if cn.disposition_rationale is not None:
+        payload["disposition_rationale"] = cn.disposition_rationale
+    return {
+        "element_type": "Concern",
+        "element_id": cn.concern_id,
+        "payload": payload,
+    }
+
+
+def _build_analysis_pass_element(ap) -> dict[str, Any]:
+    payload: dict[str, Any] = {
+        "pass_id": ap.pass_id,
+        "pass_type": ap.pass_type,
+        "mechanism": ap.mechanism,
+        "evaluated_scope": ap.evaluated_scope,
+        "execution_status": _map_execution_status(ap.execution_status),
+        "mode_active": ap.mode_active,
+        "declared_transformation_modes": list(ap.declared_transformation_modes or []),
+        "outputs": ap.outputs or {},
+        "pass_started_at": _iso(ap.pass_started_at),
+        "confidence": ap.confidence,
+    }
+    completed = _iso(ap.pass_completed_at)
+    if completed is not None:
+        payload["pass_completed_at"] = completed
+    if ap.elapsed_ms is not None:
+        payload["elapsed_ms"] = ap.elapsed_ms
+    return {
+        "element_type": "AnalysisPass",
+        "element_id": ap.pass_id,
+        "payload": payload,
+    }
+
+
+def _build_stakeholder_element(sh) -> dict[str, Any]:
+    payload: dict[str, Any] = {
+        "stakeholder_id": sh.stakeholder_id,
+        "name": sh.name,
+    }
+    if hasattr(sh, "stakeholder_type") and sh.stakeholder_type:
+        payload["role"] = sh.stakeholder_type
+    if sh.stakeholder_id == "SH001":
+        payload["stakeholder_kind"] = "Automated"
+    return {
+        "element_type": "Stakeholder",
+        "element_id": sh.stakeholder_id,
+        "payload": payload,
+    }
+
+
+def _build_domain_element(dom) -> dict[str, Any]:
+    payload: dict[str, Any] = {
+        "domain_id": dom.domain_id,
+        "name": dom.name,
+        "row_target": dom.row_target,
+    }
+    return {
+        "element_type": "Domain",
+        "element_id": dom.domain_id,
+        "payload": payload,
+    }
+
+
+def _build_requirement_element(req) -> dict[str, Any]:
+    payload: dict[str, Any] = {
+        "requirement_id": req.requirement_id,
+        "statement": req.statement,
+        "row_target": req.row_target,
+    }
+    if hasattr(req, "domain_id") and req.domain_id:
+        payload["domain_refs"] = [req.domain_id]
+    return {
+        "element_type": "Requirement",
+        "element_id": req.requirement_id,
+        "payload": payload,
+    }
+
+
+def _build_register(
+    register_id: str,
+    register_type: str,
+    member_ids: list[str],
+    completeness_rule: str,
+    confidence: float = 1.0,
+) -> dict[str, Any]:
+    return {
+        "element_type": register_type + "Register" if not register_type.endswith("Register") else register_type,
+        "element_id": register_id,
+        "payload": {
+            "register_id": register_id,
+            "register_type": register_type,
+            "member_ids": _sort_list(member_ids),
+            "completeness_rule": completeness_rule,
+            "confidence": confidence,
+        },
+    }
+
+
+def _derive_row_target(data: ProjectData) -> list[str] | str:
+    rows: set[str] = set()
+    for sig in data.signals:
+        rows.add(sig.row_target)
+    for cn in data.concerns:
+        rows.add(cn.produced_in_row)
+    for req in data.requirements:
+        rows.add(req.row_target)
+    for dom in data.domains:
+        rows.add(dom.row_target)
+    if not rows:
+        return "1"
+    sorted_rows = sorted(rows)
+    return sorted_rows[0] if len(sorted_rows) == 1 else sorted_rows
+
+
+def _sort_elements(elements: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    def sort_key(e: dict[str, Any]) -> tuple[int, str]:
+        etype = e["element_type"]
+        rank = _TYPE_RANK.get(etype, 999)
+        return (rank, e["element_id"])
+
+    return sorted(elements, key=sort_key)
+
+
+def _compute_content_hash(ledger_without_hash: dict[str, Any]) -> str:
+    """Compute SHA-256 over the canonicalised ledger payload (Appendix B.5)."""
+    serialised = json.dumps(
+        ledger_without_hash,
+        ensure_ascii=False,
+        indent=2,
+        sort_keys=True,
+    )
+    serialised = serialised.replace("\r\n", "\n").replace("\r", "\n")
+    lines = [line.rstrip() for line in serialised.split("\n")]
+    canonical_bytes = "\n".join(lines).encode("utf-8")
+    return hashlib.sha256(canonical_bytes).hexdigest()
+
+
+def build_canonical_ledger(data: ProjectData) -> dict[str, Any]:
+    """
+    Build the canonical v2.12 ledger dict from *data*.
+
+    Returns a dict that can be serialised to JSON with json.dumps().
+    Non-canonical DB columns (project_id, created_at, phase_id, etc.) are
+    stripped; execution_status is normalised to the canonical enum.
+    """
+    elements: list[dict[str, Any]] = []
+
+    for src in data.sources:
+        elements.append(_build_source_element(src))
+
+    for seg in data.segments:
+        elements.append(_build_segment_element(seg))
+
+    for atom in data.source_atoms:
+        elements.append(_build_source_atom_element(atom))
+
+    for sig in data.signals:
+        elements.append(_build_signal_element(sig))
+
+    for cn in data.concerns:
+        elements.append(_build_concern_element(cn))
+
+    for ap in data.analysis_passes:
+        elements.append(_build_analysis_pass_element(ap))
+
+    for sh in data.stakeholders:
+        elements.append(_build_stakeholder_element(sh))
+
+    for dom in data.domains:
+        elements.append(_build_domain_element(dom))
+
+    for req in data.requirements:
+        elements.append(_build_requirement_element(req))
+
+    source_ids = [src.source_id for src in data.sources]
+    source_register = _build_register(
+        "SOURCE_REG001",
+        "Source",
+        source_ids,
+        "This register SHALL contain the identifiers of ALL Source elements present in the ledger.",
+    )
+    elements.append(source_register)
+
+    signal_ids = [sig.signal_id for sig in data.signals]
+    signal_register = _build_register(
+        "SIGNAL_REG001",
+        "Signal",
+        signal_ids,
+        "This register SHALL contain the identifiers of ALL Signal elements present in the ledger.",
+    )
+    elements.append(signal_register)
+
+    stakeholder_ids = [sh.stakeholder_id for sh in data.stakeholders]
+    stakeholder_register = _build_register(
+        "STAKEHOLDER_REG001",
+        "Stakeholder",
+        stakeholder_ids,
+        "This register SHALL contain the identifiers of ALL Stakeholder elements present in the ledger.",
+    )
+    elements.append(stakeholder_register)
+
+    if data.segments:
+        seg_ids = [seg.segment_id for seg in data.segments]
+        seg_register = _build_register(
+            "SEGMENT_REG001",
+            "Segment",
+            seg_ids,
+            "This register SHALL contain the identifiers of ALL Segment elements present in the ledger.",
+        )
+        elements.append(seg_register)
+
+    if data.source_atoms:
+        atom_ids = [atom.atom_id for atom in data.source_atoms]
+        atom_register = _build_register(
+            "SOURCEATOM_REG001",
+            "SourceAtom",
+            atom_ids,
+            "This register SHALL contain the identifiers of ALL SourceAtom elements present in the ledger.",
+        )
+        elements.append(atom_register)
+
+    if data.concerns:
+        concern_ids = [cn.concern_id for cn in data.concerns]
+        concern_register = _build_register(
+            "CONCERN_REG001",
+            "Concern",
+            concern_ids,
+            "This register SHALL contain the identifiers of ALL Concern elements present in the ledger.",
+        )
+        elements.append(concern_register)
+
+    if data.domains:
+        domain_ids = [dom.domain_id for dom in data.domains]
+        domain_register = _build_register(
+            "DOMAIN_REG001",
+            "Domain",
+            domain_ids,
+            "This register SHALL contain the identifiers of ALL Domain elements present in the ledger.",
+        )
+        elements.append(domain_register)
+
+    if data.requirements:
+        req_ids = [req.requirement_id for req in data.requirements]
+        req_register = _build_register(
+            "REQUIREMENT_REG001",
+            "Requirement",
+            req_ids,
+            "This register SHALL contain the identifiers of ALL Requirement elements present in the ledger.",
+        )
+        elements.append(req_register)
+
+    elements = _sort_elements(elements)
+
+    register_index = sorted(
+        [
+            {
+                "register_type": e["element_type"],
+                "register_id": e["element_id"],
+            }
+            for e in elements
+            if e["element_type"].endswith("Register")
+        ],
+        key=lambda r: (r["register_type"], r["register_id"]),
+    )
+
+    row_target = _derive_row_target(data)
+
+    ledger: dict[str, Any] = {
+        "sysengage_ledger_version": SPEC_VERSION,
+        "schema_id": SCHEMA_ID,
+        "row_target": row_target,
+        "run_id": str(uuid.uuid4()),
+        "created_utc": datetime.now(timezone.utc).isoformat(),
+        "generator": {
+            "name": GENERATOR_NAME,
+            "version": GENERATOR_VERSION,
+        },
+        "elements": elements,
+        "register_index": register_index,
+    }
+
+    content_hash = _compute_content_hash(ledger)
+    ledger["content_hash"] = {
+        "hash_alg": "sha256",
+        "hash": content_hash,
+    }
+
+    return ledger
+
+
+def ledger_to_json_str(ledger: dict[str, Any], indent: int = 2) -> str:
+    """Serialise a canonical ledger dict to a UTF-8 JSON string (LF newlines)."""
+    raw = json.dumps(ledger, ensure_ascii=False, indent=indent)
+    return raw.replace("\r\n", "\n").replace("\r", "\n")
