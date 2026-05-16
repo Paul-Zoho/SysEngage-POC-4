@@ -28,8 +28,8 @@ def main() -> None:
     parser.add_argument("project_id", help="Project ID to export (e.g. PMT_E2E)")
     parser.add_argument(
         "--out-dir",
-        default=".",
-        help="Directory to write output files (default: current directory)",
+        default="verification_outputs",
+        help="Directory to write output files (default: verification_outputs)",
     )
     args = parser.parse_args()
 
