@@ -19,6 +19,7 @@ from fastapi.templating import Jinja2Templates
 from fastapi.responses import RedirectResponse
 
 from api.source_capture import router as source_capture_router
+from api.row_lens import router as row_lens_router
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -35,6 +36,7 @@ app.mount(
 )
 
 app.include_router(source_capture_router)
+app.include_router(row_lens_router)
 
 
 @app.get("/", include_in_schema=False)

@@ -1,0 +1,205 @@
+{
+  "sysengage_ledger_version": "2.11",
+  "schema_id": "sysengage.ledger.instance.v2_11",
+  "row_target": null,
+  "run_id": "P326",
+  "created_utc": "2026-05-13T07:07:32.989141+00:00",
+  "generator": "sysengage_source_capture_v0.7",
+  "elements": [
+    {
+      "element_id": "S1343",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S1343",
+        "source_text": " At the start of the next week all tasks become available again to be claimed.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/The Pocket Money Tracker System v1.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S1344",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S1344",
+        "source_text": " Historical task data shall be available.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/The Pocket Money Tracker System v1.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S1345",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S1345",
+        "source_text": " The resulting system shall be able to operate on iOS 16, Android 9 and Windows 11 or later.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/The Pocket Money Tracker System v1.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S1336",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S1336",
+        "source_text": "High Level Description",
+        "segmentation_context": "heading",
+        "input_material_ref": "verification_inputs/The Pocket Money Tracker System v1.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S1337",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S1337",
+        "source_text": "The pocket money tracker system allows children to claim pocket money tasks as they are completed throughout the week.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/The Pocket Money Tracker System v1.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S1338",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S1338",
+        "source_text": " Parents can detail tasks that should be completed and the monetary amount earned for that task.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/The Pocket Money Tracker System v1.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S1339",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S1339",
+        "source_text": " As a task is completed it is linked to the child that completed it.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/The Pocket Money Tracker System v1.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S1340",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S1340",
+        "source_text": " The children should be able to see the available tasks and the tasks they have completed that week.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/The Pocket Money Tracker System v1.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S1341",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S1341",
+        "source_text": " At the end of each week the children can see the total amount they have earned that week.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/The Pocket Money Tracker System v1.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "S1342",
+      "element_type": "Source",
+      "payload": {
+        "source_id": "S1342",
+        "source_text": " The Parents can also see a report of how much each child has earned and the tasks they completed so that they can provide the pocket money earned to each child.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "verification_inputs/The Pocket Money Tracker System v1.docx",
+        "confidence": 1.0,
+        "parent_source_ref": null
+      }
+    },
+    {
+      "element_id": "SEG174",
+      "element_type": "Segment",
+      "payload": {
+        "segment_id": "SEG174",
+        "title": "High Level Description",
+        "description": "Section: High Level Description",
+        "source_refs": [
+          "S1336",
+          "S1337",
+          "S1338",
+          "S1339",
+          "S1340",
+          "S1341",
+          "S1342",
+          "S1343",
+          "S1344",
+          "S1345"
+        ],
+        "parent_segment_ref": null,
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_id": "P326",
+      "element_type": "AnalysisPass",
+      "payload": {
+        "pass_id": "P326",
+        "pass_type": "Universal",
+        "mechanism": "SourceCapture",
+        "execution_status": "Success",
+        "mode_active": "LPM",
+        "declared_transformation_modes": [
+          "LPM"
+        ],
+        "outputs": {
+          "read_witness": {
+            "file_path": "verification_inputs/The Pocket Money Tracker System v1.docx",
+            "read_mode": "Full",
+            "byte_count": 13803,
+            "input_hash": "5d66954e4d33dda146d247e09c75a371789b83e04396eb7f4d9b69f6996e35a0",
+            "character_count": 902,
+            "format_detected": "docx",
+            "partial_failure_detail": null,
+            "read_completion_status": true
+          },
+          "mechanism_data": {
+            "source_ids": [
+              "S1336",
+              "S1337",
+              "S1338",
+              "S1339",
+              "S1340",
+              "S1341",
+              "S1342",
+              "S1343",
+              "S1344",
+              "S1345"
+            ],
+            "source_count": 10,
+            "segment_count": 1,
+            "source_atom_count": 0,
+            "non_text_source_ids": [],
+            "cross_source_ordering": [],
+            "source_with_decoding_issues_ids": []
+          },
+          "mode_violations": []
+        },
+        "evaluated_scope": "All input material in this project",
+        "pass_started_at": "2026-05-13T07:07:26.571368+00:00",
+        "pass_completed_at": "2026-05-13T07:07:31.804512+00:00",
+        "elapsed_ms": 5233,
+        "confidence": 1.0
+      }
+    }
+  ]
+}

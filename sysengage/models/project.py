@@ -2,7 +2,8 @@
 Project ORM model — minimal for v1 single-tenant prototype.
 
 Provides the project_id FK anchor required by Source, Segment, SourceAtom,
-and AnalysisPass. Not a canonical ledger entity; infrastructure only.
+AnalysisPass, Signal, Concern, Domain, Requirement, and ProjectProfile.
+Not a canonical ledger entity; infrastructure only.
 """
 
 from datetime import datetime, timezone
@@ -26,3 +27,10 @@ class ProjectModel(Base):
     sources = relationship("SourceModel", back_populates="project")
     source_atoms = relationship("SourceAtomModel", back_populates="project")
     analysis_passes = relationship("AnalysisPassModel", back_populates="project")
+    project_profile = relationship(
+        "ProjectProfileModel", back_populates="project", uselist=False
+    )
+    signals = relationship("SignalModel", back_populates="project")
+    concerns = relationship("ConcernModel", back_populates="project")
+    domains = relationship("DomainModel", back_populates="project")
+    requirements = relationship("RequirementModel", back_populates="project")

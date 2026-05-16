@@ -69,6 +69,7 @@ from core.db import (
     get_next_n_sequence_values,
     format_identifier,
 )
+from core.ledger import ensure_project_committed, ensure_stakeholder_committed
 from core.modes.decorator import ModeViolationError
 from mechanisms.source_capture.errors import (
     EmptyInputError,
@@ -157,8 +158,8 @@ def run_source_capture(
 
     # --- Step 1: Commit project+stakeholder in isolated mini-transaction ---
     # CRITICAL: must happen BEFORE main session so FK anchors survive main-transaction rollback.
-    _ensure_project_committed(project_id)
-    _ensure_stakeholder_committed(practitioner_id)
+    ensure_project_committed(project_id)
+    ensure_stakeholder_committed(practitioner_id)
 
     session = get_session()
 
@@ -471,72 +472,6 @@ def _abort(pass_data: dict[str, Any], reason: str, failed_pass: str) -> None:
         "failure_pass": failed_pass,
         "mode_violations": pass_data.get("mode_violations", []),
     }
-
-
-def _ensure_project_committed(project_id: str) -> None:
-    """
-    Create project record in its own committed transaction if it doesn't exist.
-
-    CRITICAL: committing separately ensures the project row persists even if
-    the subsequent main mechanism transaction rolls back. This allows
-    commit_failure_pass() to insert an AnalysisPass with the correct FK.
-    """
-    from sqlalchemy import select
-
-    session = get_session()
-    try:
-        existing = session.execute(
-            select(ProjectModel).where(ProjectModel.project_id == project_id)
-        ).scalar_one_or_none()
-        if not existing:
-            session.add(
-                ProjectModel(
-                    project_id=project_id,
-                    name=f"Project {project_id}",
-                    created_at=datetime.now(timezone.utc),
-                )
-            )
-            session.commit()
-        else:
-            session.rollback()
-    except Exception:
-        session.rollback()
-        raise
-    finally:
-        session.close()
-
-
-def _ensure_stakeholder_committed(practitioner_id: str) -> None:
-    """
-    Create stakeholder record in its own committed transaction if it doesn't exist.
-    Same rationale as _ensure_project_committed.
-    """
-    from sqlalchemy import select
-
-    session = get_session()
-    try:
-        existing = session.execute(
-            select(StakeholderModel).where(
-                StakeholderModel.stakeholder_id == practitioner_id
-            )
-        ).scalar_one_or_none()
-        if not existing:
-            session.add(
-                StakeholderModel(
-                    stakeholder_id=practitioner_id,
-                    name=f"Practitioner {practitioner_id}",
-                    stakeholder_type="practitioner",
-                    created_at=datetime.now(timezone.utc),
-                )
-            )
-            session.commit()
-        else:
-            session.rollback()
-    except Exception:
-        session.rollback()
-        raise
-    finally:
-        session.close()
 
 
 def _find_existing_hash(

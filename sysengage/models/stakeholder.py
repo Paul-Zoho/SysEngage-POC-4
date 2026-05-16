@@ -24,3 +24,4 @@ class StakeholderModel(Base):
     )
 
     analysis_passes = relationship("AnalysisPassModel", back_populates="practitioner")
+    concerns = relationship("ConcernModel", back_populates="practitioner")
