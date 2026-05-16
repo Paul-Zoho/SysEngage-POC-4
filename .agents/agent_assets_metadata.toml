@@ -1,0 +1,8 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "6xhpRCIowR28V-c5tcyqZ"
+uri = "file://PMT_E2E.ledger.json"
+type = "unspecified"
+title = "PMT_E2E — Canonical Ledger (spec v2.12)"
