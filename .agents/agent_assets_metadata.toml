@@ -18,3 +18,9 @@ id = "4hlX126U04uPJWSr5LQFH"
 uri = "file://verification_outputs/NQPS_E2E_Run_1.json"
 type = "unspecified"
 title = "NQPS_E2E_Run_1 — Canonical Ledger (spec v2.12)"
+
+[[outputs]]
+id = "Y1cQXUfVHo_2M2IG8X2jU"
+uri = "file://verification_outputs/PMT_E2E_Post_Row2.json"
+type = "unspecified"
+title = "PMT_E2E_Post_Row2 — Canonical Ledger (spec v2.12)"
