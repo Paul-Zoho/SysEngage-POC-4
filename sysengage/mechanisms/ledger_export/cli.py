@@ -18,7 +18,13 @@ import argparse
 import os
 import sys
 
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+# sysengage/ is three levels up from this file
+_SYSENGAGE_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+# workspace root is one level above sysengage/
+_WORKSPACE_ROOT = os.path.dirname(_SYSENGAGE_ROOT)
+_DEFAULT_OUT_DIR = os.path.join(_WORKSPACE_ROOT, "verification_outputs")
+
+sys.path.insert(0, _SYSENGAGE_ROOT)
 
 
 def main() -> None:
@@ -28,8 +34,8 @@ def main() -> None:
     parser.add_argument("project_id", help="Project ID to export (e.g. PMT_E2E)")
     parser.add_argument(
         "--out-dir",
-        default="verification_outputs",
-        help="Directory to write output files (default: verification_outputs)",
+        default=_DEFAULT_OUT_DIR,
+        help=f"Directory to write output files (default: {_DEFAULT_OUT_DIR})",
     )
     args = parser.parse_args()
 
