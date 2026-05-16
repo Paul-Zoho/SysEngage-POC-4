@@ -4,12 +4,8 @@ Ledger Export CLI.
 Usage:
     python -m mechanisms.ledger_export.cli <project_id> [--out-dir <dir>]
 
-Writes two files to --out-dir (default: current directory):
+Writes to --out-dir (default: verification_outputs at workspace root):
     <project_id>.ledger.json  — canonical JSON ledger (spec v2.12)
-    <project_id>.ledger.md    — Markdown projection (human review view)
-
-The JSON file is the authoritative canonical artefact per spec Appendix A.
-The Markdown file is a derived projection for human review.
 """
 
 from __future__ import annotations
@@ -59,15 +55,10 @@ def main() -> None:
 
     safe_id = project_id.replace("/", "_").replace("\\", "_")
     json_path = os.path.join(out_dir, f"{safe_id}.ledger.json")
-    md_path = os.path.join(out_dir, f"{safe_id}.ledger.md")
 
     with open(json_path, "w", encoding="utf-8", newline="\n") as f:
         f.write(result.json_str)
     print(f"[ledger-export] JSON → {json_path}", flush=True)
-
-    with open(md_path, "w", encoding="utf-8", newline="\n") as f:
-        f.write(result.markdown_str)
-    print(f"[ledger-export] Markdown → {md_path}", flush=True)
 
     ledger = result.ledger
     n_elements = len(ledger.get("elements", []))
