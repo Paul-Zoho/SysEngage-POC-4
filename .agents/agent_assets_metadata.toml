@@ -12,3 +12,9 @@ id = "ZIOlOjQ3EloBAOPsKzQB9"
 uri = "file://Row1_Understanding_E2E_Run_1.json"
 type = "unspecified"
 title = "Row1_Understanding_E2E_Run_1 — Canonical Ledger (spec v2.12)"
+
+[[outputs]]
+id = "4hlX126U04uPJWSr5LQFH"
+uri = "file://verification_outputs/NQPS_E2E_Run_1.json"
+type = "unspecified"
+title = "NQPS_E2E_Run_1 — Canonical Ledger (spec v2.12)"
