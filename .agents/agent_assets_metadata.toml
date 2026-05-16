@@ -30,3 +30,9 @@ id = "hHI6BjPNiOas8tFdLzhCn"
 uri = "file://verification_outputs/Row1_Understanding_E2E_Post_Row2.json"
 type = "unspecified"
 title = "Row1_Understanding_E2E_Post_Row2 — Canonical Ledger (spec v2.12)"
+
+[[outputs]]
+id = "gmwUmbfimKnW7L6x8cRvg"
+uri = "file://verification_outputs/NQPS_E2E_Post_Row2.json"
+type = "unspecified"
+title = "NQPS_E2E_Post_Row2 — Canonical Ledger (spec v2.12)"
