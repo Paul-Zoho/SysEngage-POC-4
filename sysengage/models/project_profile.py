@@ -8,6 +8,10 @@ Per Row-Lens Source Re-Analysis spec v0.1 §3.2 and §4.1/§4.2:
   concern_threshold — T1 for Signal/Concern classification (default 0.65).
   chunk_match_threshold — fuzzy match threshold for Stage 1 (default 0.6).
   residual_batch_size — batch size for residual AI invocations (default 50).
+
+Per CCI Construction Mechanism Spec v0.2 §3.3:
+  cci_consolidation_threshold — over-consolidation flag threshold (default 0.80).
+  cci_batch_size — signals per AI batch invocation in Step 3 (default 20).
 """
 
 from datetime import datetime, timezone
@@ -30,6 +34,12 @@ class ProjectProfileModel(Base):
     )
     residual_batch_size: Mapped[int] = mapped_column(
         Integer, nullable=False, default=50
+    )
+    cci_consolidation_threshold: Mapped[float] = mapped_column(
+        Float, nullable=False, default=0.80
+    )
+    cci_batch_size: Mapped[int] = mapped_column(
+        Integer, nullable=False, default=20
     )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
