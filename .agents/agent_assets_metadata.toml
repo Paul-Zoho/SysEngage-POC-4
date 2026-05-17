@@ -90,3 +90,9 @@ id = "sWud4074JrMlEZMtJZkTd"
 uri = "file://verification_outputs/Row1_Understanding_E2E_Post_Row5.json"
 type = "unspecified"
 title = "Row1_Understanding_E2E_Post_Row5 — Canonical Ledger (spec v2.12)"
+
+[[outputs]]
+id = "F8EXJRXLiUKLgaADrqyS9"
+uri = "file://verification_outputs/PMT_E2E.ledger.json"
+type = "unspecified"
+title = "PMT_E2E Ledger Export (post-P803)"
