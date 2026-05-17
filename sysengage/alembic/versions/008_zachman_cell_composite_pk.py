@@ -73,6 +73,18 @@ def downgrade() -> None:
 
     op.drop_constraint("zachman_cell_pkey", "zachman_cell", type_="primary")
 
+    # After upgrade, zachman_cell may have one row per (cell_id, project_id) pair.
+    # Restoring a single-column PK on cell_id requires deduplication first — keep
+    # the lexicographically first project_id row for each cell_id.
+    op.execute("""
+        DELETE FROM zachman_cell
+        WHERE (cell_id, project_id) NOT IN (
+            SELECT cell_id, MIN(project_id)
+            FROM zachman_cell
+            GROUP BY cell_id
+        )
+    """)
+
     op.create_primary_key(
         "zachman_cell_pkey",
         "zachman_cell",
