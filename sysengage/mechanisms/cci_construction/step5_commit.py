@@ -82,7 +82,10 @@ def commit_ccis(
         cell_id = f"ZC-R{row_ref}-C-{column}"
         existing_ccis = (
             session.query(CellContentItemModel)
-            .filter(CellContentItemModel.cell_id == cell_id)
+            .filter(
+                CellContentItemModel.cell_id == cell_id,
+                CellContentItemModel.project_id == project_id,
+            )
             .all()
         )
         if existing_ccis:
@@ -130,7 +133,7 @@ def commit_ccis(
     ccis_merged = 0
     now = datetime.now(timezone.utc)
     for update in existing_updates:
-        existing = session.get(CellContentItemModel, update.ci_id)
+        existing = session.get(CellContentItemModel, {"ci_id": update.ci_id, "project_id": project_id})
         if existing is None:
             continue
         existing.signal_refs = update.merged_signal_refs

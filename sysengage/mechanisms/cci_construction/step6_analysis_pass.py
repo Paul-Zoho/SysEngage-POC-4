@@ -41,37 +41,36 @@ def build_cci_data(
     consolidation_flags: list[ConsolidationFlag],
     integrity_violations: list[dict],
     project_id: str,
+    session: Any,
 ) -> dict[str, Any]:
     """
     Build the outputs.cci_data sub-structure per spec §7.
 
     Computes cells_populated and cells_empty from committed CCI counts.
     All zero-value integer fields are explicitly 0 (not null or omitted).
+
+    `session` must be the same session that inserted the CCIs so the count
+    sees the pending inserts before commit.
     """
-    from sqlalchemy import func
-    from core.db import get_session
     from models.cell_content_item import CellContentItemModel
     from models.zachman_cell import ZachmanCellModel
 
-    # Count populated cells (cells with ≥1 CCI) for this row
-    session = get_session()
-    try:
-        populated_cell_ids = (
-            session.query(CellContentItemModel.cell_id)
-            .join(
-                ZachmanCellModel,
-                CellContentItemModel.cell_id == ZachmanCellModel.cell_id,
-            )
-            .filter(
-                ZachmanCellModel.row_target == str(row_ref),
-                ZachmanCellModel.project_id == project_id,
-            )
-            .distinct()
-            .all()
+    # Count populated cells (cells with ≥1 CCI) for this row using the
+    # caller's session — ensures visibility of the current transaction's inserts.
+    populated_cell_ids = (
+        session.query(CellContentItemModel.cell_id)
+        .join(
+            ZachmanCellModel,
+            CellContentItemModel.cell_id == ZachmanCellModel.cell_id,
         )
-        cells_populated = len(populated_cell_ids)
-    finally:
-        session.close()
+        .filter(
+            ZachmanCellModel.row_target == str(row_ref),
+            CellContentItemModel.project_id == project_id,
+        )
+        .distinct()
+        .all()
+    )
+    cells_populated = len(populated_cell_ids)
 
     cells_empty = 6 - cells_populated
 

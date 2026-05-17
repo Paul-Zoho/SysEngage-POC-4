@@ -258,6 +258,7 @@ def run(
             consolidation_flags=consolidation_flags,
             integrity_violations=pass_data.get("_integrity_violations", []),
             project_id=project_id,
+            session=session,
         )
 
         all_confidences = pass_data.get("_collected_confidences", [])

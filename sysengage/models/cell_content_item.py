@@ -37,7 +37,7 @@ class CellContentItemModel(Base):
     justification: Mapped[str | None] = mapped_column(Text, nullable=True)
     confidence: Mapped[float] = mapped_column(Float, nullable=False)
     project_id: Mapped[str] = mapped_column(
-        String, ForeignKey("project.project_id"), nullable=False
+        String, ForeignKey("project.project_id"), nullable=False, primary_key=True
     )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),

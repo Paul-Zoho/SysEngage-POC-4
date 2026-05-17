@@ -118,7 +118,7 @@ def deduplicate_per_cell(
         # ------------------------------------------------------------------ #
         # Stage 4b — AI semantic review (IM)                                 #
         # ------------------------------------------------------------------ #
-        existing_ccis = _read_existing_ccis(session=session, cell_id=cell_id)
+        existing_ccis = _read_existing_ccis(session=session, cell_id=cell_id, project_id=project_id)
 
         cell_candidates, new_existing_updates = _ai_semantic_review(
             cell_id=cell_id,
@@ -249,10 +249,14 @@ def _read_existing_ccis(
     *,
     session: Session,
     cell_id: str,
+    project_id: str,
 ) -> list[CellContentItemModel]:
     return (
         session.query(CellContentItemModel)
-        .filter(CellContentItemModel.cell_id == cell_id)
+        .filter(
+            CellContentItemModel.cell_id == cell_id,
+            CellContentItemModel.project_id == project_id,
+        )
         .order_by(CellContentItemModel.ci_id)
         .all()
     )

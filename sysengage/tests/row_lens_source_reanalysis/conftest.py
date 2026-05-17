@@ -57,88 +57,60 @@ def _delete_test_data() -> None:
     """
     Clean up all test data for PROJECT_ID to ensure test isolation.
 
-    Deletion order respects FK constraints:
-      AnalysisPass, Signal, Concern (no FKs to Source/Domain/Requirement)
-      SourceAtom (FK to Source with CASCADE — but explicit delete is safer)
-      Source (FK to Project)
-      Requirement (FK to Domain, Project)
-      Domain (FK to Project)
-      Segment (FK to Project)
-      ProjectProfile (FK to Project)
-      Project
-      Stakeholder
+    Uses a single session but commits after each table's DELETE so that a
+    failure on one table cannot roll back the others.  The connection stays
+    open across all deletes (one round-trip overhead instead of eleven).
+    Deletion order respects FK constraints: children before parents.
+    Errors per table are silently absorbed — teardown is best-effort.
     """
+    stmts = [
+        delete(AnalysisPassModel).where(AnalysisPassModel.project_id == PROJECT_ID),
+        delete(SignalModel).where(SignalModel.project_id == PROJECT_ID),
+        delete(ConcernModel).where(ConcernModel.project_id == PROJECT_ID),
+        delete(SourceAtomModel).where(SourceAtomModel.project_id == PROJECT_ID),
+        delete(SourceModel).where(SourceModel.project_id == PROJECT_ID),
+        delete(RequirementModel).where(RequirementModel.project_id == PROJECT_ID),
+        delete(DomainModel).where(DomainModel.project_id == PROJECT_ID),
+        delete(SegmentModel).where(SegmentModel.project_id == PROJECT_ID),
+        delete(ProjectProfileModel).where(ProjectProfileModel.project_id == PROJECT_ID),
+        delete(ProjectModel).where(ProjectModel.project_id == PROJECT_ID),
+        delete(StakeholderModel).where(StakeholderModel.stakeholder_id == PRACTITIONER_ID),
+    ]
     session = get_session()
     try:
-        # Each delete is independent; commit after all to catch FK issues early
-        session.execute(
-            delete(AnalysisPassModel).where(
-                AnalysisPassModel.project_id == PROJECT_ID
-            )
-        )
-        session.execute(
-            delete(SignalModel).where(SignalModel.project_id == PROJECT_ID)
-        )
-        session.execute(
-            delete(ConcernModel).where(ConcernModel.project_id == PROJECT_ID)
-        )
-        session.execute(
-            delete(SourceAtomModel).where(
-                SourceAtomModel.project_id == PROJECT_ID
-            )
-        )
-        session.execute(
-            delete(SourceModel).where(SourceModel.project_id == PROJECT_ID)
-        )
-        session.execute(
-            delete(RequirementModel).where(
-                RequirementModel.project_id == PROJECT_ID
-            )
-        )
-        session.execute(
-            delete(DomainModel).where(DomainModel.project_id == PROJECT_ID)
-        )
-        session.execute(
-            delete(SegmentModel).where(SegmentModel.project_id == PROJECT_ID)
-        )
-        session.execute(
-            delete(ProjectProfileModel).where(
-                ProjectProfileModel.project_id == PROJECT_ID
-            )
-        )
-        session.execute(
-            delete(ProjectModel).where(ProjectModel.project_id == PROJECT_ID)
-        )
-        session.execute(
-            delete(StakeholderModel).where(
-                StakeholderModel.stakeholder_id == PRACTITIONER_ID
-            )
-        )
-        session.commit()
-    except Exception:
-        session.rollback()
+        for stmt in stmts:
+            try:
+                session.execute(stmt)
+                session.commit()
+            except Exception:
+                session.rollback()
     finally:
         session.close()
 
 
 @pytest.fixture()
 def test_project():
-    """Create project + stakeholder records for tests."""
+    """Create project + stakeholder records for tests.
+
+    Commits Project and Stakeholder in separate transactions so that a
+    pre-existing row for one (left over from a prior test's failed teardown)
+    cannot prevent creation of the other.
+    """
     _delete_test_data()
     _commit(
-        [
-            ProjectModel(
-                project_id=PROJECT_ID,
-                name="Row Lens Test Project",
-                created_at=datetime.now(timezone.utc),
-            ),
-            StakeholderModel(
-                stakeholder_id=PRACTITIONER_ID,
-                name="Test Practitioner",
-                stakeholder_type="practitioner",
-                created_at=datetime.now(timezone.utc),
-            ),
-        ]
+        ProjectModel(
+            project_id=PROJECT_ID,
+            name="Row Lens Test Project",
+            created_at=datetime.now(timezone.utc),
+        )
+    )
+    _commit(
+        StakeholderModel(
+            stakeholder_id=PRACTITIONER_ID,
+            name="Test Practitioner",
+            stakeholder_type="practitioner",
+            created_at=datetime.now(timezone.utc),
+        )
     )
     yield PROJECT_ID
     _delete_test_data()
