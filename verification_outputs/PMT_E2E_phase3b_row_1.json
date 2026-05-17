@@ -8,8 +8,8 @@
     "4",
     "5"
   ],
-  "run_id": "b9ddf3e7-3808-422e-91ea-307a6c412e1d",
-  "created_utc": "2026-05-17T12:46:40.638046+00:00",
+  "run_id": "451705eb-7238-48d5-aa94-ce222b06a7e4",
+  "created_utc": "2026-05-17T13:55:12.804708+00:00",
   "generator": {
     "name": "sysengage-ledger-export",
     "version": "1.0"
@@ -955,6 +955,16 @@
     },
     {
       "element_type": "ZachmanCell",
+      "element_id": "ZC-R1-C-Where",
+      "payload": {
+        "cell_id": "ZC-R1-C-Where",
+        "row_target": "1",
+        "column": "Where",
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_type": "ZachmanCell",
       "element_id": "ZC-R1-C-Who",
       "payload": {
         "cell_id": "ZC-R1-C-Who",
@@ -983,6 +993,7 @@
           "ZC-R1-C-How",
           "ZC-R1-C-What",
           "ZC-R1-C-When",
+          "ZC-R1-C-Where",
           "ZC-R1-C-Who",
           "ZC-R1-C-Why"
         ],
@@ -1885,6 +1896,6 @@
   ],
   "content_hash": {
     "hash_alg": "sha256",
-    "hash": "3888dcc94f9d7f2fc52ef6ee23a6001aee5ba8dae9a8caf7176970bff3bd92cc"
+    "hash": "af7c878f6fae8ba7303e0336854b9f51cc2e0340585762ccc65ecf1f77bf7bb6"
   }
 }

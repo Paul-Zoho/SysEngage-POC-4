@@ -44,7 +44,7 @@ def upsert_zachman_cells(
         cell_ids: list[str] = []
         for column in COLUMNS:
             cell_id = f"ZC-R{row_ref}-C-{column}"
-            existing = session.get(ZachmanCellModel, cell_id)
+            existing = session.get(ZachmanCellModel, {"cell_id": cell_id, "project_id": project_id})
             if existing is None:
                 cell = ZachmanCellModel(
                     cell_id=cell_id,

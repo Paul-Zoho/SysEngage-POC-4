@@ -10,7 +10,7 @@ Per CCI Construction Mechanism Spec v0.2 §5.2 and canonical ledger spec v2.12:
 
 from datetime import datetime, timezone
 
-from sqlalchemy import CheckConstraint, DateTime, Float, ForeignKey, String, Text
+from sqlalchemy import CheckConstraint, DateTime, Float, ForeignKey, ForeignKeyConstraint, String, Text
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -24,12 +24,16 @@ class CellContentItemModel(Base):
             r"ci_id ~ '^CCI-ROW[1-6]-C-(What|How|Where|Who|When|Why)-\d{3}$'",
             name="ck_cci_id_format",
         ),
+        ForeignKeyConstraint(
+            ["cell_id", "project_id"],
+            ["zachman_cell.cell_id", "zachman_cell.project_id"],
+            ondelete="CASCADE",
+            name="cell_content_item_cell_id_project_id_fkey",
+        ),
     )
 
     ci_id: Mapped[str] = mapped_column(String, primary_key=True)
-    cell_id: Mapped[str] = mapped_column(
-        String, ForeignKey("zachman_cell.cell_id", ondelete="CASCADE"), nullable=False
-    )
+    cell_id: Mapped[str] = mapped_column(String, nullable=False)
     classification_type: Mapped[str] = mapped_column(String, nullable=False)
     signal_refs: Mapped[list] = mapped_column(JSONB, nullable=False, default=list)
     description: Mapped[str] = mapped_column(Text, nullable=False)

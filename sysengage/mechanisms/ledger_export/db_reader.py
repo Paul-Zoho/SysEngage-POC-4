@@ -138,18 +138,12 @@ def read_project_data(project_id: str, session: Session) -> ProjectData:
         .all()
     )
 
-    # ZachmanCell uses a global PK (cell_id only, no project scope).
-    # Look up the cells referenced by this project's CCIs rather than
-    # filtering by project_id, which may differ from the owning project.
-    zachman_cells: list[ZachmanCellModel] = []
-    if ccis:
-        referenced_cell_ids = sorted({cci.cell_id for cci in ccis})
-        zachman_cells = (
-            session.query(ZachmanCellModel)
-            .filter(ZachmanCellModel.cell_id.in_(referenced_cell_ids))
-            .order_by(ZachmanCellModel.cell_id)
-            .all()
-        )
+    zachman_cells = (
+        session.query(ZachmanCellModel)
+        .filter(ZachmanCellModel.project_id == project_id)
+        .order_by(ZachmanCellModel.cell_id)
+        .all()
+    )
 
     return ProjectData(
         project=project,

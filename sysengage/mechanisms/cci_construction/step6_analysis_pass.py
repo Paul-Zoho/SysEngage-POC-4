@@ -28,6 +28,21 @@ from mechanisms.cci_construction.types import (
 )
 
 
+import re as _re
+
+_CI_ID_TO_CELL_RE = _re.compile(
+    r"^CCI-ROW([1-6])-C-(What|How|Where|Who|When|Why)-\d{3}$"
+)
+
+
+def _ci_id_to_cell_id(ci_id: str) -> str:
+    """Convert 'CCI-ROW1-C-What-001' → 'ZC-R1-C-What'. Returns '' if unparseable."""
+    m = _CI_ID_TO_CELL_RE.match(ci_id)
+    if not m:
+        return ""
+    return f"ZC-R{m.group(1)}-C-{m.group(2)}"
+
+
 def build_cci_data(
     *,
     row_ref: int,
@@ -40,38 +55,26 @@ def build_cci_data(
     merge_records: list[MergeRecord],
     consolidation_flags: list[ConsolidationFlag],
     integrity_violations: list[dict],
-    project_id: str,
-    session: Any,
 ) -> dict[str, Any]:
     """
     Build the outputs.cci_data sub-structure per spec §7.
 
-    Computes cells_populated and cells_empty from committed CCI counts.
+    Computes cells_populated in-memory from new_ci_ids and merge_records —
+    avoids a DB query against an unflushed session (which would return 0 on
+    first-run passes before the transaction is visible).
     All zero-value integer fields are explicitly 0 (not null or omitted).
-
-    `session` must be the same session that inserted the CCIs so the count
-    sees the pending inserts before commit.
     """
-    from models.cell_content_item import CellContentItemModel
-    from models.zachman_cell import ZachmanCellModel
+    populated: set[str] = set()
+    for ci_id in new_ci_ids:
+        cell_id = _ci_id_to_cell_id(ci_id)
+        if cell_id:
+            populated.add(cell_id)
+    for mr in merge_records:
+        cell_id = _ci_id_to_cell_id(mr.surviving_ci_id)
+        if cell_id:
+            populated.add(cell_id)
 
-    # Count populated cells (cells with ≥1 CCI) for this row using the
-    # caller's session — ensures visibility of the current transaction's inserts.
-    populated_cell_ids = (
-        session.query(CellContentItemModel.cell_id)
-        .join(
-            ZachmanCellModel,
-            CellContentItemModel.cell_id == ZachmanCellModel.cell_id,
-        )
-        .filter(
-            ZachmanCellModel.row_target == str(row_ref),
-            CellContentItemModel.project_id == project_id,
-        )
-        .distinct()
-        .all()
-    )
-    cells_populated = len(populated_cell_ids)
-
+    cells_populated = len(populated)
     cells_empty = 6 - cells_populated
 
     return {
