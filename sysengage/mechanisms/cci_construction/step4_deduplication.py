@@ -37,6 +37,7 @@ from typing import Any
 from sqlalchemy.orm import Session
 
 from core.ai_client import get_ai_client, MODEL
+from core.db import get_session
 from mechanisms.cci_construction.prompts.column_interrogatives import (
     COLUMN_INTERROGATIVES,
 )
@@ -66,7 +67,6 @@ def deduplicate_per_cell(
     project_id: str,
     consolidation_threshold: float,
     pass_data: dict[str, Any],
-    session: Session,
 ) -> tuple[list[CandidateCCI], list[ExistingCCIUpdate], list[MergeRecord], list[ConsolidationFlag]]:
     """
     Deduplicate the global candidate set, per cell.
@@ -78,7 +78,6 @@ def deduplicate_per_cell(
     project_id              : project scope
     consolidation_threshold : from ProjectProfile.cci_consolidation_threshold
     pass_data               : mutable pass dict for fingerprints/confidences
-    session                 : open session for reading existing CCIs (read-only)
 
     Returns
     -------
@@ -118,7 +117,7 @@ def deduplicate_per_cell(
         # ------------------------------------------------------------------ #
         # Stage 4b — AI semantic review (IM)                                 #
         # ------------------------------------------------------------------ #
-        existing_ccis = _read_existing_ccis(session=session, cell_id=cell_id, project_id=project_id)
+        existing_ccis = _read_existing_ccis(cell_id=cell_id, project_id=project_id)
 
         cell_candidates, new_existing_updates = _ai_semantic_review(
             cell_id=cell_id,
@@ -247,19 +246,31 @@ def _merge_two_candidates(
 
 def _read_existing_ccis(
     *,
-    session: Session,
     cell_id: str,
     project_id: str,
 ) -> list[CellContentItemModel]:
-    return (
-        session.query(CellContentItemModel)
-        .filter(
-            CellContentItemModel.cell_id == cell_id,
-            CellContentItemModel.project_id == project_id,
+    """
+    Read committed CCIs for a cell using a fresh, immediately-closed session.
+
+    A short-lived session is used deliberately — _read_existing_ccis is called
+    inside a per-cell loop that interleaves with AI calls.  Holding a single
+    long-lived session across those AI calls (which can each take 10–30 s)
+    leaves the underlying connection idle long enough for Neon to drop the SSL
+    link.  Opening and closing a fresh session per cell avoids that entirely.
+    """
+    session = get_session()
+    try:
+        return (
+            session.query(CellContentItemModel)
+            .filter(
+                CellContentItemModel.cell_id == cell_id,
+                CellContentItemModel.project_id == project_id,
+            )
+            .order_by(CellContentItemModel.ci_id)
+            .all()
         )
-        .order_by(CellContentItemModel.ci_id)
-        .all()
-    )
+    finally:
+        session.close()
 
 
 def _ai_semantic_review(

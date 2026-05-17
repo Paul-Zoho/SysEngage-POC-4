@@ -194,7 +194,9 @@ def run(
     # ------------------------------------------------------------------ #
     # STEP 4 — Per-cell deduplication sweep (DM + AI, outside main tx)   #
     # ------------------------------------------------------------------ #
-    dedup_session = get_session()
+    # Note: no long-lived session is passed in here.  _read_existing_ccis
+    # opens a fresh short-lived session per cell so that DB connections are
+    # never held idle across the AI calls that interleave with each cell read.
     try:
         surviving_candidates, existing_updates, merge_records, consolidation_flags = (
             deduplicate_per_cell(
@@ -203,11 +205,9 @@ def run(
                 project_id=project_id,
                 consolidation_threshold=consolidation_threshold,
                 pass_data=pass_data,
-                session=dedup_session,
             )
         )
     except Exception as exc:
-        dedup_session.close()
         finalise_cci_pass_failed(
             pass_data,
             failure_reason=f"Step 4 deduplication failed: {exc}",
@@ -216,8 +216,6 @@ def run(
         )
         commit_failure_pass(pass_data)
         raise CCIConstructionError(str(exc)) from exc
-    finally:
-        dedup_session.close()
 
     # ------------------------------------------------------------------ #
     # STEP 5 — Atomic transaction: INSERT CCIs + AnalysisPass             #
