@@ -33,6 +33,12 @@ def main() -> None:
         default=_DEFAULT_OUT_DIR,
         help=f"Directory to write output files (default: {_DEFAULT_OUT_DIR})",
     )
+    parser.add_argument(
+        "--out-file",
+        default=None,
+        help="Override the output filename (basename only, written into --out-dir). "
+             "Default: <project_id>.ledger.json",
+    )
     args = parser.parse_args()
 
     project_id: str = args.project_id
@@ -53,8 +59,11 @@ def main() -> None:
     finally:
         session.close()
 
-    safe_id = project_id.replace("/", "_").replace("\\", "_")
-    json_path = os.path.join(out_dir, f"{safe_id}.ledger.json")
+    if args.out_file:
+        json_path = os.path.join(out_dir, args.out_file)
+    else:
+        safe_id = project_id.replace("/", "_").replace("\\", "_")
+        json_path = os.path.join(out_dir, f"{safe_id}.ledger.json")
 
     with open(json_path, "w", encoding="utf-8", newline="\n") as f:
         f.write(result.json_str)

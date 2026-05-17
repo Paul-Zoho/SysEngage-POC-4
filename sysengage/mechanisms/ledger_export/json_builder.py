@@ -248,6 +248,40 @@ def _build_requirement_element(req) -> dict[str, Any]:
     }
 
 
+def _build_zachman_cell_element(cell) -> dict[str, Any]:
+    payload: dict[str, Any] = {
+        "cell_id": cell.cell_id,
+        "row_target": cell.row_target,
+        "column": cell.column,
+        "confidence": 1.0,
+    }
+    return {
+        "element_type": "ZachmanCell",
+        "element_id": cell.cell_id,
+        "payload": payload,
+    }
+
+
+def _build_cci_element(cci) -> dict[str, Any]:
+    payload: dict[str, Any] = {
+        "ci_id": cci.ci_id,
+        "cell_id": cci.cell_id,
+        "classification_type": cci.classification_type,
+        "signal_refs": _sort_list(list(cci.signal_refs or [])),
+        "description": cci.description,
+        "confidence": cci.confidence,
+    }
+    if cci.trigger_condition is not None:
+        payload["trigger_condition"] = cci.trigger_condition
+    if cci.justification is not None:
+        payload["justification"] = cci.justification
+    return {
+        "element_type": "CellContentItem",
+        "element_id": cci.ci_id,
+        "payload": payload,
+    }
+
+
 def _build_register(
     register_id: str,
     register_type: str,
@@ -344,6 +378,12 @@ def build_canonical_ledger(data: ProjectData) -> dict[str, Any]:
     for req in data.requirements:
         elements.append(_build_requirement_element(req))
 
+    for cell in data.zachman_cells:
+        elements.append(_build_zachman_cell_element(cell))
+
+    for cci in data.ccis:
+        elements.append(_build_cci_element(cci))
+
     source_ids = [src.source_id for src in data.sources]
     source_register = _build_register(
         "SOURCE_REG001",
@@ -420,6 +460,26 @@ def build_canonical_ledger(data: ProjectData) -> dict[str, Any]:
             "This register SHALL contain the identifiers of ALL Requirement elements present in the ledger.",
         )
         elements.append(req_register)
+
+    if data.zachman_cells:
+        cell_ids = [cell.cell_id for cell in data.zachman_cells]
+        cell_register = _build_register(
+            "ZACHMANCELL_REG001",
+            "ZachmanCell",
+            cell_ids,
+            "This register SHALL contain the identifiers of ALL ZachmanCell elements present in the ledger.",
+        )
+        elements.append(cell_register)
+
+    if data.ccis:
+        cci_ids = [cci.ci_id for cci in data.ccis]
+        cci_register = _build_register(
+            "CELLCONTENTITEM_REG001",
+            "CellContentItem",
+            cci_ids,
+            "This register SHALL contain the identifiers of ALL CellContentItem elements present in the ledger.",
+        )
+        elements.append(cci_register)
 
     elements = _sort_elements(elements)
 

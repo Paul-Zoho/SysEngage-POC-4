@@ -96,3 +96,9 @@ id = "F8EXJRXLiUKLgaADrqyS9"
 uri = "file://verification_outputs/PMT_E2E.ledger.json"
 type = "unspecified"
 title = "PMT_E2E Ledger Export (post-P803)"
+
+[[outputs]]
+id = "7nHc4uJKrerQlGSt3hQOZ"
+uri = "file://verification_outputs/PMT_E2E_phase3b_row_1.json"
+type = "unspecified"
+title = "PMT_E2E Phase 3b Row 1 Ledger (Signals + ZachmanCells + CCIs)"

@@ -8,8 +8,8 @@
     "4",
     "5"
   ],
-  "run_id": "1709d3af-db42-4b80-834f-a24e3719c9fe",
-  "created_utc": "2026-05-17T12:34:54.967981+00:00",
+  "run_id": "b9ddf3e7-3808-422e-91ea-307a6c412e1d",
+  "created_utc": "2026-05-17T12:46:40.638046+00:00",
   "generator": {
     "name": "sysengage-ledger-export",
     "version": "1.0"
@@ -924,6 +924,372 @@
       }
     },
     {
+      "element_type": "ZachmanCell",
+      "element_id": "ZC-R1-C-How",
+      "payload": {
+        "cell_id": "ZC-R1-C-How",
+        "row_target": "1",
+        "column": "How",
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_type": "ZachmanCell",
+      "element_id": "ZC-R1-C-What",
+      "payload": {
+        "cell_id": "ZC-R1-C-What",
+        "row_target": "1",
+        "column": "What",
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_type": "ZachmanCell",
+      "element_id": "ZC-R1-C-When",
+      "payload": {
+        "cell_id": "ZC-R1-C-When",
+        "row_target": "1",
+        "column": "When",
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_type": "ZachmanCell",
+      "element_id": "ZC-R1-C-Who",
+      "payload": {
+        "cell_id": "ZC-R1-C-Who",
+        "row_target": "1",
+        "column": "Who",
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_type": "ZachmanCell",
+      "element_id": "ZC-R1-C-Why",
+      "payload": {
+        "cell_id": "ZC-R1-C-Why",
+        "row_target": "1",
+        "column": "Why",
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_type": "ZachmanCellRegister",
+      "element_id": "ZACHMANCELL_REG001",
+      "payload": {
+        "register_id": "ZACHMANCELL_REG001",
+        "register_type": "ZachmanCell",
+        "member_ids": [
+          "ZC-R1-C-How",
+          "ZC-R1-C-What",
+          "ZC-R1-C-When",
+          "ZC-R1-C-Who",
+          "ZC-R1-C-Why"
+        ],
+        "completeness_rule": "This register SHALL contain the identifiers of ALL ZachmanCell elements present in the ledger.",
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW1-C-How-001",
+      "payload": {
+        "ci_id": "CCI-ROW1-C-How-001",
+        "cell_id": "ZC-R1-C-How",
+        "classification_type": "Function",
+        "signal_refs": [
+          "SG049"
+        ],
+        "description": "Task claiming and completion tracking capability for child users",
+        "confidence": 0.74,
+        "justification": "SG049 describes a functional capability—the ability for children to claim tasks and track their completion status. At the Planner level, this represents a strategic business function."
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW1-C-How-002",
+      "payload": {
+        "ci_id": "CCI-ROW1-C-How-002",
+        "cell_id": "ZC-R1-C-How",
+        "classification_type": "Function",
+        "signal_refs": [
+          "SG050"
+        ],
+        "description": "Task definition and monetary value assignment capability for parental users",
+        "confidence": 0.76,
+        "justification": "SG050 articulates the strategic function of enabling parents to create task definitions with associated compensation values—a core administrative capability."
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW1-C-How-003",
+      "payload": {
+        "ci_id": "CCI-ROW1-C-How-003",
+        "cell_id": "ZC-R1-C-How",
+        "classification_type": "Function",
+        "signal_refs": [
+          "SG052",
+          "SG053"
+        ],
+        "description": "Performance reporting and earnings summarization for compensation distribution",
+        "confidence": 0.79,
+        "justification": "SG052 and SG053 together describe a reporting function: calculating and displaying earnings summaries for children (SG052) and providing performance reports to parents for compensation distribution (SG053)."
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW1-C-How-004",
+      "payload": {
+        "ci_id": "CCI-ROW1-C-How-004",
+        "cell_id": "ZC-R1-C-How",
+        "classification_type": "Function",
+        "signal_refs": [
+          "SG051"
+        ],
+        "description": "Task inventory presentation and status visibility",
+        "confidence": 0.71,
+        "justification": "SG051 captures a strategic function - providing visibility into available and completed tasks."
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW1-C-How-005",
+      "payload": {
+        "ci_id": "CCI-ROW1-C-How-005",
+        "cell_id": "ZC-R1-C-How",
+        "classification_type": "Function",
+        "signal_refs": [
+          "SG054"
+        ],
+        "description": "Historical task data retention and retrieval",
+        "confidence": 0.69,
+        "justification": "SG054 indicates a strategic function - maintaining longitudinal task history for accountability and analysis purposes."
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW1-C-What-001",
+      "payload": {
+        "ci_id": "CCI-ROW1-C-What-001",
+        "cell_id": "ZC-R1-C-What",
+        "classification_type": "Entity",
+        "signal_refs": [
+          "SG049",
+          "SG050",
+          "SG051"
+        ],
+        "description": "Task - compensated household activity unit assigned to children with monetary value",
+        "confidence": 0.8,
+        "justification": "Multiple signals reference tasks as core strategic things being tracked, assigned, and completed with compensation"
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW1-C-What-002",
+      "payload": {
+        "ci_id": "CCI-ROW1-C-What-002",
+        "cell_id": "ZC-R1-C-What",
+        "classification_type": "Entity",
+        "signal_refs": [
+          "SG049",
+          "SG052",
+          "SG053"
+        ],
+        "description": "Weekly earnings record - aggregated monetary compensation for completed tasks within weekly cycle representing child compensation",
+        "confidence": 0.77,
+        "justification": "Signals indicate earnings summary as strategically important thing tracked and displayed weekly"
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW1-C-What-003",
+      "payload": {
+        "ci_id": "CCI-ROW1-C-What-003",
+        "cell_id": "ZC-R1-C-What",
+        "classification_type": "Entity",
+        "signal_refs": [
+          "SG053"
+        ],
+        "description": "Child performance report - data aggregation showing task completion metrics for compensation administration purposes",
+        "confidence": 0.78,
+        "justification": "Signal identifies performance reporting as strategic entity enabling parental compensation decisions"
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW1-C-What-004",
+      "payload": {
+        "ci_id": "CCI-ROW1-C-What-004",
+        "cell_id": "ZC-R1-C-What",
+        "classification_type": "Entity",
+        "signal_refs": [
+          "SG054"
+        ],
+        "description": "Task history - longitudinal record of task assignments and completions",
+        "confidence": 0.68,
+        "justification": "Signal references historical task data as strategically important entity for accountability and analysis"
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW1-C-What-005",
+      "payload": {
+        "ci_id": "CCI-ROW1-C-What-005",
+        "cell_id": "ZC-R1-C-What",
+        "classification_type": "Entity",
+        "signal_refs": [
+          "SG049",
+          "SG051",
+          "SG054"
+        ],
+        "description": "Task completion record supporting compensation claims",
+        "confidence": 0.65,
+        "justification": "Completion status and history are distinct strategic entities tracked for both current claims and historical accountability."
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW1-C-When-001",
+      "payload": {
+        "ci_id": "CCI-ROW1-C-When-001",
+        "cell_id": "ZC-R1-C-When",
+        "classification_type": "Cycle",
+        "signal_refs": [
+          "SG049",
+          "SG052"
+        ],
+        "description": "Weekly compensation cycle for task earnings and claims",
+        "confidence": 0.81,
+        "justification": "Signals reference weekly periodicity as strategically significant time cycle for pocket money operations"
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW1-C-Who-001",
+      "payload": {
+        "ci_id": "CCI-ROW1-C-Who-001",
+        "cell_id": "ZC-R1-C-Who",
+        "classification_type": "Role",
+        "signal_refs": [
+          "SG049",
+          "SG051",
+          "SG052"
+        ],
+        "description": "Child - stakeholder who claims tasks, completes work, views earnings, and acts as task performer and earnings claimant/recipient",
+        "confidence": 0.82,
+        "justification": "Multiple signals identify children as key strategic role performing tasks and accessing information"
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW1-C-Who-002",
+      "payload": {
+        "ci_id": "CCI-ROW1-C-Who-002",
+        "cell_id": "ZC-R1-C-Who",
+        "classification_type": "Role",
+        "signal_refs": [
+          "SG050",
+          "SG053"
+        ],
+        "description": "Parent - stakeholder who defines tasks, assigns compensation, distributes payments, and acts as task definer/administrator and compensation manager",
+        "confidence": 0.85,
+        "justification": "Signals establish parent as strategic role responsible for task definition and compensation management"
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW1-C-Why-001",
+      "payload": {
+        "ci_id": "CCI-ROW1-C-Why-001",
+        "cell_id": "ZC-R1-C-Why",
+        "classification_type": "Goal",
+        "signal_refs": [
+          "SG049",
+          "SG051",
+          "SG052"
+        ],
+        "description": "Enable children to earn and track compensation through completion of assigned household tasks",
+        "confidence": 0.78,
+        "justification": "Signal expresses fundamental purpose and strategic intent for children's task tracking and pocket money claiming capability"
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW1-C-Why-002",
+      "payload": {
+        "ci_id": "CCI-ROW1-C-Why-002",
+        "cell_id": "ZC-R1-C-Why",
+        "classification_type": "Goal",
+        "signal_refs": [
+          "SG050",
+          "SG053"
+        ],
+        "description": "Provide parents with oversight and control over child task assignment and compensation management",
+        "confidence": 0.76,
+        "justification": "Signal articulates parental strategic motivation for task definition and compensation management"
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW1-C-Why-003",
+      "payload": {
+        "ci_id": "CCI-ROW1-C-Why-003",
+        "cell_id": "ZC-R1-C-Why",
+        "classification_type": "Goal",
+        "signal_refs": [
+          "SG051"
+        ],
+        "description": "Provide children transparent visibility into available and completed task status",
+        "confidence": 0.7,
+        "justification": "Signal captures strategic purpose of task inventory transparency for child stakeholders"
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW1-C-Why-004",
+      "payload": {
+        "ci_id": "CCI-ROW1-C-Why-004",
+        "cell_id": "ZC-R1-C-Why",
+        "classification_type": "Goal",
+        "signal_refs": [
+          "SG052"
+        ],
+        "description": "Enable children to view weekly earnings summaries for motivational purposes",
+        "confidence": 0.73,
+        "justification": "Signal identifies motivational objective driving earnings visibility requirement"
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW1-C-Why-005",
+      "payload": {
+        "ci_id": "CCI-ROW1-C-Why-005",
+        "cell_id": "ZC-R1-C-Why",
+        "classification_type": "Goal",
+        "signal_refs": [
+          "SG053"
+        ],
+        "description": "Enable accurate parental compensation decisions through performance reporting",
+        "confidence": 0.8,
+        "justification": "Signal establishes parental strategic need for performance reporting to support payment accuracy"
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW1-C-Why-006",
+      "payload": {
+        "ci_id": "CCI-ROW1-C-Why-006",
+        "cell_id": "ZC-R1-C-Why",
+        "classification_type": "Goal",
+        "signal_refs": [
+          "SG054"
+        ],
+        "description": "Support accountability and behavioral trend analysis through historical task data retention",
+        "confidence": 0.7,
+        "justification": "Signal indicates strategic requirement for longitudinal data access enabling accountability oversight and pattern identification"
+      }
+    },
+    {
       "element_type": "Segment",
       "element_id": "SEG301",
       "payload": {
@@ -1454,9 +1820,44 @@
         "completeness_rule": "This register SHALL contain the identifiers of ALL Concern elements present in the ledger.",
         "confidence": 1.0
       }
+    },
+    {
+      "element_type": "CellContentItemRegister",
+      "element_id": "CELLCONTENTITEM_REG001",
+      "payload": {
+        "register_id": "CELLCONTENTITEM_REG001",
+        "register_type": "CellContentItem",
+        "member_ids": [
+          "CCI-ROW1-C-How-001",
+          "CCI-ROW1-C-How-002",
+          "CCI-ROW1-C-How-003",
+          "CCI-ROW1-C-How-004",
+          "CCI-ROW1-C-How-005",
+          "CCI-ROW1-C-What-001",
+          "CCI-ROW1-C-What-002",
+          "CCI-ROW1-C-What-003",
+          "CCI-ROW1-C-What-004",
+          "CCI-ROW1-C-What-005",
+          "CCI-ROW1-C-When-001",
+          "CCI-ROW1-C-Who-001",
+          "CCI-ROW1-C-Who-002",
+          "CCI-ROW1-C-Why-001",
+          "CCI-ROW1-C-Why-002",
+          "CCI-ROW1-C-Why-003",
+          "CCI-ROW1-C-Why-004",
+          "CCI-ROW1-C-Why-005",
+          "CCI-ROW1-C-Why-006"
+        ],
+        "completeness_rule": "This register SHALL contain the identifiers of ALL CellContentItem elements present in the ledger.",
+        "confidence": 1.0
+      }
     }
   ],
   "register_index": [
+    {
+      "register_type": "CellContentItemRegister",
+      "register_id": "CELLCONTENTITEM_REG001"
+    },
     {
       "register_type": "ConcernRegister",
       "register_id": "CONCERN_REG001"
@@ -1476,10 +1877,14 @@
     {
       "register_type": "StakeholderRegister",
       "register_id": "STAKEHOLDER_REG001"
+    },
+    {
+      "register_type": "ZachmanCellRegister",
+      "register_id": "ZACHMANCELL_REG001"
     }
   ],
   "content_hash": {
     "hash_alg": "sha256",
-    "hash": "8ddbf68c4b98d3f06497e1d55b8d58b09f91b28e82984a3852b6e00ba0ae8147"
+    "hash": "3888dcc94f9d7f2fc52ef6ee23a6001aee5ba8dae9a8caf7176970bff3bd92cc"
   }
 }

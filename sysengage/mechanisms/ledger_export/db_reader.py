@@ -13,6 +13,7 @@ from dataclasses import dataclass, field
 from sqlalchemy.orm import Session
 
 from models.analysis_pass import AnalysisPassModel
+from models.cell_content_item import CellContentItemModel
 from models.concern import ConcernModel
 from models.domain import DomainModel
 from models.project import ProjectModel
@@ -22,6 +23,7 @@ from models.signal import SignalModel
 from models.source import SourceModel
 from models.source_atom import SourceAtomModel
 from models.stakeholder import StakeholderModel
+from models.zachman_cell import ZachmanCellModel
 
 
 @dataclass
@@ -38,6 +40,8 @@ class ProjectData:
     stakeholders: list[StakeholderModel] = field(default_factory=list)
     domains: list[DomainModel] = field(default_factory=list)
     requirements: list[RequirementModel] = field(default_factory=list)
+    zachman_cells: list[ZachmanCellModel] = field(default_factory=list)
+    ccis: list[CellContentItemModel] = field(default_factory=list)
 
 
 def read_project_data(project_id: str, session: Session) -> ProjectData:
@@ -127,6 +131,26 @@ def read_project_data(project_id: str, session: Session) -> ProjectData:
         .all()
     )
 
+    ccis = (
+        session.query(CellContentItemModel)
+        .filter(CellContentItemModel.project_id == project_id)
+        .order_by(CellContentItemModel.ci_id)
+        .all()
+    )
+
+    # ZachmanCell uses a global PK (cell_id only, no project scope).
+    # Look up the cells referenced by this project's CCIs rather than
+    # filtering by project_id, which may differ from the owning project.
+    zachman_cells: list[ZachmanCellModel] = []
+    if ccis:
+        referenced_cell_ids = sorted({cci.cell_id for cci in ccis})
+        zachman_cells = (
+            session.query(ZachmanCellModel)
+            .filter(ZachmanCellModel.cell_id.in_(referenced_cell_ids))
+            .order_by(ZachmanCellModel.cell_id)
+            .all()
+        )
+
     return ProjectData(
         project=project,
         sources=sources,
@@ -138,4 +162,6 @@ def read_project_data(project_id: str, session: Session) -> ProjectData:
         stakeholders=stakeholders,
         domains=domains,
         requirements=requirements,
+        zachman_cells=zachman_cells,
+        ccis=ccis,
     )
