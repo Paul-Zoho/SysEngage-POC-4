@@ -471,6 +471,9 @@ def _apply_duplicate(
         cand_a = surviving_candidates[idx_a]
         cand_b = surviving_candidates[idx_b]
 
+        if cand_a is None or cand_b is None:
+            return
+
         if cand_a.confidence >= cand_b.confidence:
             higher_idx, lower_idx = idx_a, idx_b
         else:
