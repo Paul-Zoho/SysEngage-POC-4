@@ -1,11 +1,18 @@
 """
 Ledger Export CLI.
 
-Usage:
+Usage (named convention):
+    python -m mechanisms.ledger_export.cli <project_id> \\
+        --phase 03 --pass 3a --row 1 [--out-dir <dir>]
+
+    Writes: <out-dir>/{ProjectID}_Ph{phase}_{pass}_{passLabel}_R{row}_Run{n}.json
+    Run number is derived automatically from existing files in out-dir.
+
+Usage (legacy):
     python -m mechanisms.ledger_export.cli <project_id> [--out-dir <dir>]
 
-Writes to --out-dir (default: verification_outputs at workspace root):
-    <project_id>.ledger.json  — canonical JSON ledger (spec v2.12)
+    Writes: <out-dir>/<project_id>.ledger.json
+    --out-file overrides the filename entirely (legacy use only).
 """
 
 from __future__ import annotations
@@ -14,9 +21,7 @@ import argparse
 import os
 import sys
 
-# sysengage/ is three levels up from this file
 _SYSENGAGE_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-# workspace root is one level above sysengage/
 _WORKSPACE_ROOT = os.path.dirname(_SYSENGAGE_ROOT)
 _DEFAULT_OUT_DIR = os.path.join(_WORKSPACE_ROOT, "verification_outputs")
 
@@ -25,19 +30,36 @@ sys.path.insert(0, _SYSENGAGE_ROOT)
 
 def main() -> None:
     parser = argparse.ArgumentParser(
-        description="Export a SysEngage project ledger to JSON + Markdown (spec v2.12)."
+        description="Export a SysEngage project ledger to JSON (spec v2.12)."
     )
-    parser.add_argument("project_id", help="Project ID to export (e.g. PMT_E2E)")
+    parser.add_argument("project_id", help="Project ID to export (e.g. PMT)")
     parser.add_argument(
         "--out-dir",
         default=_DEFAULT_OUT_DIR,
-        help=f"Directory to write output files (default: {_DEFAULT_OUT_DIR})",
+        help=f"Directory to write output file (default: {_DEFAULT_OUT_DIR})",
+    )
+    parser.add_argument(
+        "--phase",
+        default=None,
+        help="Phase number (e.g. 03). Required for named-convention output.",
+    )
+    parser.add_argument(
+        "--pass",
+        dest="pass_",
+        default=None,
+        metavar="PASS",
+        help="Pass identifier within the phase (e.g. 3a). Required for named-convention output.",
+    )
+    parser.add_argument(
+        "--row",
+        default=None,
+        help="Zachman row number 1–6 (e.g. 1). Required for named-convention output.",
     )
     parser.add_argument(
         "--out-file",
         default=None,
-        help="Override the output filename (basename only, written into --out-dir). "
-             "Default: <project_id>.ledger.json",
+        help="Override the output filename (basename only). Legacy use; ignored when "
+             "--phase/--pass/--row are all supplied.",
     )
     args = parser.parse_args()
 
@@ -59,11 +81,27 @@ def main() -> None:
     finally:
         session.close()
 
-    if args.out_file:
-        json_path = os.path.join(out_dir, args.out_file)
+    naming_args = (args.phase, args.pass_, args.row)
+    if all(a is not None for a in naming_args):
+        from core.output_naming import OutputNamingError, generate_filename
+        try:
+            basename = generate_filename(
+                project_id=project_id,
+                phase=args.phase,
+                pass_=args.pass_,
+                row=args.row,
+                out_dir=out_dir,
+            )
+        except OutputNamingError as exc:
+            print(f"[ledger-export] Naming error: {exc}", file=sys.stderr)
+            sys.exit(1)
+    elif args.out_file:
+        basename = args.out_file
     else:
         safe_id = project_id.replace("/", "_").replace("\\", "_")
-        json_path = os.path.join(out_dir, f"{safe_id}.ledger.json")
+        basename = f"{safe_id}.ledger.json"
+
+    json_path = os.path.join(out_dir, basename)
 
     with open(json_path, "w", encoding="utf-8", newline="\n") as f:
         f.write(result.json_str)
@@ -80,7 +118,8 @@ def main() -> None:
         f"  Project:   {project_name} ({project_id})\n"
         f"  Elements:  {n_elements}\n"
         f"  Registers: {n_registers}\n"
-        f"  Hash:      {hash_prefix}...\n",
+        f"  Hash:      {hash_prefix}...\n"
+        f"  File:      {basename}\n",
         flush=True,
     )
 
