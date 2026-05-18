@@ -102,3 +102,9 @@ id = "7nHc4uJKrerQlGSt3hQOZ"
 uri = "file://verification_outputs/PMT_E2E_phase3b_row_1.json"
 type = "unspecified"
 title = "PMT_E2E Phase 3b Row 1 Ledger (Signals + ZachmanCells + CCIs)"
+
+[[outputs]]
+id = "DqDVlir3ZFFNTsy9s1-Hz"
+uri = "file://verification_outputs/NQPS_Ph03_3b_CCIConstruction_R5_Run1.json"
+type = "unspecified"
+title = "NQPS_E2E Canonical Ledger — Phase 3b (Row 5)"
