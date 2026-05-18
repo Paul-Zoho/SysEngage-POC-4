@@ -1,8 +1,9 @@
 """
 run_row1_cci_e2e.py — Phase 3b CCI Construction E2E runner for ROW1_E2E.
 
-Runs CCI Construction for rows 1-5 sequentially with skip_deduplication=True,
-then exports the row 5 ledger using the output naming convention.
+Runs CCI Construction for rows 1-5 sequentially with skip_deduplication=True.
+Idempotent: skips any row that already has a Completed/CompletedWithWarnings
+pass to prevent double-runs caused by bash interrupt + subprocess survival.
 
 Invocation (from workspace root):
     python -u sysengage/run_row1_cci_e2e.py
@@ -20,12 +21,41 @@ import mechanisms.cci_construction as cci
 from core.db import get_session
 from core.output_naming import generate_filename
 from mechanisms.ledger_export import run_ledger_export
+from sqlalchemy import text
 
 PROJECT_ID = "ROW1_E2E"
 PROJECT_CODE = "ROW1"
 PRACTITIONER_ID = "SH001"
 ROWS = [1, 2, 3, 4, 5]
 OUT_DIR = Path(__file__).parent.parent / "verification_outputs"
+
+
+def already_completed(project_id: str, row_ref: int) -> str | None:
+    """
+    Return existing pass_id if a Completed/CompletedWithWarnings CCIConstruction
+    pass already exists for this project + row, or None if the row should run.
+    """
+    scope = f"All Row {row_ref} Signals"
+    s = get_session()
+    try:
+        row = s.execute(
+            text(
+                """
+                SELECT pass_id FROM analysis_pass
+                WHERE project_id = :p
+                  AND mechanism = 'CCIConstruction'
+                  AND evaluated_scope = :scope
+                  AND execution_status IN ('Completed', 'CompletedWithWarnings')
+                ORDER BY created_at DESC
+                LIMIT 1
+                """
+            ),
+            {"p": project_id, "scope": scope},
+        ).fetchone()
+        return row[0] if row else None
+    finally:
+        s.close()
+
 
 print(f"[runner] Starting Phase 3b CCI Construction for {PROJECT_ID}", flush=True)
 print(f"[runner] skip_deduplication=True  rows={ROWS}", flush=True)
@@ -34,6 +64,12 @@ print(flush=True)
 results: dict[int, dict] = {}
 
 for row in ROWS:
+    existing = already_completed(PROJECT_ID, row)
+    if existing:
+        print(f"[runner] --- Row {row} --- SKIP (pass {existing} already Completed)", flush=True)
+        results[row] = {"skipped": True, "pass_id": existing}
+        continue
+
     print(f"[runner] --- Row {row} ---", flush=True)
     try:
         result = cci.run(
@@ -54,11 +90,14 @@ for row in ROWS:
 print(flush=True)
 print("[runner] All rows complete. Summary:", flush=True)
 total = 0
-for row, r in sorted(results.items()):
-    n = r["cci_data"]["ccis_created"]
-    total += n
-    print(f"[runner]   R{row}: {n} CCIs  ({r['pass_id']}  {r['execution_status']})", flush=True)
-print(f"[runner]   Total CCIs: {total}", flush=True)
+for row_ref, r in sorted(results.items()):
+    if r.get("skipped"):
+        print(f"[runner]   R{row_ref}: skipped ({r['pass_id']})", flush=True)
+    else:
+        n = r["cci_data"]["ccis_created"]
+        total += n
+        print(f"[runner]   R{row_ref}: {n} CCIs  ({r['pass_id']}  {r['execution_status']})", flush=True)
+print(f"[runner]   New CCIs this run: {total}", flush=True)
 
 print(flush=True)
 print("[runner] Exporting row 5 ledger (naming convention)...", flush=True)

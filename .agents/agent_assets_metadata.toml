@@ -108,3 +108,9 @@ id = "DqDVlir3ZFFNTsy9s1-Hz"
 uri = "file://verification_outputs/NQPS_Ph03_3b_CCIConstruction_R5_Run1.json"
 type = "unspecified"
 title = "NQPS_E2E Canonical Ledger — Phase 3b (Row 5)"
+
+[[outputs]]
+id = "MwhU4LiAq9SXciiZcEjxk"
+uri = "file://verification_outputs/NQPS_Ph03_3b_CCIConstruction_R5_Run3.json"
+type = "unspecified"
+title = "NQPS_E2E Clean Ledger — Phase 3b (Row 5, Run3)"

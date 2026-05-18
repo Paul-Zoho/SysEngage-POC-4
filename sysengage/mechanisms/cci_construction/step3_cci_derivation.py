@@ -76,9 +76,15 @@ def derive_ccis_for_batches(
     client = get_ai_client()
     valid_cell_ids = {f"ZC-R{row_ref}-C-{col}" for col in VALID_COLUMNS}
 
+    total_batches = len(batches)
     for batch_idx, batch in enumerate(batches):
         prompt = build_cci_derivation_prompt(row_ref=row_ref, signals=batch)
         batch_label = f"batch-{batch_idx + 1}"
+        print(
+            f"[step3] R{row_ref} {batch_label}/{total_batches}"
+            f"  signals={len(batch)}",
+            flush=True,
+        )
 
         raw_response = _invoke_with_retry(client=client, prompt=prompt, label=batch_label)
 
