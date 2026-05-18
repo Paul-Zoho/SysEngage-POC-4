@@ -1,0 +1,2613 @@
+{
+  "sysengage_ledger_version": "2.12",
+  "schema_id": "sysengage.ledger.instance.v2_11",
+  "row_target": [
+    "1",
+    "2",
+    "3",
+    "4",
+    "5"
+  ],
+  "run_id": "5adc1200-e36b-4d38-9b75-dc5754b45ad8",
+  "created_utc": "2026-05-18T18:43:37.900107+00:00",
+  "generator": {
+    "name": "sysengage-ledger-export",
+    "version": "1.0"
+  },
+  "elements": [
+    {
+      "element_type": "Source",
+      "element_id": "S2295",
+      "payload": {
+        "source_id": "S2295",
+        "source_text": "High Level Description",
+        "segmentation_context": "heading",
+        "input_material_ref": "/home/runner/workspace/verification_inputs/The Pocket Money Tracker System v1.docx",
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_type": "Source",
+      "element_id": "S2296",
+      "payload": {
+        "source_id": "S2296",
+        "source_text": "The pocket money tracker system allows children to claim pocket money tasks as they are completed throughout the week.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "/home/runner/workspace/verification_inputs/The Pocket Money Tracker System v1.docx",
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_type": "Source",
+      "element_id": "S2297",
+      "payload": {
+        "source_id": "S2297",
+        "source_text": " Parents can detail tasks that should be completed and the monetary amount earned for that task.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "/home/runner/workspace/verification_inputs/The Pocket Money Tracker System v1.docx",
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_type": "Source",
+      "element_id": "S2298",
+      "payload": {
+        "source_id": "S2298",
+        "source_text": " As a task is completed it is linked to the child that completed it.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "/home/runner/workspace/verification_inputs/The Pocket Money Tracker System v1.docx",
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_type": "Source",
+      "element_id": "S2299",
+      "payload": {
+        "source_id": "S2299",
+        "source_text": " The children should be able to see the available tasks and the tasks they have completed that week.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "/home/runner/workspace/verification_inputs/The Pocket Money Tracker System v1.docx",
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_type": "Source",
+      "element_id": "S2300",
+      "payload": {
+        "source_id": "S2300",
+        "source_text": " At the end of each week the children can see the total amount they have earned that week.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "/home/runner/workspace/verification_inputs/The Pocket Money Tracker System v1.docx",
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_type": "Source",
+      "element_id": "S2301",
+      "payload": {
+        "source_id": "S2301",
+        "source_text": " The Parents can also see a report of how much each child has earned and the tasks they completed so that they can provide the pocket money earned to each child.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "/home/runner/workspace/verification_inputs/The Pocket Money Tracker System v1.docx",
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_type": "Source",
+      "element_id": "S2302",
+      "payload": {
+        "source_id": "S2302",
+        "source_text": " At the start of the next week all tasks become available again to be claimed.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "/home/runner/workspace/verification_inputs/The Pocket Money Tracker System v1.docx",
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_type": "Source",
+      "element_id": "S2303",
+      "payload": {
+        "source_id": "S2303",
+        "source_text": " Historical task data shall be available.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "/home/runner/workspace/verification_inputs/The Pocket Money Tracker System v1.docx",
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_type": "Source",
+      "element_id": "S2304",
+      "payload": {
+        "source_id": "S2304",
+        "source_text": " The resulting system shall be able to operate on iOS 16, Android 9 and Windows 11 or later.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "/home/runner/workspace/verification_inputs/The Pocket Money Tracker System v1.docx",
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_type": "SourceRegister",
+      "element_id": "SOURCE_REG001",
+      "payload": {
+        "register_id": "SOURCE_REG001",
+        "register_type": "Source",
+        "member_ids": [
+          "S2295",
+          "S2296",
+          "S2297",
+          "S2298",
+          "S2299",
+          "S2300",
+          "S2301",
+          "S2302",
+          "S2303",
+          "S2304"
+        ],
+        "completeness_rule": "This register SHALL contain the identifiers of ALL Source elements present in the ledger.",
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_type": "AnalysisPass",
+      "element_id": "P1265",
+      "payload": {
+        "pass_id": "P1265",
+        "pass_type": "Per-row",
+        "mechanism": "CCIConstruction",
+        "evaluated_scope": "All Row 1 Signals",
+        "execution_status": "Success",
+        "mode_active": "DM",
+        "declared_transformation_modes": [
+          "IM",
+          "DM"
+        ],
+        "outputs": {
+          "cci_data": {
+            "merges": [],
+            "row_ref": 1,
+            "ccis_merged": 0,
+            "cells_empty": 1,
+            "ccis_created": 13,
+            "batches_failed": 0,
+            "cells_populated": 5,
+            "batches_processed": 1,
+            "candidates_rejected": 0,
+            "consolidation_flags": [],
+            "integrity_violations": []
+          },
+          "mode_violations": []
+        },
+        "pass_started_at": "2026-05-18T18:35:26.984265+00:00",
+        "confidence": 0.77,
+        "pass_completed_at": "2026-05-18T18:35:53.154704+00:00",
+        "elapsed_ms": 29369
+      }
+    },
+    {
+      "element_type": "AnalysisPass",
+      "element_id": "P1266",
+      "payload": {
+        "pass_id": "P1266",
+        "pass_type": "Per-row",
+        "mechanism": "CCIConstruction",
+        "evaluated_scope": "All Row 2 Signals",
+        "execution_status": "Success",
+        "mode_active": "DM",
+        "declared_transformation_modes": [
+          "IM",
+          "DM"
+        ],
+        "outputs": {
+          "cci_data": {
+            "merges": [],
+            "row_ref": 2,
+            "ccis_merged": 0,
+            "cells_empty": 1,
+            "ccis_created": 25,
+            "batches_failed": 0,
+            "cells_populated": 5,
+            "batches_processed": 1,
+            "candidates_rejected": 0,
+            "consolidation_flags": [],
+            "integrity_violations": []
+          },
+          "mode_violations": []
+        },
+        "pass_started_at": "2026-05-18T18:35:54.734701+00:00",
+        "confidence": 0.8908,
+        "pass_completed_at": "2026-05-18T18:36:42.753516+00:00",
+        "elapsed_ms": 49052
+      }
+    },
+    {
+      "element_type": "AnalysisPass",
+      "element_id": "P1267",
+      "payload": {
+        "pass_id": "P1267",
+        "pass_type": "Per-row",
+        "mechanism": "CCIConstruction",
+        "evaluated_scope": "All Row 3 Signals",
+        "execution_status": "Success",
+        "mode_active": "DM",
+        "declared_transformation_modes": [
+          "IM",
+          "DM"
+        ],
+        "outputs": {
+          "cci_data": {
+            "merges": [],
+            "row_ref": 3,
+            "ccis_merged": 0,
+            "cells_empty": 1,
+            "ccis_created": 16,
+            "batches_failed": 0,
+            "cells_populated": 5,
+            "batches_processed": 1,
+            "candidates_rejected": 0,
+            "consolidation_flags": [],
+            "integrity_violations": []
+          },
+          "mode_violations": []
+        },
+        "pass_started_at": "2026-05-18T18:36:44.319490+00:00",
+        "confidence": 0.730625,
+        "pass_completed_at": "2026-05-18T18:37:15.524324+00:00",
+        "elapsed_ms": 32245
+      }
+    },
+    {
+      "element_type": "AnalysisPass",
+      "element_id": "P1268",
+      "payload": {
+        "pass_id": "P1268",
+        "pass_type": "Per-row",
+        "mechanism": "CCIConstruction",
+        "evaluated_scope": "All Row 4 Signals",
+        "execution_status": "Success",
+        "mode_active": "DM",
+        "declared_transformation_modes": [
+          "IM",
+          "DM"
+        ],
+        "outputs": {
+          "cci_data": {
+            "merges": [],
+            "row_ref": 4,
+            "ccis_merged": 0,
+            "cells_empty": 4,
+            "ccis_created": 2,
+            "batches_failed": 0,
+            "cells_populated": 2,
+            "batches_processed": 1,
+            "candidates_rejected": 0,
+            "consolidation_flags": [],
+            "integrity_violations": []
+          },
+          "mode_violations": []
+        },
+        "pass_started_at": "2026-05-18T18:37:34.854815+00:00",
+        "confidence": 0.865,
+        "pass_completed_at": "2026-05-18T18:37:44.163683+00:00",
+        "elapsed_ms": 12194
+      }
+    },
+    {
+      "element_type": "AnalysisPass",
+      "element_id": "P1269",
+      "payload": {
+        "pass_id": "P1269",
+        "pass_type": "Per-row",
+        "mechanism": "CCIConstruction",
+        "evaluated_scope": "All Row 5 Signals",
+        "execution_status": "Success",
+        "mode_active": "DM",
+        "declared_transformation_modes": [
+          "IM",
+          "DM"
+        ],
+        "outputs": {
+          "cci_data": {
+            "merges": [],
+            "row_ref": 5,
+            "ccis_merged": 0,
+            "cells_empty": 3,
+            "ccis_created": 9,
+            "batches_failed": 0,
+            "cells_populated": 3,
+            "batches_processed": 1,
+            "candidates_rejected": 0,
+            "consolidation_flags": [],
+            "integrity_violations": []
+          },
+          "mode_violations": []
+        },
+        "pass_started_at": "2026-05-18T18:37:53.643029+00:00",
+        "confidence": 0.8111111111111111,
+        "pass_completed_at": "2026-05-18T18:38:14.062568+00:00",
+        "elapsed_ms": 23417
+      }
+    },
+    {
+      "element_type": "AnalysisPass",
+      "element_id": "P529",
+      "payload": {
+        "pass_id": "P529",
+        "pass_type": "Universal",
+        "mechanism": "SourceCapture",
+        "evaluated_scope": "All input material in this project",
+        "execution_status": "Success",
+        "mode_active": "LPM",
+        "declared_transformation_modes": [
+          "LPM"
+        ],
+        "outputs": {
+          "read_witness": {
+            "file_path": "/home/runner/workspace/verification_inputs/The Pocket Money Tracker System v1.docx",
+            "read_mode": "Full",
+            "byte_count": 13803,
+            "input_hash": "5d66954e4d33dda146d247e09c75a371789b83e04396eb7f4d9b69f6996e35a0",
+            "character_count": 902,
+            "format_detected": "docx",
+            "partial_failure_detail": null,
+            "read_completion_status": true
+          },
+          "mechanism_data": {
+            "source_ids": [
+              "S2295",
+              "S2296",
+              "S2297",
+              "S2298",
+              "S2299",
+              "S2300",
+              "S2301",
+              "S2302",
+              "S2303",
+              "S2304"
+            ],
+            "source_count": 10,
+            "segment_count": 1,
+            "source_atom_count": 0,
+            "non_text_source_ids": [],
+            "cross_source_ordering": [],
+            "source_with_decoding_issues_ids": []
+          },
+          "mode_violations": []
+        },
+        "pass_started_at": "2026-05-16T06:56:51.769563+00:00",
+        "confidence": 1.0,
+        "pass_completed_at": "2026-05-16T06:56:55.242212+00:00",
+        "elapsed_ms": 3472
+      }
+    },
+    {
+      "element_type": "AnalysisPass",
+      "element_id": "P530",
+      "payload": {
+        "pass_id": "P530",
+        "pass_type": "Per-row",
+        "mechanism": "RowLensSourceReanalysis",
+        "evaluated_scope": "All Sources + Row 0 Requirements",
+        "execution_status": "Success",
+        "mode_active": "IM",
+        "declared_transformation_modes": [
+          "IM",
+          "DM",
+          "LPM"
+        ],
+        "outputs": {
+          "row_lens_data": {
+            "row_ref": 1,
+            "chunk_assignment": {},
+            "out_of_scope_refs": [
+              "S2295",
+              "S2298",
+              "S2302",
+              "S2304"
+            ],
+            "out_of_scope_count": 4,
+            "stream1_source_count": 10,
+            "stream2_domain_count": 0,
+            "ai_model_fingerprints": [
+              "claude-sonnet-4-5-20250929 (residual batch 1)"
+            ],
+            "signal_count_produced": 6,
+            "concern_count_produced": 0,
+            "concern_threshold_used": 0.65,
+            "stream2_requirement_count": 0,
+            "chunk_match_threshold_used": 0.6
+          },
+          "mode_violations": []
+        },
+        "pass_started_at": "2026-05-16T06:57:19.535781+00:00",
+        "confidence": 0.43600000000000005,
+        "pass_completed_at": "2026-05-16T06:57:33.557430+00:00",
+        "elapsed_ms": 16954
+      }
+    },
+    {
+      "element_type": "AnalysisPass",
+      "element_id": "P567",
+      "payload": {
+        "pass_id": "P567",
+        "pass_type": "Per-row",
+        "mechanism": "RowLensSourceReanalysis",
+        "evaluated_scope": "All Sources + Row 1 Requirements",
+        "execution_status": "Success",
+        "mode_active": "IM",
+        "declared_transformation_modes": [
+          "IM",
+          "DM",
+          "LPM"
+        ],
+        "outputs": {
+          "row_lens_data": {
+            "row_ref": 2,
+            "chunk_assignment": {},
+            "out_of_scope_refs": [
+              "S2304"
+            ],
+            "out_of_scope_count": 1,
+            "stream1_source_count": 10,
+            "stream2_domain_count": 0,
+            "ai_model_fingerprints": [
+              "claude-sonnet-4-5-20250929 (residual batch 1)"
+            ],
+            "signal_count_produced": 9,
+            "concern_count_produced": 0,
+            "concern_threshold_used": 0.65,
+            "stream2_requirement_count": 0,
+            "chunk_match_threshold_used": 0.6
+          },
+          "mode_violations": []
+        },
+        "pass_started_at": "2026-05-16T08:58:31.430615+00:00",
+        "confidence": 0.8789999999999999,
+        "pass_completed_at": "2026-05-16T08:58:45.663681+00:00",
+        "elapsed_ms": 17141
+      }
+    },
+    {
+      "element_type": "AnalysisPass",
+      "element_id": "P570",
+      "payload": {
+        "pass_id": "P570",
+        "pass_type": "Per-row",
+        "mechanism": "RowLensSourceReanalysis",
+        "evaluated_scope": "All Sources + Row 2 Requirements",
+        "execution_status": "Success",
+        "mode_active": "IM",
+        "declared_transformation_modes": [
+          "IM",
+          "DM",
+          "LPM"
+        ],
+        "outputs": {
+          "row_lens_data": {
+            "row_ref": 3,
+            "chunk_assignment": {},
+            "out_of_scope_refs": [
+              "S2295",
+              "S2296",
+              "S2297",
+              "S2304"
+            ],
+            "out_of_scope_count": 4,
+            "stream1_source_count": 10,
+            "stream2_domain_count": 0,
+            "ai_model_fingerprints": [
+              "claude-sonnet-4-5-20250929 (residual batch 1)"
+            ],
+            "signal_count_produced": 6,
+            "concern_count_produced": 0,
+            "concern_threshold_used": 0.65,
+            "stream2_requirement_count": 0,
+            "chunk_match_threshold_used": 0.6
+          },
+          "mode_violations": []
+        },
+        "pass_started_at": "2026-05-16T10:12:01.726989+00:00",
+        "confidence": 0.422,
+        "pass_completed_at": "2026-05-16T10:12:17.415404+00:00",
+        "elapsed_ms": 18631
+      }
+    },
+    {
+      "element_type": "AnalysisPass",
+      "element_id": "P573",
+      "payload": {
+        "pass_id": "P573",
+        "pass_type": "Per-row",
+        "mechanism": "RowLensSourceReanalysis",
+        "evaluated_scope": "All Sources + Row 3 Requirements",
+        "execution_status": "Success",
+        "mode_active": "IM",
+        "declared_transformation_modes": [
+          "IM",
+          "DM",
+          "LPM"
+        ],
+        "outputs": {
+          "row_lens_data": {
+            "row_ref": 4,
+            "chunk_assignment": {},
+            "out_of_scope_refs": [
+              "S2295",
+              "S2296",
+              "S2297",
+              "S2298",
+              "S2299",
+              "S2300",
+              "S2301",
+              "S2302",
+              "S2303"
+            ],
+            "out_of_scope_count": 9,
+            "stream1_source_count": 10,
+            "stream2_domain_count": 0,
+            "ai_model_fingerprints": [
+              "claude-sonnet-4-5-20250929 (residual batch 1)"
+            ],
+            "signal_count_produced": 1,
+            "concern_count_produced": 0,
+            "concern_threshold_used": 0.65,
+            "stream2_requirement_count": 0,
+            "chunk_match_threshold_used": 0.6
+          },
+          "mode_violations": []
+        },
+        "pass_started_at": "2026-05-16T10:22:55.601020+00:00",
+        "confidence": 0.08499999999999999,
+        "pass_completed_at": "2026-05-16T10:23:06.624382+00:00",
+        "elapsed_ms": 13920
+      }
+    },
+    {
+      "element_type": "AnalysisPass",
+      "element_id": "P576",
+      "payload": {
+        "pass_id": "P576",
+        "pass_type": "Per-row",
+        "mechanism": "RowLensSourceReanalysis",
+        "evaluated_scope": "All Sources + Row 4 Requirements",
+        "execution_status": "Success",
+        "mode_active": "IM",
+        "declared_transformation_modes": [
+          "IM",
+          "DM",
+          "LPM"
+        ],
+        "outputs": {
+          "row_lens_data": {
+            "row_ref": 5,
+            "chunk_assignment": {},
+            "out_of_scope_refs": [
+              "S2295",
+              "S2298"
+            ],
+            "out_of_scope_count": 2,
+            "stream1_source_count": 10,
+            "stream2_domain_count": 0,
+            "ai_model_fingerprints": [
+              "claude-sonnet-4-5-20250929 (residual batch 1)"
+            ],
+            "signal_count_produced": 7,
+            "concern_count_produced": 1,
+            "concern_threshold_used": 0.65,
+            "stream2_requirement_count": 0,
+            "chunk_match_threshold_used": 0.6
+          },
+          "mode_violations": []
+        },
+        "pass_started_at": "2026-05-16T10:36:01.763986+00:00",
+        "confidence": 0.595,
+        "pass_completed_at": "2026-05-16T10:36:16.860569+00:00",
+        "elapsed_ms": 18006
+      }
+    },
+    {
+      "element_type": "ZachmanCell",
+      "element_id": "ZC-R1-C-How",
+      "payload": {
+        "cell_id": "ZC-R1-C-How",
+        "row_target": "1",
+        "column": "How",
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_type": "ZachmanCell",
+      "element_id": "ZC-R1-C-What",
+      "payload": {
+        "cell_id": "ZC-R1-C-What",
+        "row_target": "1",
+        "column": "What",
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_type": "ZachmanCell",
+      "element_id": "ZC-R1-C-When",
+      "payload": {
+        "cell_id": "ZC-R1-C-When",
+        "row_target": "1",
+        "column": "When",
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_type": "ZachmanCell",
+      "element_id": "ZC-R1-C-Where",
+      "payload": {
+        "cell_id": "ZC-R1-C-Where",
+        "row_target": "1",
+        "column": "Where",
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_type": "ZachmanCell",
+      "element_id": "ZC-R1-C-Who",
+      "payload": {
+        "cell_id": "ZC-R1-C-Who",
+        "row_target": "1",
+        "column": "Who",
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_type": "ZachmanCell",
+      "element_id": "ZC-R1-C-Why",
+      "payload": {
+        "cell_id": "ZC-R1-C-Why",
+        "row_target": "1",
+        "column": "Why",
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_type": "ZachmanCell",
+      "element_id": "ZC-R2-C-How",
+      "payload": {
+        "cell_id": "ZC-R2-C-How",
+        "row_target": "2",
+        "column": "How",
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_type": "ZachmanCell",
+      "element_id": "ZC-R2-C-What",
+      "payload": {
+        "cell_id": "ZC-R2-C-What",
+        "row_target": "2",
+        "column": "What",
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_type": "ZachmanCell",
+      "element_id": "ZC-R2-C-When",
+      "payload": {
+        "cell_id": "ZC-R2-C-When",
+        "row_target": "2",
+        "column": "When",
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_type": "ZachmanCell",
+      "element_id": "ZC-R2-C-Where",
+      "payload": {
+        "cell_id": "ZC-R2-C-Where",
+        "row_target": "2",
+        "column": "Where",
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_type": "ZachmanCell",
+      "element_id": "ZC-R2-C-Who",
+      "payload": {
+        "cell_id": "ZC-R2-C-Who",
+        "row_target": "2",
+        "column": "Who",
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_type": "ZachmanCell",
+      "element_id": "ZC-R2-C-Why",
+      "payload": {
+        "cell_id": "ZC-R2-C-Why",
+        "row_target": "2",
+        "column": "Why",
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_type": "ZachmanCell",
+      "element_id": "ZC-R3-C-How",
+      "payload": {
+        "cell_id": "ZC-R3-C-How",
+        "row_target": "3",
+        "column": "How",
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_type": "ZachmanCell",
+      "element_id": "ZC-R3-C-What",
+      "payload": {
+        "cell_id": "ZC-R3-C-What",
+        "row_target": "3",
+        "column": "What",
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_type": "ZachmanCell",
+      "element_id": "ZC-R3-C-When",
+      "payload": {
+        "cell_id": "ZC-R3-C-When",
+        "row_target": "3",
+        "column": "When",
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_type": "ZachmanCell",
+      "element_id": "ZC-R3-C-Where",
+      "payload": {
+        "cell_id": "ZC-R3-C-Where",
+        "row_target": "3",
+        "column": "Where",
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_type": "ZachmanCell",
+      "element_id": "ZC-R3-C-Who",
+      "payload": {
+        "cell_id": "ZC-R3-C-Who",
+        "row_target": "3",
+        "column": "Who",
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_type": "ZachmanCell",
+      "element_id": "ZC-R3-C-Why",
+      "payload": {
+        "cell_id": "ZC-R3-C-Why",
+        "row_target": "3",
+        "column": "Why",
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_type": "ZachmanCell",
+      "element_id": "ZC-R4-C-How",
+      "payload": {
+        "cell_id": "ZC-R4-C-How",
+        "row_target": "4",
+        "column": "How",
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_type": "ZachmanCell",
+      "element_id": "ZC-R4-C-What",
+      "payload": {
+        "cell_id": "ZC-R4-C-What",
+        "row_target": "4",
+        "column": "What",
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_type": "ZachmanCell",
+      "element_id": "ZC-R4-C-When",
+      "payload": {
+        "cell_id": "ZC-R4-C-When",
+        "row_target": "4",
+        "column": "When",
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_type": "ZachmanCell",
+      "element_id": "ZC-R4-C-Where",
+      "payload": {
+        "cell_id": "ZC-R4-C-Where",
+        "row_target": "4",
+        "column": "Where",
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_type": "ZachmanCell",
+      "element_id": "ZC-R4-C-Who",
+      "payload": {
+        "cell_id": "ZC-R4-C-Who",
+        "row_target": "4",
+        "column": "Who",
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_type": "ZachmanCell",
+      "element_id": "ZC-R4-C-Why",
+      "payload": {
+        "cell_id": "ZC-R4-C-Why",
+        "row_target": "4",
+        "column": "Why",
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_type": "ZachmanCell",
+      "element_id": "ZC-R5-C-How",
+      "payload": {
+        "cell_id": "ZC-R5-C-How",
+        "row_target": "5",
+        "column": "How",
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_type": "ZachmanCell",
+      "element_id": "ZC-R5-C-What",
+      "payload": {
+        "cell_id": "ZC-R5-C-What",
+        "row_target": "5",
+        "column": "What",
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_type": "ZachmanCell",
+      "element_id": "ZC-R5-C-When",
+      "payload": {
+        "cell_id": "ZC-R5-C-When",
+        "row_target": "5",
+        "column": "When",
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_type": "ZachmanCell",
+      "element_id": "ZC-R5-C-Where",
+      "payload": {
+        "cell_id": "ZC-R5-C-Where",
+        "row_target": "5",
+        "column": "Where",
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_type": "ZachmanCell",
+      "element_id": "ZC-R5-C-Who",
+      "payload": {
+        "cell_id": "ZC-R5-C-Who",
+        "row_target": "5",
+        "column": "Who",
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_type": "ZachmanCell",
+      "element_id": "ZC-R5-C-Why",
+      "payload": {
+        "cell_id": "ZC-R5-C-Why",
+        "row_target": "5",
+        "column": "Why",
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_type": "ZachmanCellRegister",
+      "element_id": "ZACHMANCELL_REG001",
+      "payload": {
+        "register_id": "ZACHMANCELL_REG001",
+        "register_type": "ZachmanCell",
+        "member_ids": [
+          "ZC-R1-C-How",
+          "ZC-R1-C-What",
+          "ZC-R1-C-When",
+          "ZC-R1-C-Where",
+          "ZC-R1-C-Who",
+          "ZC-R1-C-Why",
+          "ZC-R2-C-How",
+          "ZC-R2-C-What",
+          "ZC-R2-C-When",
+          "ZC-R2-C-Where",
+          "ZC-R2-C-Who",
+          "ZC-R2-C-Why",
+          "ZC-R3-C-How",
+          "ZC-R3-C-What",
+          "ZC-R3-C-When",
+          "ZC-R3-C-Where",
+          "ZC-R3-C-Who",
+          "ZC-R3-C-Why",
+          "ZC-R4-C-How",
+          "ZC-R4-C-What",
+          "ZC-R4-C-When",
+          "ZC-R4-C-Where",
+          "ZC-R4-C-Who",
+          "ZC-R4-C-Why",
+          "ZC-R5-C-How",
+          "ZC-R5-C-What",
+          "ZC-R5-C-When",
+          "ZC-R5-C-Where",
+          "ZC-R5-C-Who",
+          "ZC-R5-C-Why"
+        ],
+        "completeness_rule": "This register SHALL contain the identifiers of ALL ZachmanCell elements present in the ledger.",
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW1-C-How-001",
+      "payload": {
+        "ci_id": "CCI-ROW1-C-How-001",
+        "cell_id": "ZC-R1-C-How",
+        "classification_type": "Process",
+        "signal_refs": [
+          "SG049"
+        ],
+        "description": "Task claiming and completion workflow executed by children on a weekly cycle",
+        "confidence": 0.76,
+        "justification": "Signal describes a strategic business process involving child-initiated task selection and fulfillment tracking"
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW1-C-How-002",
+      "payload": {
+        "ci_id": "CCI-ROW1-C-How-002",
+        "cell_id": "ZC-R1-C-How",
+        "classification_type": "Process",
+        "signal_refs": [
+          "SG050"
+        ],
+        "description": "Task definition and monetary valuation process performed by parents",
+        "confidence": 0.74,
+        "justification": "Signal identifies the parent-driven process of establishing compensated work assignments with financial parameters"
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW1-C-How-003",
+      "payload": {
+        "ci_id": "CCI-ROW1-C-How-003",
+        "cell_id": "ZC-R1-C-How",
+        "classification_type": "Process",
+        "signal_refs": [
+          "SG053"
+        ],
+        "description": "Performance reporting and compensation distribution process enabling parental oversight",
+        "confidence": 0.75,
+        "justification": "Signal describes the strategic process of accessing child performance data to inform accurate payment administration"
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW1-C-What-001",
+      "payload": {
+        "ci_id": "CCI-ROW1-C-What-001",
+        "cell_id": "ZC-R1-C-What",
+        "classification_type": "Entity",
+        "signal_refs": [
+          "SG049",
+          "SG050",
+          "SG051"
+        ],
+        "description": "Task as a unit of work with completion status and associated monetary value",
+        "confidence": 0.83,
+        "justification": "Multiple signals reference tasks as strategically important entities with attributes including status, availability, and compensation amount"
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW1-C-What-002",
+      "payload": {
+        "ci_id": "CCI-ROW1-C-What-002",
+        "cell_id": "ZC-R1-C-What",
+        "classification_type": "Entity",
+        "signal_refs": [
+          "SG052"
+        ],
+        "description": "Weekly earnings summary representing accumulated child compensation for task completion",
+        "confidence": 0.75,
+        "justification": "Signal identifies earnings as a distinct strategic data entity aggregated over a weekly period"
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW1-C-What-003",
+      "payload": {
+        "ci_id": "CCI-ROW1-C-What-003",
+        "cell_id": "ZC-R1-C-What",
+        "classification_type": "Entity",
+        "signal_refs": [
+          "SG054"
+        ],
+        "description": "Task history representing longitudinal performance records",
+        "confidence": 0.7,
+        "justification": "Signal describes historical task data as a strategically important entity supporting accountability and analysis"
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW1-C-What-004",
+      "payload": {
+        "ci_id": "CCI-ROW1-C-What-004",
+        "cell_id": "ZC-R1-C-What",
+        "classification_type": "Relationship",
+        "signal_refs": [
+          "SG049",
+          "SG052"
+        ],
+        "description": "Child claims and completes tasks resulting in earnings accumulation",
+        "confidence": 0.78,
+        "justification": "Signals establish the strategic relationship between task completion actions and resulting financial compensation"
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW1-C-When-001",
+      "payload": {
+        "ci_id": "CCI-ROW1-C-When-001",
+        "cell_id": "ZC-R1-C-When",
+        "classification_type": "Cycle",
+        "signal_refs": [
+          "SG049",
+          "SG052"
+        ],
+        "description": "Weekly pocket money cycle governing task completion and earnings calculation",
+        "confidence": 0.77,
+        "justification": "Signals explicitly reference a weekly temporal cycle as strategically significant for task tracking and compensation summarization"
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW1-C-Who-001",
+      "payload": {
+        "ci_id": "CCI-ROW1-C-Who-001",
+        "cell_id": "ZC-R1-C-Who",
+        "classification_type": "Role",
+        "signal_refs": [
+          "SG049",
+          "SG051",
+          "SG052"
+        ],
+        "description": "Child as task executor and earnings recipient",
+        "confidence": 0.8,
+        "justification": "Signals consistently identify children as strategic actors performing task-related activities and viewing compensation information"
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW1-C-Who-002",
+      "payload": {
+        "ci_id": "CCI-ROW1-C-Who-002",
+        "cell_id": "ZC-R1-C-Who",
+        "classification_type": "Role",
+        "signal_refs": [
+          "SG050",
+          "SG053"
+        ],
+        "description": "Parent as task administrator and compensation distributor",
+        "confidence": 0.79,
+        "justification": "Signals establish parents as the strategic role responsible for task design, performance monitoring, and payment execution"
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW1-C-Why-001",
+      "payload": {
+        "ci_id": "CCI-ROW1-C-Why-001",
+        "cell_id": "ZC-R1-C-Why",
+        "classification_type": "Goal",
+        "signal_refs": [
+          "SG049",
+          "SG051",
+          "SG052"
+        ],
+        "description": "Enable children to participate in a transparent pocket money system through task completion and earnings tracking",
+        "confidence": 0.82,
+        "justification": "These signals collectively express the strategic goal of empowering children with visibility and agency in a structured compensation system based on task performance"
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW1-C-Why-002",
+      "payload": {
+        "ci_id": "CCI-ROW1-C-Why-002",
+        "cell_id": "ZC-R1-C-Why",
+        "classification_type": "Goal",
+        "signal_refs": [
+          "SG050",
+          "SG053"
+        ],
+        "description": "Establish parental capability to design, monitor, and administer a value-based task compensation framework",
+        "confidence": 0.8,
+        "justification": "Signals articulate the parent-centric strategic objective of creating and managing a monetized task assignment system with performance oversight"
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW1-C-Why-003",
+      "payload": {
+        "ci_id": "CCI-ROW1-C-Why-003",
+        "cell_id": "ZC-R1-C-Why",
+        "classification_type": "Goal",
+        "signal_refs": [
+          "SG054"
+        ],
+        "description": "Support accountability and behavioral insight through historical performance data retention",
+        "confidence": 0.72,
+        "justification": "Signal indicates a strategic purpose for longitudinal data access enabling trend analysis and responsibility tracking over time"
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW2-C-How-001",
+      "payload": {
+        "ci_id": "CCI-ROW2-C-How-001",
+        "cell_id": "ZC-R2-C-How",
+        "classification_type": "Function",
+        "signal_refs": [
+          "SG291"
+        ],
+        "description": "Define task with monetary value: parent capability to create task entities and assign associated dollar amounts",
+        "confidence": 0.91,
+        "justification": "Core business function enabling task creation with value assignment"
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW2-C-How-002",
+      "payload": {
+        "ci_id": "CCI-ROW2-C-How-002",
+        "cell_id": "ZC-R2-C-How",
+        "classification_type": "Process",
+        "signal_refs": [
+          "SG290",
+          "SG292"
+        ],
+        "description": "Claim and complete task: workflow whereby children select available tasks, perform work, and link completion to their identity for earnings credit",
+        "confidence": 0.89,
+        "justification": "Primary business process describing the task lifecycle from availability through child completion"
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW2-C-How-003",
+      "payload": {
+        "ci_id": "CCI-ROW2-C-How-003",
+        "cell_id": "ZC-R2-C-How",
+        "classification_type": "Function",
+        "signal_refs": [
+          "SG293"
+        ],
+        "description": "View task availability: child capability to access and review current available and completed task listings within the active period",
+        "confidence": 0.87,
+        "justification": "Supporting function enabling child actor awareness of work opportunities and status"
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW2-C-How-004",
+      "payload": {
+        "ci_id": "CCI-ROW2-C-How-004",
+        "cell_id": "ZC-R2-C-How",
+        "classification_type": "Function",
+        "signal_refs": [
+          "SG294"
+        ],
+        "description": "Calculate weekly earnings total: aggregation capability that sums monetary values of completed tasks by child within weekly boundaries",
+        "confidence": 0.9,
+        "justification": "Computational function producing derived earnings data for child visibility"
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW2-C-How-005",
+      "payload": {
+        "ci_id": "CCI-ROW2-C-How-005",
+        "cell_id": "ZC-R2-C-How",
+        "classification_type": "Function",
+        "signal_refs": [
+          "SG295"
+        ],
+        "description": "Generate parent payment report: reporting capability displaying child-task-earnings associations to facilitate allowance disbursement",
+        "confidence": 0.91,
+        "justification": "Business function supporting parent financial obligation fulfillment through visibility of earned amounts"
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW2-C-How-006",
+      "payload": {
+        "ci_id": "CCI-ROW2-C-How-006",
+        "cell_id": "ZC-R2-C-How",
+        "classification_type": "Rule",
+        "signal_refs": [
+          "SG296"
+        ],
+        "description": "Weekly task availability reset: business rule requiring task inventory to refresh and return to available state at the start of each new week",
+        "confidence": 0.92,
+        "trigger_condition": "At weekly temporal boundary",
+        "justification": "Explicit cyclical rule governing task state transitions tied to temporal events"
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW2-C-How-007",
+      "payload": {
+        "ci_id": "CCI-ROW2-C-How-007",
+        "cell_id": "ZC-R2-C-How",
+        "classification_type": "Function",
+        "signal_refs": [
+          "SG297"
+        ],
+        "description": "Retain historical task data: archival capability maintaining accessibility of prior period task records for audit and reference purposes",
+        "confidence": 0.86,
+        "justification": "Data management function ensuring temporal persistence beyond operational cycles"
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW2-C-What-001",
+      "payload": {
+        "ci_id": "CCI-ROW2-C-What-001",
+        "cell_id": "ZC-R2-C-What",
+        "classification_type": "Entity",
+        "signal_refs": [
+          "SG291",
+          "SG292",
+          "SG293"
+        ],
+        "description": "Task: a unit of work defined by parents with associated monetary value that can be claimed and completed by children",
+        "confidence": 0.91,
+        "justification": "Multiple signals establish task as a core business entity with attributes (monetary value) and relationships to both parent and child actors"
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW2-C-What-002",
+      "payload": {
+        "ci_id": "CCI-ROW2-C-What-002",
+        "cell_id": "ZC-R2-C-What",
+        "classification_type": "Attribute",
+        "signal_refs": [
+          "SG291",
+          "SG294"
+        ],
+        "description": "Monetary value: the dollar amount assigned to each task that becomes earned income upon completion",
+        "confidence": 0.9,
+        "justification": "Explicit attribute of task entities that enables reward tracking and aggregation"
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW2-C-What-003",
+      "payload": {
+        "ci_id": "CCI-ROW2-C-What-003",
+        "cell_id": "ZC-R2-C-What",
+        "classification_type": "Attribute",
+        "signal_refs": [
+          "SG293",
+          "SG296"
+        ],
+        "description": "Task status: distinguishes available tasks from completed tasks within the business workflow",
+        "confidence": 0.88,
+        "justification": "Implicit status attribute required to differentiate available versus completed task states and enable weekly reset logic"
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW2-C-What-004",
+      "payload": {
+        "ci_id": "CCI-ROW2-C-What-004",
+        "cell_id": "ZC-R2-C-What",
+        "classification_type": "Entity",
+        "signal_refs": [
+          "SG294"
+        ],
+        "description": "Weekly earnings aggregate: calculated total of monetary values for tasks completed by a child within a weekly period",
+        "confidence": 0.89,
+        "justification": "Derived entity representing aggregated monetary totals scoped to child and week"
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW2-C-What-005",
+      "payload": {
+        "ci_id": "CCI-ROW2-C-What-005",
+        "cell_id": "ZC-R2-C-What",
+        "classification_type": "Relationship",
+        "signal_refs": [
+          "SG290",
+          "SG292"
+        ],
+        "description": "Child claims task: association linking a specific child to a completed task entity for ownership and earnings attribution",
+        "confidence": 0.9,
+        "justification": "Core business relationship enabling task completion tracking and child-to-earnings linkage"
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW2-C-What-006",
+      "payload": {
+        "ci_id": "CCI-ROW2-C-What-006",
+        "cell_id": "ZC-R2-C-What",
+        "classification_type": "Relationship",
+        "signal_refs": [
+          "SG291"
+        ],
+        "description": "Parent assigns task: originating relationship establishing task definition and monetary value by parent actor",
+        "confidence": 0.88,
+        "justification": "Foundational relationship for task entity creation and ownership within the system"
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW2-C-What-007",
+      "payload": {
+        "ci_id": "CCI-ROW2-C-What-007",
+        "cell_id": "ZC-R2-C-What",
+        "classification_type": "Entity",
+        "signal_refs": [
+          "SG297"
+        ],
+        "description": "Historical task record: persistent data entity capturing past task assignments, completions, and earnings across time periods",
+        "confidence": 0.86,
+        "justification": "Distinct entity for temporal data retention beyond current operational period"
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW2-C-When-001",
+      "payload": {
+        "ci_id": "CCI-ROW2-C-When-001",
+        "cell_id": "ZC-R2-C-When",
+        "classification_type": "Cycle",
+        "signal_refs": [
+          "SG294",
+          "SG296"
+        ],
+        "description": "Weekly period: recurring temporal boundary defining task availability cycles and earnings aggregation scope",
+        "confidence": 0.91,
+        "justification": "Fundamental time-based cycle governing both reset operations and earnings calculation"
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW2-C-When-002",
+      "payload": {
+        "ci_id": "CCI-ROW2-C-When-002",
+        "cell_id": "ZC-R2-C-When",
+        "classification_type": "Event",
+        "signal_refs": [
+          "SG290",
+          "SG292"
+        ],
+        "description": "Task completion: discrete business event occurring when a child finalizes work, triggering earnings attribution and status change",
+        "confidence": 0.88,
+        "justification": "Significant temporal event changing task state and initiating earnings recording"
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW2-C-When-003",
+      "payload": {
+        "ci_id": "CCI-ROW2-C-When-003",
+        "cell_id": "ZC-R2-C-When",
+        "classification_type": "Trigger",
+        "signal_refs": [
+          "SG296"
+        ],
+        "description": "Week boundary reached: temporal trigger initiating task availability reset and potentially earnings reporting cycle",
+        "confidence": 0.9,
+        "trigger_condition": "At start of new weekly period",
+        "justification": "Specific trigger point activating cyclical business rule for task state refresh"
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW2-C-When-004",
+      "payload": {
+        "ci_id": "CCI-ROW2-C-When-004",
+        "cell_id": "ZC-R2-C-When",
+        "classification_type": "Cycle",
+        "signal_refs": [
+          "SG297"
+        ],
+        "description": "Historical retention period: extended temporal scope across multiple weeks during which past task data remains accessible",
+        "confidence": 0.84,
+        "justification": "Longer-term temporal dimension for data persistence beyond immediate operational cycles"
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW2-C-Who-001",
+      "payload": {
+        "ci_id": "CCI-ROW2-C-Who-001",
+        "cell_id": "ZC-R2-C-Who",
+        "classification_type": "Actor",
+        "signal_refs": [
+          "SG291",
+          "SG295"
+        ],
+        "description": "Parent: business actor responsible for defining tasks, assigning monetary values, and reviewing earnings for payment fulfillment",
+        "confidence": 0.92,
+        "justification": "Primary actor role with task creation and payment accountability responsibilities"
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW2-C-Who-002",
+      "payload": {
+        "ci_id": "CCI-ROW2-C-Who-002",
+        "cell_id": "ZC-R2-C-Who",
+        "classification_type": "Actor",
+        "signal_refs": [
+          "SG290",
+          "SG292",
+          "SG293",
+          "SG294"
+        ],
+        "description": "Child: business actor who claims tasks, performs work, views earnings, and receives monetary rewards",
+        "confidence": 0.91,
+        "justification": "Primary actor role executing tasks and benefiting from reward system"
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW2-C-Why-001",
+      "payload": {
+        "ci_id": "CCI-ROW2-C-Why-001",
+        "cell_id": "ZC-R2-C-Why",
+        "classification_type": "Goal",
+        "signal_refs": [
+          "SG290",
+          "SG294",
+          "SG295"
+        ],
+        "description": "Track child earnings from completed tasks: business objective to monitor monetary rewards earned through task completion for allowance distribution",
+        "confidence": 0.89,
+        "justification": "Overarching business purpose stated explicitly and supported by tracking and reporting capabilities"
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW2-C-Why-002",
+      "payload": {
+        "ci_id": "CCI-ROW2-C-Why-002",
+        "cell_id": "ZC-R2-C-Why",
+        "classification_type": "Principle",
+        "signal_refs": [
+          "SG293",
+          "SG294"
+        ],
+        "description": "Child visibility of work and rewards: guiding principle ensuring children can view available opportunities and earned results within operational timeframes",
+        "confidence": 0.87,
+        "justification": "Foundational transparency principle supporting child engagement and awareness"
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW2-C-Why-003",
+      "payload": {
+        "ci_id": "CCI-ROW2-C-Why-003",
+        "cell_id": "ZC-R2-C-Why",
+        "classification_type": "Principle",
+        "signal_refs": [
+          "SG295"
+        ],
+        "description": "Parent payment accountability: guiding principle requiring visibility of child-earnings relationships to enable accurate allowance fulfillment",
+        "confidence": 0.89,
+        "justification": "Business principle establishing parent responsibility for payment based on verified earnings data"
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW2-C-Why-004",
+      "payload": {
+        "ci_id": "CCI-ROW2-C-Why-004",
+        "cell_id": "ZC-R2-C-Why",
+        "classification_type": "Constraint",
+        "signal_refs": [
+          "SG296"
+        ],
+        "description": "Weekly task cycle boundary: temporal constraint limiting task availability to weekly periods with mandatory reset at cycle completion",
+        "confidence": 0.91,
+        "justification": "Explicit constraint defining operational rhythm and task lifecycle boundaries"
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW2-C-Why-005",
+      "payload": {
+        "ci_id": "CCI-ROW2-C-Why-005",
+        "cell_id": "ZC-R2-C-Why",
+        "classification_type": "Constraint",
+        "signal_refs": [
+          "SG297"
+        ],
+        "description": "Historical data retention requirement: mandated constraint requiring preservation and accessibility of past task records across time",
+        "confidence": 0.87,
+        "justification": "Business constraint enforcing data persistence for audit, reference, or regulatory purposes"
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW3-C-How-001",
+      "payload": {
+        "ci_id": "CCI-ROW3-C-How-001",
+        "cell_id": "ZC-R3-C-How",
+        "classification_type": "Function",
+        "signal_refs": [
+          "SG459"
+        ],
+        "description": "Weekly earnings aggregation function computing total monetary amounts earned by each child within defined time periods.",
+        "confidence": 0.75,
+        "justification": "Signal describes temporal aggregation logic as a computational function that processes and presents earnings data."
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW3-C-How-002",
+      "payload": {
+        "ci_id": "CCI-ROW3-C-How-002",
+        "cell_id": "ZC-R3-C-How",
+        "classification_type": "Function",
+        "signal_refs": [
+          "SG460"
+        ],
+        "description": "Parental reporting interface function providing aggregated presentation of child task performance and earnings metrics.",
+        "confidence": 0.74,
+        "justification": "Reporting interface represents a logical function that transforms and presents data for parent users."
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW3-C-How-003",
+      "payload": {
+        "ci_id": "CCI-ROW3-C-How-003",
+        "cell_id": "ZC-R3-C-How",
+        "classification_type": "Process",
+        "signal_refs": [
+          "SG461"
+        ],
+        "description": "Weekly task availability restoration process resetting task state to enable renewed access and assignment.",
+        "confidence": 0.77,
+        "justification": "State reset logic describes a cyclical process that operates on task entities to restore availability."
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW3-C-How-004",
+      "payload": {
+        "ci_id": "CCI-ROW3-C-How-004",
+        "cell_id": "ZC-R3-C-How",
+        "classification_type": "Rule",
+        "signal_refs": [
+          "SG457"
+        ],
+        "description": "Task completion association rule governing how completion events are recorded and linked to child entity records.",
+        "confidence": 0.71,
+        "justification": "Association rule defines logical constraints on how task completions are processed and related to children."
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW3-C-What-001",
+      "payload": {
+        "ci_id": "CCI-ROW3-C-What-001",
+        "cell_id": "ZC-R3-C-What",
+        "classification_type": "Entity",
+        "signal_refs": [
+          "SG458",
+          "SG459"
+        ],
+        "description": "Child user profile representing individual children in the system with access to task and earnings information.",
+        "confidence": 0.74,
+        "justification": "Multiple signals reference child users as logical entities that interact with tasks and earnings data, indicating a distinct entity type at the designer level."
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW3-C-What-002",
+      "payload": {
+        "ci_id": "CCI-ROW3-C-What-002",
+        "cell_id": "ZC-R3-C-What",
+        "classification_type": "Entity",
+        "signal_refs": [
+          "SG457",
+          "SG458",
+          "SG460",
+          "SG462"
+        ],
+        "description": "Task record containing structured information about assigned activities, completion status, and associated monetary value.",
+        "confidence": 0.79,
+        "justification": "Tasks appear as central data entities across multiple signals, with defined attributes (completion status, value) and relationships to other entities."
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW3-C-What-003",
+      "payload": {
+        "ci_id": "CCI-ROW3-C-What-003",
+        "cell_id": "ZC-R3-C-What",
+        "classification_type": "Entity",
+        "signal_refs": [
+          "SG459",
+          "SG460"
+        ],
+        "description": "Earnings record capturing monetary amounts accrued by children through task completion over time periods.",
+        "confidence": 0.76,
+        "justification": "Earnings are referenced as distinct data requiring computation, aggregation, and reporting, indicating a separate logical entity."
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW3-C-What-004",
+      "payload": {
+        "ci_id": "CCI-ROW3-C-What-004",
+        "cell_id": "ZC-R3-C-What",
+        "classification_type": "Relationship",
+        "signal_refs": [
+          "SG457"
+        ],
+        "description": "Task completion linkage associating completed task instances with specific child entities for tracking and reporting purposes.",
+        "confidence": 0.73,
+        "justification": "Signal explicitly describes an association rule linking task completion events to child entities, representing a logical relationship."
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW3-C-What-005",
+      "payload": {
+        "ci_id": "CCI-ROW3-C-What-005",
+        "cell_id": "ZC-R3-C-What",
+        "classification_type": "Attribute",
+        "signal_refs": [
+          "SG458"
+        ],
+        "description": "Task collection visibility scope defining which tasks are accessible to specific child users based on access control criteria.",
+        "confidence": 0.68,
+        "justification": "Visibility requirements define a logical attribute governing data access patterns for tasks at the child level."
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW3-C-What-006",
+      "payload": {
+        "ci_id": "CCI-ROW3-C-What-006",
+        "cell_id": "ZC-R3-C-What",
+        "classification_type": "Attribute",
+        "signal_refs": [
+          "SG462"
+        ],
+        "description": "Historical task data retention status indicating persistence requirements for completed and past task records.",
+        "confidence": 0.69,
+        "justification": "Retention requirement specifies a data characteristic that must be maintained for historical task records."
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW3-C-When-001",
+      "payload": {
+        "ci_id": "CCI-ROW3-C-When-001",
+        "cell_id": "ZC-R3-C-When",
+        "classification_type": "Event",
+        "signal_refs": [
+          "SG457"
+        ],
+        "description": "Task completion event triggered when a child successfully finishes an assigned task, initiating earning calculations.",
+        "confidence": 0.72,
+        "justification": "Task completion represents a significant state change event that triggers association rules and data updates."
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW3-C-When-002",
+      "payload": {
+        "ci_id": "CCI-ROW3-C-When-002",
+        "cell_id": "ZC-R3-C-When",
+        "classification_type": "Cycle",
+        "signal_refs": [
+          "SG459",
+          "SG461"
+        ],
+        "description": "Weekly operational cycle governing task availability reset, earnings aggregation, and reporting period boundaries.",
+        "confidence": 0.78,
+        "justification": "Multiple signals reference weekly temporal patterns for both earnings computation and task state reset, indicating a defined cycle."
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW3-C-Who-001",
+      "payload": {
+        "ci_id": "CCI-ROW3-C-Who-001",
+        "cell_id": "ZC-R3-C-Who",
+        "classification_type": "Role",
+        "signal_refs": [
+          "SG458",
+          "SG459"
+        ],
+        "description": "Child role with permissions to view assigned tasks and access personal earnings information within scope boundaries.",
+        "confidence": 0.72,
+        "justification": "Signals describe access patterns and data visibility specific to child users, indicating a distinct logical role."
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW3-C-Who-002",
+      "payload": {
+        "ci_id": "CCI-ROW3-C-Who-002",
+        "cell_id": "ZC-R3-C-Who",
+        "classification_type": "Role",
+        "signal_refs": [
+          "SG460"
+        ],
+        "description": "Parent role with elevated permissions to view aggregated reporting data across multiple children and their activities.",
+        "confidence": 0.73,
+        "justification": "Parental reporting interface implies a supervisory role with distinct access to aggregated child data."
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW3-C-Why-001",
+      "payload": {
+        "ci_id": "CCI-ROW3-C-Why-001",
+        "cell_id": "ZC-R3-C-Why",
+        "classification_type": "Constraint",
+        "signal_refs": [
+          "SG462"
+        ],
+        "description": "Data persistence constraint requiring historical task and completion records to remain accessible for audit and reporting purposes.",
+        "confidence": 0.7,
+        "justification": "Retention requirement represents a design constraint mandating preservation of historical data."
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW3-C-Why-002",
+      "payload": {
+        "ci_id": "CCI-ROW3-C-Why-002",
+        "cell_id": "ZC-R3-C-Why",
+        "classification_type": "Principle",
+        "signal_refs": [
+          "SG458"
+        ],
+        "description": "Access control principle ensuring children view only appropriately scoped task and earnings data relevant to their context.",
+        "confidence": 0.68,
+        "justification": "Visibility requirements reflect a design principle governing data access boundaries at the logical level."
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW4-C-Where-001",
+      "payload": {
+        "ci_id": "CCI-ROW4-C-Where-001",
+        "cell_id": "ZC-R4-C-Where",
+        "classification_type": "Node",
+        "signal_refs": [
+          "SG530"
+        ],
+        "description": "Specific operating system versions designated as deployment targets for the platform.",
+        "confidence": 0.85,
+        "justification": "Operating system versions represent physical computational nodes in the Builder row context. The signal identifies concrete OS versions as deployment infrastructure."
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW4-C-Why-001",
+      "payload": {
+        "ci_id": "CCI-ROW4-C-Why-001",
+        "cell_id": "ZC-R4-C-Why",
+        "classification_type": "Constraint",
+        "signal_refs": [
+          "SG530"
+        ],
+        "description": "Technical requirement limiting platform deployment to designated operating system versions.",
+        "confidence": 0.88,
+        "justification": "The normative signal explicitly describes a compatibility constraint that restricts deployment options based on OS version specifications, representing a technical boundary condition at the physical level."
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW5-C-When-001",
+      "payload": {
+        "ci_id": "CCI-ROW5-C-When-001",
+        "cell_id": "ZC-R5-C-When",
+        "classification_type": "Cycle",
+        "signal_refs": [
+          "SG542"
+        ],
+        "description": "Weekly operational cycle boundary at which child actor interfaces display cumulative earned amount totals.",
+        "confidence": 0.8,
+        "justification": "SG542 establishes weekly schedule boundaries for earned amount access. This represents a detailed timing specification for interface data refresh cycles at Row 5."
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW5-C-When-002",
+      "payload": {
+        "ci_id": "CCI-ROW5-C-When-002",
+        "cell_id": "ZC-R5-C-When",
+        "classification_type": "Cycle",
+        "signal_refs": [
+          "SG544"
+        ],
+        "description": "Weekly task availability reset cycle defining temporal sequencing for task claiming operations.",
+        "confidence": 0.85,
+        "justification": "SG544 specifies weekly operational cycle timing for task reset, which at Row 5 defines detailed sequencing and timing parameters for system refresh operations."
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW5-C-Where-001",
+      "payload": {
+        "ci_id": "CCI-ROW5-C-Where-001",
+        "cell_id": "ZC-R5-C-Where",
+        "classification_type": "Node",
+        "signal_refs": [
+          "SG545"
+        ],
+        "description": "System deployment on iOS mobile platform node.",
+        "confidence": 0.9,
+        "justification": "SG545 specifies iOS as a deployment platform. At Row 5, this represents detailed node specification for iOS platform deployment configuration."
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW5-C-Where-002",
+      "payload": {
+        "ci_id": "CCI-ROW5-C-Where-002",
+        "cell_id": "ZC-R5-C-Where",
+        "classification_type": "Node",
+        "signal_refs": [
+          "SG545"
+        ],
+        "description": "System deployment on Android mobile platform node.",
+        "confidence": 0.9,
+        "justification": "SG545 specifies Android as a deployment platform. At Row 5, this represents detailed node specification for Android platform deployment configuration."
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW5-C-Where-003",
+      "payload": {
+        "ci_id": "CCI-ROW5-C-Where-003",
+        "cell_id": "ZC-R5-C-Where",
+        "classification_type": "Node",
+        "signal_refs": [
+          "SG545"
+        ],
+        "description": "System deployment on Windows desktop platform node.",
+        "confidence": 0.9,
+        "justification": "SG545 specifies Windows as a deployment platform. At Row 5, this represents detailed node specification for Windows platform deployment configuration."
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW5-C-Who-001",
+      "payload": {
+        "ci_id": "CCI-ROW5-C-Who-001",
+        "cell_id": "ZC-R5-C-Who",
+        "classification_type": "Actor",
+        "signal_refs": [
+          "SG539"
+        ],
+        "description": "Child user interface actor executing task claim operations within weekly temporal boundaries.",
+        "confidence": 0.75,
+        "justification": "SG539 identifies children as operational actors performing task claiming activities. At Row 5, this maps to detailed user interface specification for the child actor type."
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW5-C-Who-002",
+      "payload": {
+        "ci_id": "CCI-ROW5-C-Who-002",
+        "cell_id": "ZC-R5-C-Who",
+        "classification_type": "Actor",
+        "signal_refs": [
+          "SG540"
+        ],
+        "description": "Parent user interface actor performing task configuration and monetary assignment operations.",
+        "confidence": 0.75,
+        "justification": "SG540 defines parents as actors responsible for configuration activities. This represents detailed user interface specification for parent actor operations."
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW5-C-Who-003",
+      "payload": {
+        "ci_id": "CCI-ROW5-C-Who-003",
+        "cell_id": "ZC-R5-C-Who",
+        "classification_type": "Role",
+        "signal_refs": [
+          "SG541"
+        ],
+        "description": "Child role with interface permissions for viewing available task inventory and completed task history within weekly operational cycles.",
+        "confidence": 0.7,
+        "justification": "SG541 specifies operational visibility requirements for child actors, which at Row 5 defines detailed role-based interface access permissions and data visibility constraints."
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW5-C-Who-004",
+      "payload": {
+        "ci_id": "CCI-ROW5-C-Who-004",
+        "cell_id": "ZC-R5-C-Who",
+        "classification_type": "Role",
+        "signal_refs": [
+          "SG543"
+        ],
+        "description": "Parent role with interface access to reporting functions for executing pocket money distribution workflows.",
+        "confidence": 0.75,
+        "justification": "SG543 defines parent operational responsibilities in accessing reports, translating to detailed role-based interface specifications and functional access permissions at Row 5."
+      }
+    },
+    {
+      "element_type": "Segment",
+      "element_id": "SEG301",
+      "payload": {
+        "segment_id": "SEG301",
+        "title": "High Level Description",
+        "source_refs": [
+          "S2295",
+          "S2296",
+          "S2297",
+          "S2298",
+          "S2299",
+          "S2300",
+          "S2301",
+          "S2302",
+          "S2303",
+          "S2304"
+        ],
+        "confidence": 1.0,
+        "description": "Section: High Level Description"
+      }
+    },
+    {
+      "element_type": "SegmentRegister",
+      "element_id": "SEGMENT_REG001",
+      "payload": {
+        "register_id": "SEGMENT_REG001",
+        "register_type": "Segment",
+        "member_ids": [
+          "SEG301"
+        ],
+        "completeness_rule": "This register SHALL contain the identifiers of ALL Segment elements present in the ledger.",
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_type": "Signal",
+      "element_id": "SG049",
+      "payload": {
+        "signal_id": "SG049",
+        "signal_type": "Intent",
+        "row_target": "1",
+        "description": "Expresses the fundamental purpose of enabling children to claim and track completed pocket money tasks weekly.",
+        "source_refs": [
+          "S2296"
+        ],
+        "confidence": 0.75
+      }
+    },
+    {
+      "element_type": "Signal",
+      "element_id": "SG050",
+      "payload": {
+        "signal_id": "SG050",
+        "signal_type": "Intent",
+        "row_target": "1",
+        "description": "Articulates parental motivation to define compensated task assignments with associated monetary values.",
+        "source_refs": [
+          "S2297"
+        ],
+        "confidence": 0.72
+      }
+    },
+    {
+      "element_type": "Signal",
+      "element_id": "SG051",
+      "payload": {
+        "signal_id": "SG051",
+        "signal_type": "Intent",
+        "row_target": "1",
+        "description": "Captures the purpose of providing children visibility into available and completed task inventory.",
+        "source_refs": [
+          "S2299"
+        ],
+        "confidence": 0.7
+      }
+    },
+    {
+      "element_type": "Signal",
+      "element_id": "SG052",
+      "payload": {
+        "signal_id": "SG052",
+        "signal_type": "Intent",
+        "row_target": "1",
+        "description": "Identifies the motivational goal of enabling children to view their weekly earnings summary.",
+        "source_refs": [
+          "S2300"
+        ],
+        "confidence": 0.73
+      }
+    },
+    {
+      "element_type": "Signal",
+      "element_id": "SG053",
+      "payload": {
+        "signal_id": "SG053",
+        "signal_type": "Intent",
+        "row_target": "1",
+        "description": "Establishes parental need to access child performance reporting for accurate compensation distribution purposes.",
+        "source_refs": [
+          "S2301"
+        ],
+        "confidence": 0.78
+      }
+    },
+    {
+      "element_type": "Signal",
+      "element_id": "SG054",
+      "payload": {
+        "signal_id": "SG054",
+        "signal_type": "Intent",
+        "row_target": "1",
+        "description": "Indicates stakeholder requirement for longitudinal task history access supporting accountability or trend analysis.",
+        "source_refs": [
+          "S2303"
+        ],
+        "confidence": 0.68
+      }
+    },
+    {
+      "element_type": "Signal",
+      "element_id": "SG289",
+      "payload": {
+        "signal_id": "SG289",
+        "signal_type": "Intent",
+        "row_target": "2",
+        "description": "Section header indicating the commencement of conceptual system description.",
+        "source_refs": [
+          "S2295"
+        ],
+        "confidence": 0.75
+      }
+    },
+    {
+      "element_type": "Signal",
+      "element_id": "SG290",
+      "payload": {
+        "signal_id": "SG290",
+        "signal_type": "Intent",
+        "row_target": "2",
+        "description": "Establishes the core business concept of children claiming completed tasks for monetary reward tracking.",
+        "source_refs": [
+          "S2296"
+        ],
+        "confidence": 0.85
+      }
+    },
+    {
+      "element_type": "Signal",
+      "element_id": "SG291",
+      "payload": {
+        "signal_id": "SG291",
+        "signal_type": "Normative",
+        "row_target": "2",
+        "description": "Defines the parent capability to specify task entities with associated monetary value attributes.",
+        "source_refs": [
+          "S2297"
+        ],
+        "confidence": 0.9
+      }
+    },
+    {
+      "element_type": "Signal",
+      "element_id": "SG292",
+      "payload": {
+        "signal_id": "SG292",
+        "signal_type": "Normative",
+        "row_target": "2",
+        "description": "Specifies the relationship between completed task entities and child entities through linkage.",
+        "source_refs": [
+          "S2298"
+        ],
+        "confidence": 0.92
+      }
+    },
+    {
+      "element_type": "Signal",
+      "element_id": "SG293",
+      "payload": {
+        "signal_id": "SG293",
+        "signal_type": "Normative",
+        "row_target": "2",
+        "description": "Defines child actor visibility requirements for both available and completed task entities within temporal scope.",
+        "source_refs": [
+          "S2299"
+        ],
+        "confidence": 0.88
+      }
+    },
+    {
+      "element_type": "Signal",
+      "element_id": "SG294",
+      "payload": {
+        "signal_id": "SG294",
+        "signal_type": "Normative",
+        "row_target": "2",
+        "description": "Establishes weekly aggregation capability for earned monetary totals visible to child actors.",
+        "source_refs": [
+          "S2300"
+        ],
+        "confidence": 0.9
+      }
+    },
+    {
+      "element_type": "Signal",
+      "element_id": "SG295",
+      "payload": {
+        "signal_id": "SG295",
+        "signal_type": "Normative",
+        "row_target": "2",
+        "description": "Defines parent reporting capability displaying child-task-earnings relationships to support payment fulfillment.",
+        "source_refs": [
+          "S2301"
+        ],
+        "confidence": 0.92
+      }
+    },
+    {
+      "element_type": "Signal",
+      "element_id": "SG296",
+      "payload": {
+        "signal_id": "SG296",
+        "signal_type": "Normative",
+        "row_target": "2",
+        "description": "Specifies the cyclical business rule for task availability reset at weekly temporal boundaries.",
+        "source_refs": [
+          "S2302"
+        ],
+        "confidence": 0.87
+      }
+    },
+    {
+      "element_type": "Signal",
+      "element_id": "SG297",
+      "payload": {
+        "signal_id": "SG297",
+        "signal_type": "Normative",
+        "row_target": "2",
+        "description": "Mandates retention and accessibility of historical task data entities across temporal periods.",
+        "source_refs": [
+          "S2303"
+        ],
+        "confidence": 0.85
+      }
+    },
+    {
+      "element_type": "Signal",
+      "element_id": "SG457",
+      "payload": {
+        "signal_id": "SG457",
+        "signal_type": "Normative",
+        "row_target": "3",
+        "description": "Logical association rule defining how task completion events are linked to child entities.",
+        "source_refs": [
+          "S2298"
+        ],
+        "confidence": 0.7
+      }
+    },
+    {
+      "element_type": "Signal",
+      "element_id": "SG458",
+      "payload": {
+        "signal_id": "SG458",
+        "signal_type": "Normative",
+        "row_target": "3",
+        "description": "Data visibility requirements specifying logical access patterns for child users to task collections.",
+        "source_refs": [
+          "S2299"
+        ],
+        "confidence": 0.68
+      }
+    },
+    {
+      "element_type": "Signal",
+      "element_id": "SG459",
+      "payload": {
+        "signal_id": "SG459",
+        "signal_type": "Normative",
+        "row_target": "3",
+        "description": "Temporal aggregation logic defining weekly computation and presentation of earned amounts to children.",
+        "source_refs": [
+          "S2300"
+        ],
+        "confidence": 0.72
+      }
+    },
+    {
+      "element_type": "Signal",
+      "element_id": "SG460",
+      "payload": {
+        "signal_id": "SG460",
+        "signal_type": "Normative",
+        "row_target": "3",
+        "description": "Logical reporting interface providing parents aggregated view of child earnings and task completion data.",
+        "source_refs": [
+          "S2301"
+        ],
+        "confidence": 0.71
+      }
+    },
+    {
+      "element_type": "Signal",
+      "element_id": "SG461",
+      "payload": {
+        "signal_id": "SG461",
+        "signal_type": "Normative",
+        "row_target": "3",
+        "description": "Periodic state reset logic defining weekly cycle behavior for task availability restoration.",
+        "source_refs": [
+          "S2302"
+        ],
+        "confidence": 0.75
+      }
+    },
+    {
+      "element_type": "Signal",
+      "element_id": "SG462",
+      "payload": {
+        "signal_id": "SG462",
+        "signal_type": "Normative",
+        "row_target": "3",
+        "description": "Data retention requirement mandating logical persistence and accessibility of historical task records.",
+        "source_refs": [
+          "S2303"
+        ],
+        "confidence": 0.66
+      }
+    },
+    {
+      "element_type": "Signal",
+      "element_id": "SG530",
+      "payload": {
+        "signal_id": "SG530",
+        "signal_type": "Normative",
+        "row_target": "4",
+        "description": "Platform compatibility constraint specifying concrete operating system versions for deployment.",
+        "source_refs": [
+          "S2304"
+        ],
+        "confidence": 0.85
+      }
+    },
+    {
+      "element_type": "Signal",
+      "element_id": "SG539",
+      "payload": {
+        "signal_id": "SG539",
+        "signal_type": "Actor",
+        "row_target": "5",
+        "description": "Identifies children as operational actors who execute task claiming activities throughout the week on a temporal basis.",
+        "source_refs": [
+          "S2296"
+        ],
+        "confidence": 0.75
+      }
+    },
+    {
+      "element_type": "Signal",
+      "element_id": "SG540",
+      "payload": {
+        "signal_id": "SG540",
+        "signal_type": "Actor",
+        "row_target": "5",
+        "description": "Identifies parents as operational actors responsible for task configuration and monetary value assignment activities.",
+        "source_refs": [
+          "S2297"
+        ],
+        "confidence": 0.75
+      }
+    },
+    {
+      "element_type": "Signal",
+      "element_id": "SG541",
+      "payload": {
+        "signal_id": "SG541",
+        "signal_type": "Actor",
+        "row_target": "5",
+        "description": "Defines operational visibility requirements for child actors viewing available and completed tasks within weekly cycles.",
+        "source_refs": [
+          "S2299"
+        ],
+        "confidence": 0.7
+      }
+    },
+    {
+      "element_type": "Signal",
+      "element_id": "SG542",
+      "payload": {
+        "signal_id": "SG542",
+        "signal_type": "Normative",
+        "row_target": "5",
+        "description": "Establishes weekly operational schedule boundary when child actors can access earned amount totals.",
+        "source_refs": [
+          "S2300"
+        ],
+        "confidence": 0.8
+      }
+    },
+    {
+      "element_type": "Signal",
+      "element_id": "SG543",
+      "payload": {
+        "signal_id": "SG543",
+        "signal_type": "Actor",
+        "row_target": "5",
+        "description": "Defines parent operational role in accessing reports to execute pocket money distribution activities.",
+        "source_refs": [
+          "S2301"
+        ],
+        "confidence": 0.75
+      }
+    },
+    {
+      "element_type": "Signal",
+      "element_id": "SG544",
+      "payload": {
+        "signal_id": "SG544",
+        "signal_type": "Normative",
+        "row_target": "5",
+        "description": "Specifies weekly operational cycle timing when task availability resets for claiming operations.",
+        "source_refs": [
+          "S2302"
+        ],
+        "confidence": 0.85
+      }
+    },
+    {
+      "element_type": "Signal",
+      "element_id": "SG545",
+      "payload": {
+        "signal_id": "SG545",
+        "signal_type": "Normative",
+        "row_target": "5",
+        "description": "Defines deployment platform locations specifying where the system operates across iOS, Android, and Windows environments.",
+        "source_refs": [
+          "S2304"
+        ],
+        "confidence": 0.9
+      }
+    },
+    {
+      "element_type": "SignalRegister",
+      "element_id": "SIGNAL_REG001",
+      "payload": {
+        "register_id": "SIGNAL_REG001",
+        "register_type": "Signal",
+        "member_ids": [
+          "SG049",
+          "SG050",
+          "SG051",
+          "SG052",
+          "SG053",
+          "SG054",
+          "SG289",
+          "SG290",
+          "SG291",
+          "SG292",
+          "SG293",
+          "SG294",
+          "SG295",
+          "SG296",
+          "SG297",
+          "SG457",
+          "SG458",
+          "SG459",
+          "SG460",
+          "SG461",
+          "SG462",
+          "SG530",
+          "SG539",
+          "SG540",
+          "SG541",
+          "SG542",
+          "SG543",
+          "SG544",
+          "SG545"
+        ],
+        "completeness_rule": "This register SHALL contain the identifiers of ALL Signal elements present in the ledger.",
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_type": "Stakeholder",
+      "element_id": "SH001",
+      "payload": {
+        "stakeholder_id": "SH001",
+        "name": "Practitioner SH001",
+        "role": "practitioner",
+        "stakeholder_kind": "Automated"
+      }
+    },
+    {
+      "element_type": "Stakeholder",
+      "element_id": "SH_PMT",
+      "payload": {
+        "stakeholder_id": "SH_PMT",
+        "name": "Practitioner SH_PMT",
+        "role": "practitioner"
+      }
+    },
+    {
+      "element_type": "StakeholderRegister",
+      "element_id": "STAKEHOLDER_REG001",
+      "payload": {
+        "register_id": "STAKEHOLDER_REG001",
+        "register_type": "Stakeholder",
+        "member_ids": [
+          "SH001",
+          "SH_PMT"
+        ],
+        "completeness_rule": "This register SHALL contain the identifiers of ALL Stakeholder elements present in the ledger.",
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_type": "Concern",
+      "element_id": "CN022",
+      "payload": {
+        "concern_id": "CN022",
+        "source_refs": [
+          "S2303"
+        ],
+        "description": "States historical data availability requirement but lacks operational retention schedule or access timing details.",
+        "state": "Open",
+        "produced_in_row": "5",
+        "practitioner_id": "SH_PMT",
+        "confidence": 0.45
+      }
+    },
+    {
+      "element_type": "ConcernRegister",
+      "element_id": "CONCERN_REG001",
+      "payload": {
+        "register_id": "CONCERN_REG001",
+        "register_type": "Concern",
+        "member_ids": [
+          "CN022"
+        ],
+        "completeness_rule": "This register SHALL contain the identifiers of ALL Concern elements present in the ledger.",
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_type": "CellContentItemRegister",
+      "element_id": "CELLCONTENTITEM_REG001",
+      "payload": {
+        "register_id": "CELLCONTENTITEM_REG001",
+        "register_type": "CellContentItem",
+        "member_ids": [
+          "CCI-ROW1-C-How-001",
+          "CCI-ROW1-C-How-002",
+          "CCI-ROW1-C-How-003",
+          "CCI-ROW1-C-What-001",
+          "CCI-ROW1-C-What-002",
+          "CCI-ROW1-C-What-003",
+          "CCI-ROW1-C-What-004",
+          "CCI-ROW1-C-When-001",
+          "CCI-ROW1-C-Who-001",
+          "CCI-ROW1-C-Who-002",
+          "CCI-ROW1-C-Why-001",
+          "CCI-ROW1-C-Why-002",
+          "CCI-ROW1-C-Why-003",
+          "CCI-ROW2-C-How-001",
+          "CCI-ROW2-C-How-002",
+          "CCI-ROW2-C-How-003",
+          "CCI-ROW2-C-How-004",
+          "CCI-ROW2-C-How-005",
+          "CCI-ROW2-C-How-006",
+          "CCI-ROW2-C-How-007",
+          "CCI-ROW2-C-What-001",
+          "CCI-ROW2-C-What-002",
+          "CCI-ROW2-C-What-003",
+          "CCI-ROW2-C-What-004",
+          "CCI-ROW2-C-What-005",
+          "CCI-ROW2-C-What-006",
+          "CCI-ROW2-C-What-007",
+          "CCI-ROW2-C-When-001",
+          "CCI-ROW2-C-When-002",
+          "CCI-ROW2-C-When-003",
+          "CCI-ROW2-C-When-004",
+          "CCI-ROW2-C-Who-001",
+          "CCI-ROW2-C-Who-002",
+          "CCI-ROW2-C-Why-001",
+          "CCI-ROW2-C-Why-002",
+          "CCI-ROW2-C-Why-003",
+          "CCI-ROW2-C-Why-004",
+          "CCI-ROW2-C-Why-005",
+          "CCI-ROW3-C-How-001",
+          "CCI-ROW3-C-How-002",
+          "CCI-ROW3-C-How-003",
+          "CCI-ROW3-C-How-004",
+          "CCI-ROW3-C-What-001",
+          "CCI-ROW3-C-What-002",
+          "CCI-ROW3-C-What-003",
+          "CCI-ROW3-C-What-004",
+          "CCI-ROW3-C-What-005",
+          "CCI-ROW3-C-What-006",
+          "CCI-ROW3-C-When-001",
+          "CCI-ROW3-C-When-002",
+          "CCI-ROW3-C-Who-001",
+          "CCI-ROW3-C-Who-002",
+          "CCI-ROW3-C-Why-001",
+          "CCI-ROW3-C-Why-002",
+          "CCI-ROW4-C-Where-001",
+          "CCI-ROW4-C-Why-001",
+          "CCI-ROW5-C-When-001",
+          "CCI-ROW5-C-When-002",
+          "CCI-ROW5-C-Where-001",
+          "CCI-ROW5-C-Where-002",
+          "CCI-ROW5-C-Where-003",
+          "CCI-ROW5-C-Who-001",
+          "CCI-ROW5-C-Who-002",
+          "CCI-ROW5-C-Who-003",
+          "CCI-ROW5-C-Who-004"
+        ],
+        "completeness_rule": "This register SHALL contain the identifiers of ALL CellContentItem elements present in the ledger.",
+        "confidence": 1.0
+      }
+    }
+  ],
+  "register_index": [
+    {
+      "register_type": "CellContentItemRegister",
+      "register_id": "CELLCONTENTITEM_REG001"
+    },
+    {
+      "register_type": "ConcernRegister",
+      "register_id": "CONCERN_REG001"
+    },
+    {
+      "register_type": "SegmentRegister",
+      "register_id": "SEGMENT_REG001"
+    },
+    {
+      "register_type": "SignalRegister",
+      "register_id": "SIGNAL_REG001"
+    },
+    {
+      "register_type": "SourceRegister",
+      "register_id": "SOURCE_REG001"
+    },
+    {
+      "register_type": "StakeholderRegister",
+      "register_id": "STAKEHOLDER_REG001"
+    },
+    {
+      "register_type": "ZachmanCellRegister",
+      "register_id": "ZACHMANCELL_REG001"
+    }
+  ],
+  "content_hash": {
+    "hash_alg": "sha256",
+    "hash": "151be2a663086337135f678c75a0a18feac45460bb7534082cb27831302c44d7"
+  }
+}

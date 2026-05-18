@@ -56,6 +56,14 @@ def main() -> None:
         help="Zachman row number 1–6 (e.g. 1). Required for named-convention output.",
     )
     parser.add_argument(
+        "--project-code",
+        default=None,
+        metavar="CODE",
+        help="Short uppercase code used in the output filename (e.g. PMT). "
+             "Defaults to project_id. Use this when project_id contains underscores "
+             "or digits that are not valid in the naming convention (e.g. PMT_E2E → PMT).",
+    )
+    parser.add_argument(
         "--out-file",
         default=None,
         help="Override the output filename (basename only). Legacy use; ignored when "
@@ -84,9 +92,10 @@ def main() -> None:
     naming_args = (args.phase, args.pass_, args.row)
     if all(a is not None for a in naming_args):
         from core.output_naming import OutputNamingError, generate_filename
+        naming_id = args.project_code if args.project_code else project_id
         try:
             basename = generate_filename(
-                project_id=project_id,
+                project_id=naming_id,
                 phase=args.phase,
                 pass_=args.pass_,
                 row=args.row,
