@@ -58,15 +58,19 @@ def run(
     project_id: str,
     practitioner_id: str,
     row_ref: int,
+    skip_deduplication: bool = False,
 ) -> dict[str, Any]:
     """
     Execute Phase 3 Pass 3b CCI Construction.
 
     Parameters
     ----------
-    project_id      : ledger project identifier
-    practitioner_id : practitioner stakeholder_id (SG-03 attribution)
-    row_ref         : Zachman row number being analysed (1-6)
+    project_id          : ledger project identifier
+    practitioner_id     : practitioner stakeholder_id (SG-03 attribution)
+    row_ref             : Zachman row number being analysed (1-6)
+    skip_deduplication  : when True Step 4 is bypassed — all raw candidates
+                          from Step 3 flow directly into Step 5 with no merging
+                          or consolidation, surfacing the raw duplication level.
 
     Returns
     -------
@@ -197,25 +201,33 @@ def run(
     # Note: no long-lived session is passed in here.  _read_existing_ccis
     # opens a fresh short-lived session per cell so that DB connections are
     # never held idle across the AI calls that interleave with each cell read.
-    try:
-        surviving_candidates, existing_updates, merge_records, consolidation_flags = (
-            deduplicate_per_cell(
-                all_candidates=all_candidates,
-                row_ref=row_ref,
-                project_id=project_id,
-                consolidation_threshold=consolidation_threshold,
-                pass_data=pass_data,
+    if skip_deduplication:
+        # Bypass Step 4 entirely — all raw candidates flow into Step 5 as-is.
+        # merge_records and consolidation_flags are empty (nothing was merged).
+        surviving_candidates = all_candidates
+        existing_updates: list = []
+        merge_records: list = []
+        consolidation_flags: list = []
+    else:
+        try:
+            surviving_candidates, existing_updates, merge_records, consolidation_flags = (
+                deduplicate_per_cell(
+                    all_candidates=all_candidates,
+                    row_ref=row_ref,
+                    project_id=project_id,
+                    consolidation_threshold=consolidation_threshold,
+                    pass_data=pass_data,
+                )
             )
-        )
-    except Exception as exc:
-        finalise_cci_pass_failed(
-            pass_data,
-            failure_reason=f"Step 4 deduplication failed: {exc}",
-            failure_pass="Step4",
-            start_monotonic=_start_monotonic,
-        )
-        commit_failure_pass(pass_data)
-        raise CCIConstructionError(str(exc)) from exc
+        except Exception as exc:
+            finalise_cci_pass_failed(
+                pass_data,
+                failure_reason=f"Step 4 deduplication failed: {exc}",
+                failure_pass="Step4",
+                start_monotonic=_start_monotonic,
+            )
+            commit_failure_pass(pass_data)
+            raise CCIConstructionError(str(exc)) from exc
 
     # ------------------------------------------------------------------ #
     # STEP 5 — Atomic transaction: INSERT CCIs + AnalysisPass             #

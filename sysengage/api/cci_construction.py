@@ -31,6 +31,10 @@ class CCIConstructionRequest(BaseModel):
     project_id: str = Field(default=DEFAULT_PROJECT_ID, min_length=1)
     practitioner_id: str = Field(default=DEFAULT_PRACTITIONER_ID, min_length=1)
     row_ref: int = Field(ge=1, le=6, description="Zachman row number (1-6)")
+    skip_deduplication: bool = Field(
+        default=False,
+        description="When true, Step 4 deduplication is skipped and all raw AI candidates are committed as-is.",
+    )
 
 
 class CCIConstructionResponse(BaseModel):
@@ -52,6 +56,7 @@ async def run_cci_construction(body: CCIConstructionRequest) -> CCIConstructionR
             project_id=body.project_id,
             practitioner_id=body.practitioner_id,
             row_ref=body.row_ref,
+            skip_deduplication=body.skip_deduplication,
         )
     except CCIConstructionError as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
