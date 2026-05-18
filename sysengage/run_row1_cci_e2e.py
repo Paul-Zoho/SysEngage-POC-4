@@ -24,9 +24,9 @@ from mechanisms.ledger_export import run_ledger_export
 from sqlalchemy import text
 
 PROJECT_ID = "ROW1_E2E"
-PROJECT_CODE = "ROW1"
+PROJECT_CODE = "ROW"
 PRACTITIONER_ID = "SH001"
-ROWS = [1, 2, 3, 4, 5]
+ROWS = [1]
 OUT_DIR = Path(__file__).parent.parent / "verification_outputs"
 
 
