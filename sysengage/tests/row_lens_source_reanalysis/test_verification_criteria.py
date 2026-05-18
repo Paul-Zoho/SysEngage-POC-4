@@ -5,23 +5,27 @@ These tests use mock AI responses to avoid real API calls.
 Each test verifies one or more decidable criteria against the full mechanism run.
 
 Criteria tested:
-  CN-1 — Concern identifier format ^CN\d{3,}$
-  CN-2 — Concern source_refs non-empty
-  CN-3 — Concern referential integrity (tested via entity_production tests)
-  CN-4 — Concern upstream row constraint (tested via entity_production tests)
-  CN-5 — Concern state = "Open" at production
-  CN-6 — Concern produced_in_row = str(row_ref)
-  SG-1 — Signal referential integrity (tested via entity_production tests)
-  SG-2 — Signal upstream row constraint (tested via entity_production tests)
-  SG-3 — Signal row_target = str(row_ref)
-  ME-1 — No source_id in both Signal and Concern source_refs
-  OS-1 — OutOfScope items in out_of_scope_refs
-  OS-2 — OutOfScope source_ids not in Signal/Concern source_refs
-  INV-1 — Invariant: stream1 + stream2 = signals + concerns + oos
-  R1-1 — Row 1: stream2_requirement_count=0, stream2_domain_count=0
-  AP-1 — AnalysisPass with mechanism="RowLensSourceReanalysis" exists
-  AP-2 — execution_status ∈ {Completed, CompletedWithWarnings}
-  AP-3 — mode_active="IM"; "LPM" ∈ declared_transformation_modes
+  CN-1 -- Concern identifier format ^CN[0-9]{3,}$
+  CN-2 -- Concern source_refs non-empty
+  CN-3 -- Concern referential integrity (tested via entity_production tests)
+  CN-4 -- Concern upstream row constraint (tested via entity_production tests)
+  CN-5 -- Concern state = "Open" at production
+  CN-6 -- Concern produced_in_row = str(row_ref)
+  SG-1 -- Signal referential integrity (tested via entity_production tests)
+  SG-2 -- Signal upstream row constraint (tested via entity_production tests)
+  SG-3 -- Signal row_target = str(row_ref)
+  ME-1 -- No source_id in both Signal and Concern source_refs
+  OS-1 -- OutOfScope items in out_of_scope_refs
+  OS-2 -- OutOfScope source_ids not in Signal/Concern source_refs
+  INV-1 -- Invariant: stream1 + stream2 = signals + concerns + oos
+  R1-1 -- Row 1: stream2_requirement_count=0, stream2_domain_count=0
+  AP-1 -- AnalysisPass with mechanism="RowLensSourceReanalysis" exists
+  AP-2 -- execution_status in {Completed, CompletedWithWarnings}
+  AP-3 -- mode_active="IM"; "LPM" in declared_transformation_modes
+
+End-to-end fixtures:
+  TestRow1EmptyStream2 -- Fixture 1: row_ref=1, stream2 empty (R1-1, INV-1, AP-1..3)
+  TestRow2WithStream2  -- Fixture 2: row_ref=2, one domain + two requirements (INV-1, AP-1)
 """
 
 from __future__ import annotations
@@ -326,3 +330,83 @@ class TestMutualExclusivityEndToEnd:
 
         overlap = signal_source_ids & concern_source_ids
         assert not overlap, f"ME-1: Source IDs {overlap} appear in both Signal and Concern source_refs"
+
+
+class TestRow2WithStream2:
+    """
+    Fixture 1: Row 2 with non-empty stream 2 (one Domain, two Requirements).
+
+    Verifies the mechanism runs end-to-end at row_ref=2 where chunk assembly
+    produces a matched chunk (sources + requirements → 5 classified items total)
+    and INV-1 holds: stream1(3) + stream2(2) == total_out(5).
+    """
+
+    def test_row2_inv1_with_stream2(
+        self,
+        sources_3,
+        stream2_domain_and_requirements,
+        project_profile,
+        mock_ai_client,
+    ):
+        """
+        INV-1 at row_ref=2: stream1(3) + stream2(2 requirements) == total_out(5).
+
+        Two AI calls are made:
+        - Call 1: chunk classification (sources RLS901, RLS902 + requirements RLR901, RLR902)
+        - Call 2: residual classification (source RLS903)
+        side_effect returns a different mock for each call.
+        """
+        chunk_response = build_mock_message(
+            make_classification_response([
+                {"item_id": "RLS901", "classification": "Signal", "signal_type": "Normative", "confidence": 0.9, "description": "Children track savings."},
+                {"item_id": "RLS902", "classification": "Signal", "signal_type": "Actor", "confidence": 0.85, "description": "Parents approve spending."},
+                {"item_id": "RLR901", "classification": "Signal", "signal_type": "Normative", "confidence": 0.8, "description": "Children manage accounts."},
+                {"item_id": "RLR902", "classification": "Signal", "signal_type": "Normative", "confidence": 0.8, "description": "Parents oversee requests."},
+            ])
+        )
+        residual_response = build_mock_message(
+            make_classification_response([
+                {"item_id": "RLS903", "classification": "Signal", "signal_type": "Normative", "confidence": 0.75, "description": "System sends summaries."},
+            ])
+        )
+        mock_ai_client.messages.create.side_effect = [chunk_response, residual_response]
+
+        result = _run_mechanism(row_ref=2)
+
+        rld = result["row_lens_data"]
+        total_in = rld["stream1_source_count"] + rld["stream2_requirement_count"]
+        total_out = rld["signal_count_produced"] + rld["concern_count_produced"] + rld["out_of_scope_count"]
+        assert total_in == total_out, f"INV-1 violated at row_ref=2: {total_in} != {total_out}"
+        assert rld["stream2_requirement_count"] == 2, "stream2 must have 2 requirements"
+        assert rld["stream2_domain_count"] == 1, "stream2 must have 1 domain"
+        assert result["execution_status"] in {"Completed", "CompletedWithWarnings"}, (
+            f"Unexpected execution_status: {result['execution_status']}"
+        )
+
+    def test_row2_ap1_analysis_pass_mechanism_name(
+        self,
+        sources_3,
+        stream2_domain_and_requirements,
+        project_profile,
+        mock_ai_client,
+    ):
+        """AP-1 at row_ref=2: AnalysisPass.mechanism == 'RowLensSourceReanalysis'."""
+        chunk_response = build_mock_message(
+            make_classification_response([
+                {"item_id": "RLS901", "classification": "Signal", "signal_type": "Normative", "confidence": 0.9, "description": "d1"},
+                {"item_id": "RLS902", "classification": "Signal", "signal_type": "Normative", "confidence": 0.85, "description": "d2"},
+                {"item_id": "RLR901", "classification": "Signal", "signal_type": "Normative", "confidence": 0.8, "description": "d3"},
+                {"item_id": "RLR902", "classification": "Signal", "signal_type": "Normative", "confidence": 0.8, "description": "d4"},
+            ])
+        )
+        residual_response = build_mock_message(
+            make_classification_response([
+                {"item_id": "RLS903", "classification": "Signal", "signal_type": "Normative", "confidence": 0.75, "description": "d5"},
+            ])
+        )
+        mock_ai_client.messages.create.side_effect = [chunk_response, residual_response]
+
+        result = _run_mechanism(row_ref=2)
+        pass_record = _get_analysis_pass(result["pass_id"])
+        assert pass_record is not None, "AP-1: AnalysisPass must exist"
+        assert pass_record.mechanism == "RowLensSourceReanalysis"
