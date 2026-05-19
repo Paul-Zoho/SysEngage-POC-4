@@ -4,24 +4,32 @@ Step 4 — Per-Cell Deduplication Sweep.
 Mode: DM (Stage 4a) + IM (Stage 4b) + DM (Stage 4c). Per-cell iteration.
 No ledger write — results held in memory until Step 5.
 
-Per CCI Construction Mechanism Spec v0.2 §4.4:
+Per CCI Construction Mechanism Spec v0.7 §4.4 and Row 3 Mechanism Spec v0.6 §4:
 
 Stage 4a — Structural pre-filter (DM):
-  For each pair of new candidates within the same cell: if classification_type
-  and signal_refs (set equality) both match, it is a structural duplicate.
-  Apply merge rule immediately without AI.
+  Exhaustive pairwise comparison of new candidates within each cell.
+  If classification_type and signal_refs (set equality) both match: structural
+  duplicate.  Apply merge rule immediately without AI.
 
-Stage 4b — AI semantic review (IM):
-  Read existing committed CCIs for the cell.  Group surviving candidates +
-  existing CCIs by classification_type.  For each group with >1 member, call
-  Claude Sonnet with same-type pairs for semantic equivalence judgment.
+Stage 4b — AI cluster review (IM):
+  Read existing committed CCIs for the cell via a fresh connection with SSL retry.
+  NoneType guard: any None or confidence-less item excluded before cluster review;
+  recorded as step4_nonetype_excluded in execution_warnings.
+  Combine surviving new candidates and existing CCIs; group by classification_type.
+  For each group with >1 member: one AI call presenting the full group.
+  Group-size cap: if a group exceeds 50 members, split into sub-groups of 50 and
+  process each sub-group as a separate AI call; results aggregated before Stage 4c.
   AI failure (all retries exhausted): candidates survive as Distinct (conservative,
   non-loss per spec §9.5).
+  SSL failure on existing-CCI read: set existing_ccis = []; record
+  step4_read_failure in execution_warnings; proceed with new candidates only.
 
 Stage 4c — Merge execution (DM):
-  Duplicate verdicts: merge two new candidates in-memory, or record an
-  ExistingCCIUpdate if merging into a committed CCI.
-  Ambiguous verdicts: both survive; reduce confidence by 0.1 (floor 0.0).
+  Duplicate cluster: merge all N members — union signal_refs, max confidence,
+  AI representative_description.  If any existing CCIs in the cluster: retain
+  the highest-confidence existing CCI; discard all new candidates in the cluster.
+  If all new candidates: produce one merged candidate; discard the rest.
+  Ambiguous entry: all members survive; reduce confidence by 0.1 (floor 0.0).
 
 Consolidation threshold check: if candidates_in > 0 and
   (candidates_in - survivors) / candidates_in > cci_consolidation_threshold,
@@ -34,22 +42,23 @@ import json
 import time
 from typing import Any
 
-from sqlalchemy.orm import Session
+import sqlalchemy.exc
 
 from core.ai_client import get_ai_client, MODEL
 from core.db import get_session
 from mechanisms.cci_construction.prompts.column_interrogatives import (
     COLUMN_INTERROGATIVES,
 )
-from mechanisms.cci_construction.prompts.dedup_semantic_review_prompt import (
-    build_dedup_review_prompt,
+from mechanisms.cci_construction.prompts.dedup_cluster_review_prompt import (
+    build_cluster_review_prompt,
 )
-from mechanisms.cci_construction.schemas.dedup_review_response_schema import (
-    parse_dedup_response,
+from mechanisms.cci_construction.schemas.dedup_cluster_review_response_schema import (
+    parse_cluster_review_response,
 )
 from mechanisms.cci_construction.types import (
     CandidateCCI,
     ConsolidationFlag,
+    ExecutionWarning,
     ExistingCCIUpdate,
     MergeRecord,
 )
@@ -57,7 +66,7 @@ from models.cell_content_item import CellContentItemModel
 
 _MAX_RETRIES = 3
 _RETRY_DELAYS = [1.0, 2.0, 4.0]
-_MAX_PAIRS_PER_CALL = 20
+_GROUP_SIZE_CAP = 50
 
 
 def deduplicate_per_cell(
@@ -67,7 +76,13 @@ def deduplicate_per_cell(
     project_id: str,
     consolidation_threshold: float,
     pass_data: dict[str, Any],
-) -> tuple[list[CandidateCCI], list[ExistingCCIUpdate], list[MergeRecord], list[ConsolidationFlag]]:
+) -> tuple[
+    list[CandidateCCI],
+    list[ExistingCCIUpdate],
+    list[MergeRecord],
+    list[ConsolidationFlag],
+    list[ExecutionWarning],
+]:
     """
     Deduplicate the global candidate set, per cell.
 
@@ -81,7 +96,8 @@ def deduplicate_per_cell(
 
     Returns
     -------
-    (surviving_candidates, existing_updates, merge_records, consolidation_flags)
+    (surviving_candidates, existing_updates, merge_records,
+     consolidation_flags, execution_warnings)
     """
     from mechanisms.cci_construction.prompts.column_vocabulary import COLUMNS
 
@@ -89,8 +105,8 @@ def deduplicate_per_cell(
     existing_updates: list[ExistingCCIUpdate] = []
     merge_records: list[MergeRecord] = []
     consolidation_flags: list[ConsolidationFlag] = []
+    execution_warnings: list[ExecutionWarning] = []
 
-    # Group candidates by cell_id
     candidates_by_cell: dict[str, list[CandidateCCI]] = {}
     for cand in all_candidates:
         candidates_by_cell.setdefault(cand.cell_id, []).append(cand)
@@ -115,19 +131,18 @@ def deduplicate_per_cell(
         )
 
         # ------------------------------------------------------------------ #
-        # Stage 4b — AI semantic review (IM)                                 #
+        # Stage 4b — AI cluster review (IM)                                  #
         # ------------------------------------------------------------------ #
-        existing_ccis = _read_existing_ccis(cell_id=cell_id, project_id=project_id)
-
-        cell_candidates, new_existing_updates = _ai_semantic_review(
+        cell_candidates, new_existing_updates = _ai_cluster_review(
             cell_id=cell_id,
             column=column,
             row_ref=row_ref,
             candidates=cell_candidates,
-            existing_ccis=existing_ccis,
+            project_id=project_id,
             client=client,
             pass_data=pass_data,
             merge_records=merge_records,
+            execution_warnings=execution_warnings,
         )
 
         existing_updates.extend(new_existing_updates)
@@ -150,7 +165,13 @@ def deduplicate_per_cell(
 
         surviving_candidates.extend(cell_candidates)
 
-    return surviving_candidates, existing_updates, merge_records, consolidation_flags
+    return (
+        surviving_candidates,
+        existing_updates,
+        merge_records,
+        consolidation_flags,
+        execution_warnings,
+    )
 
 
 # --------------------------------------------------------------------------- #
@@ -201,9 +222,7 @@ def _merge_two_candidates(
     b: CandidateCCI,
     merged_description: str | None,
 ) -> CandidateCCI:
-    """
-    Apply merge rule to two new candidates. Returns a single merged CandidateCCI.
-    """
+    """Apply merge rule to two new candidates. Returns a single merged CandidateCCI."""
     if a.confidence >= b.confidence:
         higher, lower = a, b
     else:
@@ -212,13 +231,9 @@ def _merge_two_candidates(
     description = merged_description if merged_description else higher.description
     signal_refs = sorted(set(a.signal_refs) | set(b.signal_refs))
 
-    trigger = None
+    trigger = higher.trigger_condition or lower.trigger_condition
     if higher.trigger_condition and lower.trigger_condition:
         trigger = higher.trigger_condition
-    elif higher.trigger_condition:
-        trigger = higher.trigger_condition
-    elif lower.trigger_condition:
-        trigger = lower.trigger_condition
 
     justification = None
     if higher.justification and lower.justification:
@@ -252,104 +267,181 @@ def _read_existing_ccis(
     """
     Read committed CCIs for a cell using a fresh, immediately-closed session.
 
-    A short-lived session is used deliberately — _read_existing_ccis is called
-    inside a per-cell loop that interleaves with AI calls.  Holding a single
-    long-lived session across those AI calls (which can each take 10–30 s)
-    leaves the underlying connection idle long enough for Neon to drop the SSL
-    link.  Opening and closing a fresh session per cell avoids that entirely.
+    Retries up to 3 times with exponential backoff on connection/SSL failures.
+    Raises the last exception if all retries are exhausted — caller records
+    step4_read_failure and falls back to an empty existing-CCI set.
     """
-    session = get_session()
-    try:
-        return (
-            session.query(CellContentItemModel)
-            .filter(
-                CellContentItemModel.cell_id == cell_id,
-                CellContentItemModel.project_id == project_id,
+    last_exc: Exception | None = None
+    delays = [0.0] + _RETRY_DELAYS
+
+    for attempt, delay in enumerate(delays):
+        if delay > 0:
+            time.sleep(delay)
+        session = get_session()
+        try:
+            result = (
+                session.query(CellContentItemModel)
+                .filter(
+                    CellContentItemModel.cell_id == cell_id,
+                    CellContentItemModel.project_id == project_id,
+                )
+                .order_by(CellContentItemModel.ci_id)
+                .all()
             )
-            .order_by(CellContentItemModel.ci_id)
-            .all()
-        )
-    finally:
-        session.close()
+            return result
+        except (sqlalchemy.exc.OperationalError, Exception) as exc:
+            last_exc = exc
+        finally:
+            session.close()
+
+    raise last_exc  # type: ignore[misc]
 
 
-def _ai_semantic_review(
+def _ai_cluster_review(
     *,
     cell_id: str,
     column: str,
     row_ref: int,
     candidates: list[CandidateCCI],
-    existing_ccis: list[CellContentItemModel],
+    project_id: str,
     client,
     pass_data: dict[str, Any],
     merge_records: list[MergeRecord],
+    execution_warnings: list[ExecutionWarning],
 ) -> tuple[list[CandidateCCI], list[ExistingCCIUpdate]]:
     """
-    Stage 4b: group by classification_type, present same-type pairs to AI,
-    then execute Stage 4c merge/ambiguity resolution.
+    Stage 4b: read existing CCIs, apply NoneType guard, group by classification_type,
+    call AI per group (with sub-group splitting if > GROUP_SIZE_CAP), then execute
+    Stage 4c merge/ambiguity resolution.
     """
     existing_updates: list[ExistingCCIUpdate] = []
 
-    if not candidates and not existing_ccis:
+    if not candidates:
         return candidates, existing_updates
 
     column_interrogative = COLUMN_INTERROGATIVES[row_ref][column]
 
-    # Build combined pool: new candidates + existing CCIs per classification_type
+    # ------------------------------------------------------------------ #
+    # Read existing CCIs with SSL retry                                   #
+    # ------------------------------------------------------------------ #
+    try:
+        raw_existing = _read_existing_ccis(cell_id=cell_id, project_id=project_id)
+    except Exception:
+        raw_existing = []
+        execution_warnings.append(ExecutionWarning(
+            warning_type="step4_read_failure",
+            detail={"cell_id": cell_id},
+        ))
+
+    # ------------------------------------------------------------------ #
+    # NoneType guard — validate every item before cluster review          #
+    # ------------------------------------------------------------------ #
+    existing_ccis: list[CellContentItemModel] = []
+    for item in raw_existing:
+        if item is None or not hasattr(item, "confidence"):
+            execution_warnings.append(ExecutionWarning(
+                warning_type="step4_nonetype_excluded",
+                detail={
+                    "cell_id": cell_id,
+                    "ci_id_or_ref": getattr(item, "ci_id", repr(item)),
+                },
+            ))
+        else:
+            existing_ccis.append(item)
+
+    # Guard on candidates too (defensive)
+    valid_candidates: list[CandidateCCI] = []
+    for cand in candidates:
+        if cand is None or not hasattr(cand, "confidence"):
+            execution_warnings.append(ExecutionWarning(
+                warning_type="step4_nonetype_excluded",
+                detail={"cell_id": cell_id, "ci_id_or_ref": repr(cand)},
+            ))
+        else:
+            valid_candidates.append(cand)
+    candidates = valid_candidates
+
+    if not candidates and not existing_ccis:
+        return candidates, existing_updates
+
+    # ------------------------------------------------------------------ #
+    # Build combined pool grouped by classification_type                  #
+    # ------------------------------------------------------------------ #
     type_groups: dict[str, list[dict]] = {}
 
     for idx, cand in enumerate(candidates):
         ref = f"new_{idx}"
-        type_groups.setdefault(cand.classification_type, []).append(
-            {
-                "source": "new_candidate",
-                "ref": ref,
-                "description": cand.description,
-                "signal_refs": cand.signal_refs,
-                "confidence": cand.confidence,
-                "_candidate_idx": idx,
-            }
-        )
+        type_groups.setdefault(cand.classification_type, []).append({
+            "source": "new_candidate",
+            "ref": ref,
+            "description": cand.description,
+            "signal_refs": cand.signal_refs,
+            "confidence": cand.confidence,
+            "_candidate_idx": idx,
+        })
 
     for cci in existing_ccis:
-        type_groups.setdefault(cci.classification_type, []).append(
-            {
-                "source": "existing_cci",
-                "ref": cci.ci_id,
-                "description": cci.description,
-                "signal_refs": list(cci.signal_refs),
-                "confidence": cci.confidence,
-                "_ci_id": cci.ci_id,
-                "_cci": cci,
-            }
-        )
+        type_groups.setdefault(cci.classification_type, []).append({
+            "source": "existing_cci",
+            "ref": cci.ci_id,
+            "description": cci.description,
+            "signal_refs": list(cci.signal_refs),
+            "confidence": cci.confidence,
+            "_ci_id": cci.ci_id,
+            "_cci": cci,
+        })
 
-    # Only groups with >1 member need review
-    active_candidate_indices: set[int] = set(range(len(candidates)))
-    merged_into_existing: set[int] = set()  # candidate indices merged into existing CCIs
     surviving_candidates = list(candidates)
+    merged_into_existing: set[int] = set()
 
     for classification_type, group_items in type_groups.items():
         if len(group_items) <= 1:
             continue
 
-        # Build pairs for this group
-        pairs = _build_pairs(group_items)
-        if not pairs:
-            continue
+        # ------------------------------------------------------------------ #
+        # Group-size cap: split into sub-groups if > _GROUP_SIZE_CAP        #
+        # ------------------------------------------------------------------ #
+        if len(group_items) > _GROUP_SIZE_CAP:
+            sub_groups = [
+                group_items[i: i + _GROUP_SIZE_CAP]
+                for i in range(0, len(group_items), _GROUP_SIZE_CAP)
+            ]
+            execution_warnings.append(ExecutionWarning(
+                warning_type="step4_sub_group_split",
+                detail={
+                    "cell_id": cell_id,
+                    "classification_type": classification_type,
+                    "group_size": len(group_items),
+                    "sub_group_count": len(sub_groups),
+                },
+            ))
+        else:
+            sub_groups = [group_items]
 
-        # Split into batches of _MAX_PAIRS_PER_CALL if needed
-        pair_batches = [
-            pairs[i : i + _MAX_PAIRS_PER_CALL]
-            for i in range(0, len(pairs), _MAX_PAIRS_PER_CALL)
-        ]
+        # Collect all cluster/ambiguous results across sub-groups
+        all_cluster_entries = []
+        all_ambiguous_entries = []
 
-        for pair_batch in pair_batches:
-            prompt = build_dedup_review_prompt(
+        for sub_group in sub_groups:
+            if len(sub_group) <= 1:
+                continue
+
+            member_list = [
+                {
+                    "ref": item["ref"],
+                    "source": item["source"],
+                    "description": item["description"],
+                    "signal_refs": item["signal_refs"],
+                    "confidence": item["confidence"],
+                }
+                for item in sub_group
+            ]
+
+            prompt = build_cluster_review_prompt(
                 cell_id=cell_id,
                 column=column,
                 column_interrogative=column_interrogative,
-                pairs=pair_batch,
+                members=member_list,
             )
 
             raw_response = _invoke_with_retry(
@@ -359,7 +451,6 @@ def _ai_semantic_review(
             )
 
             if raw_response is None:
-                # Conservative: all candidates survive as Distinct (non-loss)
                 pass_data.setdefault("_dedup_failures", []).append(
                     {"cell_id": cell_id, "classification_type": classification_type}
                 )
@@ -370,207 +461,197 @@ def _ai_semantic_review(
                 f"{model_fingerprint} (dedup {cell_id})"
             )
 
-            verdicts, _ = parse_dedup_response(raw_response.get("content", {}))
+            cluster_response, _ = parse_cluster_review_response(
+                raw_response.get("content", {})
+            )
 
-            # Build ref → item lookup for this batch
-            ref_to_item: dict[str, dict] = {}
-            for item in group_items:
-                ref_to_item[item["ref"]] = item
+            if cluster_response is None:
+                continue
 
-            # Stage 4c — merge execution (DM)
-            for verdict in verdicts:
-                item_a = ref_to_item.get(verdict.item_a_ref)
-                item_b = ref_to_item.get(verdict.item_b_ref)
-                if item_a is None or item_b is None:
-                    continue
+            all_cluster_entries.extend(cluster_response.clusters)
+            all_ambiguous_entries.extend(cluster_response.ambiguous)
 
-                if verdict.verdict == "Duplicate":
-                    _apply_duplicate(
-                        item_a=item_a,
-                        item_b=item_b,
-                        merged_description=verdict.merged_description,
-                        surviving_candidates=surviving_candidates,
-                        existing_updates=existing_updates,
-                        merged_into_existing=merged_into_existing,
-                        merge_records=merge_records,
-                    )
+        # ------------------------------------------------------------------ #
+        # Stage 4c — Merge execution across all sub-group results            #
+        # ------------------------------------------------------------------ #
+        ref_to_item: dict[str, dict] = {item["ref"]: item for item in group_items}
 
-                elif verdict.verdict == "Ambiguous":
-                    _apply_ambiguous(
-                        item_a=item_a,
-                        item_b=item_b,
-                        surviving_candidates=surviving_candidates,
-                    )
+        for cluster in all_cluster_entries:
+            _apply_duplicate_cluster(
+                cluster_refs=cluster.member_refs,
+                representative_description=cluster.representative_description,
+                ref_to_item=ref_to_item,
+                surviving_candidates=surviving_candidates,
+                existing_updates=existing_updates,
+                merged_into_existing=merged_into_existing,
+                merge_records=merge_records,
+            )
 
-    # Remove candidates that were merged into existing CCIs
+        for ambiguous in all_ambiguous_entries:
+            _apply_ambiguous_cluster(
+                member_refs=ambiguous.member_refs,
+                ref_to_item=ref_to_item,
+                surviving_candidates=surviving_candidates,
+            )
+
+    # Filter out candidates merged into existing CCIs (marked None sentinel)
     final_survivors = [
         cand
         for idx, cand in enumerate(surviving_candidates)
-        if idx not in merged_into_existing
+        if idx not in merged_into_existing and cand is not None
     ]
 
     return final_survivors, existing_updates
 
 
-def _build_pairs(group_items: list[dict]) -> list[dict]:
-    """Build all pairwise combinations within a classification_type group."""
-    pairs = []
-    for i in range(len(group_items)):
-        for j in range(i + 1, len(group_items)):
-            a = group_items[i]
-            b = group_items[j]
-            pairs.append(
-                {
-                    "item_a": {
-                        "source": a["source"],
-                        "ref": a["ref"],
-                        "description": a["description"],
-                        "signal_refs": a["signal_refs"],
-                    },
-                    "item_b": {
-                        "source": b["source"],
-                        "ref": b["ref"],
-                        "description": b["description"],
-                        "signal_refs": b["signal_refs"],
-                    },
-                }
-            )
-    return pairs
+# --------------------------------------------------------------------------- #
+# Stage 4c helpers                                                             #
+# --------------------------------------------------------------------------- #
 
-
-def _apply_duplicate(
+def _apply_duplicate_cluster(
     *,
-    item_a: dict,
-    item_b: dict,
-    merged_description: str | None,
+    cluster_refs: list[str],
+    representative_description: str,
+    ref_to_item: dict[str, dict],
     surviving_candidates: list[CandidateCCI],
     existing_updates: list[ExistingCCIUpdate],
     merged_into_existing: set[int],
     merge_records: list[MergeRecord],
 ) -> None:
-    """Stage 4c: handle a Duplicate verdict."""
-    a_is_existing = item_a["source"] == "existing_cci"
-    b_is_existing = item_b["source"] == "existing_cci"
+    """Stage 4c: handle a Duplicate cluster of N members."""
+    members = [ref_to_item[ref] for ref in cluster_refs if ref in ref_to_item]
+    if len(members) < 2:
+        return
 
-    if a_is_existing and not b_is_existing:
-        _merge_candidate_into_existing(
-            existing_item=item_a,
-            new_item=item_b,
-            merged_description=merged_description,
-            surviving_candidates=surviving_candidates,
-            existing_updates=existing_updates,
-            merged_into_existing=merged_into_existing,
-            merge_records=merge_records,
-        )
-    elif b_is_existing and not a_is_existing:
-        _merge_candidate_into_existing(
-            existing_item=item_b,
-            new_item=item_a,
-            merged_description=merged_description,
-            surviving_candidates=surviving_candidates,
-            existing_updates=existing_updates,
-            merged_into_existing=merged_into_existing,
-            merge_records=merge_records,
-        )
-    elif not a_is_existing and not b_is_existing:
-        # Both are new candidates: merge in-memory
-        idx_a = item_a.get("_candidate_idx")
-        idx_b = item_b.get("_candidate_idx")
-        if idx_a is None or idx_b is None:
-            return
+    existing_members = [m for m in members if m["source"] == "existing_cci"]
+    new_members = [m for m in members if m["source"] == "new_candidate"]
 
-        cand_a = surviving_candidates[idx_a]
-        cand_b = surviving_candidates[idx_b]
+    # Union all signal_refs across all cluster members
+    all_signal_refs: set[str] = set()
+    for m in members:
+        all_signal_refs.update(m["signal_refs"])
+    merged_refs = sorted(all_signal_refs)
 
-        if cand_a is None or cand_b is None:
-            return
+    # Max confidence across all cluster members
+    merged_conf = max(m["confidence"] for m in members)
 
-        if cand_a.confidence >= cand_b.confidence:
-            higher_idx, lower_idx = idx_a, idx_b
-        else:
-            higher_idx, lower_idx = idx_b, idx_a
+    all_descriptions = [m["description"] for m in members]
 
-        merged = _merge_two_candidates(
-            surviving_candidates[higher_idx],
-            surviving_candidates[lower_idx],
-            merged_description=merged_description,
+    if existing_members:
+        # Retain the existing CCI with highest confidence as the surviving entity
+        surviving_existing = max(existing_members, key=lambda m: m["confidence"])
+        cci = surviving_existing["_cci"]
+        ci_id = surviving_existing["_ci_id"]
+
+        existing_updates.append(
+            ExistingCCIUpdate(
+                ci_id=ci_id,
+                cell_id=cci.cell_id,
+                merged_signal_refs=merged_refs,
+                merged_confidence=merged_conf,
+                merged_description=representative_description or cci.description,
+                original_descriptions=all_descriptions,
+            )
         )
         merge_records.append(
             MergeRecord(
-                surviving_ci_id="(pending)",
-                original_descriptions=[cand_a.description, cand_b.description],
-                merged_signal_refs=merged.signal_refs,
+                surviving_ci_id=ci_id,
+                original_descriptions=all_descriptions,
+                merged_signal_refs=merged_refs,
             )
         )
-        surviving_candidates[higher_idx] = merged
-        # Mark lower as merged (set to None sentinel — filtered at end)
-        surviving_candidates[lower_idx] = None  # type: ignore[assignment]
 
+        # Discard all new candidates in the cluster
+        for nm in new_members:
+            idx = nm.get("_candidate_idx")
+            if idx is not None:
+                merged_into_existing.add(idx)
+                surviving_candidates[idx] = None  # type: ignore[assignment]
 
-def _merge_candidate_into_existing(
-    *,
-    existing_item: dict,
-    new_item: dict,
-    merged_description: str | None,
-    surviving_candidates: list[CandidateCCI],
-    existing_updates: list[ExistingCCIUpdate],
-    merged_into_existing: set[int],
-    merge_records: list[MergeRecord],
-) -> None:
-    """Stage 4c: merge a new candidate into an existing committed CCI."""
-    ci_id = existing_item["_ci_id"]
-    cci = existing_item["_cci"]
-    new_idx = new_item.get("_candidate_idx")
-    if new_idx is None:
-        return
+    else:
+        # All new candidates — merge into one, discard the rest
+        if not new_members:
+            return
 
-    new_cand = surviving_candidates[new_idx]
-    if new_cand is None:
-        return
+        # Highest-confidence new candidate is the base
+        base = max(new_members, key=lambda m: m["confidence"])
+        base_idx = base.get("_candidate_idx")
+        if base_idx is None:
+            return
 
-    merged_refs = sorted(set(list(cci.signal_refs) + new_cand.signal_refs))
-    merged_conf = max(cci.confidence, new_cand.confidence)
-    final_description = (
-        merged_description
-        if merged_description
-        else (cci.description if cci.confidence >= new_cand.confidence else new_cand.description)
-    )
+        base_cand = surviving_candidates[base_idx]
+        if base_cand is None:
+            return
 
-    existing_updates.append(
-        ExistingCCIUpdate(
-            ci_id=ci_id,
-            cell_id=cci.cell_id,
-            merged_signal_refs=merged_refs,
-            merged_confidence=merged_conf,
-            merged_description=final_description,
-            original_descriptions=[cci.description, new_cand.description],
+        # Gather justifications from the CandidateCCI structs (group_items dicts
+        # do not carry justification — it lives on the CandidateCCI objects).
+        cluster_justifications = [
+            surviving_candidates[m["_candidate_idx"]].justification
+            for m in new_members
+            if m.get("_candidate_idx") is not None
+            and surviving_candidates[m["_candidate_idx"]] is not None
+        ]
+
+        merged_candidate = CandidateCCI(
+            cell_id=base_cand.cell_id,
+            column=base_cand.column,
+            classification_type=base_cand.classification_type,
+            description=representative_description or base_cand.description,
+            signal_refs=merged_refs,
+            confidence=merged_conf,
+            trigger_condition=base_cand.trigger_condition,
+            justification=_merge_justifications(cluster_justifications),
         )
-    )
-    merge_records.append(
-        MergeRecord(
-            surviving_ci_id=ci_id,
-            original_descriptions=[cci.description, new_cand.description],
-            merged_signal_refs=merged_refs,
+
+        merge_records.append(
+            MergeRecord(
+                surviving_ci_id="(pending)",
+                original_descriptions=all_descriptions,
+                merged_signal_refs=merged_refs,
+            )
         )
-    )
-    merged_into_existing.add(new_idx)
-    surviving_candidates[new_idx] = None  # type: ignore[assignment]
+
+        surviving_candidates[base_idx] = merged_candidate
+
+        # Discard all other new candidates in the cluster
+        for nm in new_members:
+            idx = nm.get("_candidate_idx")
+            if idx is not None and idx != base_idx:
+                surviving_candidates[idx] = None  # type: ignore[assignment]
 
 
-def _apply_ambiguous(
+def _merge_justifications(justifications: list[str | None]) -> str | None:
+    """Concatenate non-null justifications with ' | ' separator."""
+    non_null = [j for j in justifications if j]
+    if not non_null:
+        return None
+    return " | ".join(non_null)
+
+
+def _apply_ambiguous_cluster(
     *,
-    item_a: dict,
-    item_b: dict,
+    member_refs: list[str],
+    ref_to_item: dict[str, dict],
     surviving_candidates: list[CandidateCCI],
 ) -> None:
-    """Stage 4c: handle an Ambiguous verdict — both survive; reduce confidence by 0.1."""
-    for item in (item_a, item_b):
+    """
+    Stage 4c: handle an Ambiguous entry — all members survive with confidence -0.1.
+    Applies to both new candidates and existing CCIs in the combined set.
+    """
+    for ref in member_refs:
+        item = ref_to_item.get(ref)
+        if item is None:
+            continue
         if item["source"] == "new_candidate":
             idx = item.get("_candidate_idx")
             if idx is not None and surviving_candidates[idx] is not None:
                 cand = surviving_candidates[idx]
                 cand.confidence = max(0.0, round(cand.confidence - 0.1, 10))
 
+
+# --------------------------------------------------------------------------- #
+# AI invocation helper                                                         #
+# --------------------------------------------------------------------------- #
 
 def _invoke_with_retry(
     *,

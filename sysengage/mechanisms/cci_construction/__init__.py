@@ -203,21 +203,26 @@ def run(
     # never held idle across the AI calls that interleave with each cell read.
     if skip_deduplication:
         # Bypass Step 4 entirely — all raw candidates flow into Step 5 as-is.
-        # merge_records and consolidation_flags are empty (nothing was merged).
+        # merge_records, consolidation_flags, and execution_warnings are empty.
         surviving_candidates = all_candidates
         existing_updates: list = []
         merge_records: list = []
         consolidation_flags: list = []
+        execution_warnings: list = []
     else:
         try:
-            surviving_candidates, existing_updates, merge_records, consolidation_flags = (
-                deduplicate_per_cell(
-                    all_candidates=all_candidates,
-                    row_ref=row_ref,
-                    project_id=project_id,
-                    consolidation_threshold=consolidation_threshold,
-                    pass_data=pass_data,
-                )
+            (
+                surviving_candidates,
+                existing_updates,
+                merge_records,
+                consolidation_flags,
+                execution_warnings,
+            ) = deduplicate_per_cell(
+                all_candidates=all_candidates,
+                row_ref=row_ref,
+                project_id=project_id,
+                consolidation_threshold=consolidation_threshold,
+                pass_data=pass_data,
             )
         except Exception as exc:
             finalise_cci_pass_failed(
@@ -267,6 +272,7 @@ def run(
             merge_records=merge_records,
             consolidation_flags=consolidation_flags,
             integrity_violations=pass_data.get("_integrity_violations", []),
+            execution_warnings=execution_warnings,
         )
 
         all_confidences = pass_data.get("_collected_confidences", [])

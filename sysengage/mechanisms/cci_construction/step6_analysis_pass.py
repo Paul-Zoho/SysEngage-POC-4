@@ -24,6 +24,7 @@ from typing import Any
 
 from mechanisms.cci_construction.types import (
     ConsolidationFlag,
+    ExecutionWarning,
     MergeRecord,
 )
 
@@ -55,6 +56,7 @@ def build_cci_data(
     merge_records: list[MergeRecord],
     consolidation_flags: list[ConsolidationFlag],
     integrity_violations: list[dict],
+    execution_warnings: list[ExecutionWarning] | None = None,
 ) -> dict[str, Any]:
     """
     Build the outputs.cci_data sub-structure per spec §7.
@@ -89,6 +91,7 @@ def build_cci_data(
         "merges": [r.to_dict() for r in merge_records],
         "consolidation_flags": [f.to_dict() for f in consolidation_flags],
         "integrity_violations": integrity_violations,
+        "execution_warnings": [w.to_dict() for w in (execution_warnings or [])],
     }
 
 

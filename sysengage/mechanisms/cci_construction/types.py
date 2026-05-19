@@ -88,3 +88,22 @@ class ConsolidationFlag:
             "ccis_out": self.ccis_out,
             "ratio": round(self.ratio, 4),
         }
+
+
+@dataclass
+class ExecutionWarning:
+    """
+    Runtime execution condition stored in AnalysisPass outputs.cci_data.execution_warnings.
+
+    warning_type values (per spec v0.7 §4.4):
+      step4_read_failure       — SSL/connection drop during existing CCI read
+      step4_nonetype_excluded  — malformed CCI excluded from cluster review
+      step4_sub_group_split    — group size exceeded cap and was split into sub-groups
+    detail is a freeform dict whose structure varies by warning_type.
+    """
+
+    warning_type: str
+    detail: dict
+
+    def to_dict(self) -> dict:
+        return {"warning_type": self.warning_type, "detail": self.detail}
