@@ -100,6 +100,9 @@ def run(
         profile.cci_consolidation_threshold if profile else 0.80
     )
     batch_size = profile.cci_batch_size if profile else 20
+    stage4a_similarity_threshold = (
+        profile.stage4a_similarity_threshold if profile else 0.60
+    )
 
     # ------------------------------------------------------------------ #
     # STEP 1 — Assemble eligible Signal set (DM, read-only)               #
@@ -222,6 +225,7 @@ def run(
                 row_ref=row_ref,
                 project_id=project_id,
                 consolidation_threshold=consolidation_threshold,
+                stage4a_similarity_threshold=stage4a_similarity_threshold,
                 pass_data=pass_data,
             )
         except Exception as exc:

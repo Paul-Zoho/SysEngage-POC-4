@@ -4,12 +4,18 @@ Step 4 — Per-Cell Deduplication Sweep.
 Mode: DM (Stage 4a) + IM (Stage 4b) + DM (Stage 4c). Per-cell iteration.
 No ledger write — results held in memory until Step 5.
 
-Per CCI Construction Mechanism Spec v0.7 §4.4 and Row 3 Mechanism Spec v0.6 §4:
+Per CCI Construction Mechanism Spec v0.8 §4.4 and Row 3 Mechanism Spec v0.7 §4:
 
 Stage 4a — Structural pre-filter (DM):
   Exhaustive pairwise comparison of new candidates within each cell.
-  If classification_type and signal_refs (set equality) both match: structural
-  duplicate.  Apply merge rule immediately without AI.
+  Three-condition rule (v0.8):
+    1. classification_type equality
+    2. signal_refs set equality
+    3. Jaccard token-overlap of descriptions >= stage4a_similarity_threshold
+  All three conditions met → structural duplicate: merge immediately without AI.
+  Conditions 1+2 met but condition 3 fails (descriptions materially differ) →
+    route both candidates to Stage 4b for AI semantic review (no Stage 4a merge).
+  Condition 1 fails → leave for Stage 4b as normal.
 
 Stage 4b — AI cluster review (IM):
   Read existing committed CCIs for the cell via a fresh connection with SSL retry.
@@ -75,6 +81,7 @@ def deduplicate_per_cell(
     row_ref: int,
     project_id: str,
     consolidation_threshold: float,
+    stage4a_similarity_threshold: float = 0.60,
     pass_data: dict[str, Any],
 ) -> tuple[
     list[CandidateCCI],
@@ -88,11 +95,14 @@ def deduplicate_per_cell(
 
     Parameters
     ----------
-    all_candidates          : candidates from Step 3, across all batches
-    row_ref                 : Zachman row number
-    project_id              : project scope
-    consolidation_threshold : from ProjectProfile.cci_consolidation_threshold
-    pass_data               : mutable pass dict for fingerprints/confidences
+    all_candidates                : candidates from Step 3, across all batches
+    row_ref                       : Zachman row number
+    project_id                    : project scope
+    consolidation_threshold       : from ProjectProfile.cci_consolidation_threshold
+    stage4a_similarity_threshold  : Jaccard threshold for Stage 4a auto-merge
+                                    (from ProjectProfile.stage4a_similarity_threshold,
+                                    default 0.60 per spec v0.8 §3.2)
+    pass_data                     : mutable pass dict for fingerprints/confidences
 
     Returns
     -------
@@ -128,6 +138,7 @@ def deduplicate_per_cell(
         cell_candidates = _structural_pre_filter(
             candidates=cell_candidates,
             merge_records=merge_records,
+            similarity_threshold=stage4a_similarity_threshold,
         )
 
         # ------------------------------------------------------------------ #
@@ -178,14 +189,58 @@ def deduplicate_per_cell(
 # Stage 4a helpers                                                             #
 # --------------------------------------------------------------------------- #
 
+_STOPWORDS: frozenset[str] = frozenset({
+    "a", "an", "the", "is", "are", "was", "were", "and", "or", "of",
+    "in", "to", "for", "that", "this", "it", "its", "be", "by", "at",
+    "as", "on", "with", "from", "not", "but",
+})
+
+
+def _jaccard_similarity(text_a: str, text_b: str) -> float:
+    """
+    Jaccard token-overlap similarity between two description strings.
+
+    Tokens are whitespace-split, lowercased, and filtered against a compact
+    English stopword list.  Returns 0.0 if either token set is empty after
+    filtering (conservative — routes the pair to Stage 4b).
+
+    Per spec v0.8 §4.4: used only within Stage 4a to guard auto-merge.
+    """
+    import re
+
+    def _tokenise(text: str) -> frozenset[str]:
+        raw = re.split(r"[\s\W]+", text.lower())
+        return frozenset(t for t in raw if t and t not in _STOPWORDS)
+
+    tokens_a = _tokenise(text_a)
+    tokens_b = _tokenise(text_b)
+
+    if not tokens_a or not tokens_b:
+        return 0.0
+
+    intersection = len(tokens_a & tokens_b)
+    union = len(tokens_a | tokens_b)
+    return intersection / union if union > 0 else 0.0
+
+
 def _structural_pre_filter(
     *,
     candidates: list[CandidateCCI],
     merge_records: list[MergeRecord],
+    similarity_threshold: float = 0.60,
 ) -> list[CandidateCCI]:
     """
-    Exhaustive pairwise comparison — merge exact structural duplicates in-memory.
-    Structural duplicate: same classification_type AND same signal_refs set.
+    Exhaustive pairwise comparison — merge structural duplicates in-memory.
+
+    Three-condition rule per spec v0.8 §4.4:
+      1. classification_type equality
+      2. signal_refs set equality
+      3. Jaccard description similarity >= similarity_threshold
+
+    All three → merge at Stage 4a (structural duplicate).
+    Conditions 1+2 only (descriptions differ materially) → leave both in
+      the active list; they will be picked up by Stage 4b for AI review.
+    Condition 1 fails → leave both (Stage 4b handles normally).
     """
     active = list(candidates)
     i = 0
@@ -199,17 +254,23 @@ def _structural_pre_filter(
                 a.classification_type == b.classification_type
                 and set(a.signal_refs) == set(b.signal_refs)
             ):
-                merged = _merge_two_candidates(a, b, merged_description=None)
-                merge_records.append(
-                    MergeRecord(
-                        surviving_ci_id="(pending)",
-                        original_descriptions=[a.description, b.description],
-                        merged_signal_refs=merged.signal_refs,
+                similarity = _jaccard_similarity(a.description, b.description)
+                if similarity >= similarity_threshold:
+                    # All three conditions met — structural duplicate: merge now.
+                    merged = _merge_two_candidates(a, b, merged_description=None)
+                    merge_records.append(
+                        MergeRecord(
+                            surviving_ci_id="(pending)",
+                            original_descriptions=[a.description, b.description],
+                            merged_signal_refs=merged.signal_refs,
+                        )
                     )
-                )
-                active[i] = merged
-                active.pop(j)
-                merged_this_round = True
+                    active[i] = merged
+                    active.pop(j)
+                    merged_this_round = True
+                else:
+                    # Conditions 1+2 only — descriptions differ; route to Stage 4b.
+                    j += 1
             else:
                 j += 1
         if not merged_this_round:

@@ -9,9 +9,12 @@ Per Row-Lens Source Re-Analysis spec v0.1 §3.2 and §4.1/§4.2:
   chunk_match_threshold — fuzzy match threshold for Stage 1 (default 0.6).
   residual_batch_size — batch size for residual AI invocations (default 50).
 
-Per CCI Construction Mechanism Spec v0.2 §3.3:
+Per CCI Construction Mechanism Spec v0.8 §3.2 and §3.3:
   cci_consolidation_threshold — over-consolidation flag threshold (default 0.80).
   cci_batch_size — signals per AI batch invocation in Step 3 (default 20).
+  stage4a_similarity_threshold — Jaccard description similarity required for
+    Stage 4a auto-merge (default 0.60). Pairs with matching type + refs but
+    similarity below threshold are routed to Stage 4b instead.
 """
 
 from datetime import datetime, timezone
@@ -40,6 +43,9 @@ class ProjectProfileModel(Base):
     )
     cci_batch_size: Mapped[int] = mapped_column(
         Integer, nullable=False, default=20
+    )
+    stage4a_similarity_threshold: Mapped[float] = mapped_column(
+        Float, nullable=False, default=0.60
     )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
