@@ -21,6 +21,7 @@ class CCIResponseItem(BaseModel):
     description: str = Field(min_length=1)
     signal_refs: list[str] = Field(min_length=1)
     confidence: float = Field(ge=0.0, le=1.0)
+    is_named_instance: bool = False
     trigger_condition: Optional[str] = None
     justification: Optional[str] = None
 

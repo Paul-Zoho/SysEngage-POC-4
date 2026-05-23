@@ -29,8 +29,9 @@ class CandidateCCI:
     description: str
     signal_refs: list[str]
     confidence: float
-    trigger_condition: Optional[str]
-    justification: Optional[str]
+    is_named_instance: bool = False
+    trigger_condition: Optional[str] = None
+    justification: Optional[str] = None
     ci_id: Optional[str] = None
 
 
@@ -95,10 +96,12 @@ class ExecutionWarning:
     """
     Runtime execution condition stored in AnalysisPass outputs.cci_data.execution_warnings.
 
-    warning_type values (per spec v0.7 §4.4):
-      step4_read_failure       — SSL/connection drop during existing CCI read
-      step4_nonetype_excluded  — malformed CCI excluded from cluster review
-      step4_sub_group_split    — group size exceeded cap and was split into sub-groups
+    warning_type values (per spec v0.9 §4.4):
+      step4_read_failure              — SSL/connection drop during existing CCI read
+      step4_nonetype_excluded         — malformed CCI excluded from cluster review
+      step4_sub_group_split           — group size exceeded cap and was split into sub-groups
+      stage4b_named_instance_bypass   — all new candidates in group have is_named_instance=True;
+                                        AI cluster review skipped; group treated as Distinct
     detail is a freeform dict whose structure varies by warning_type.
     """
 

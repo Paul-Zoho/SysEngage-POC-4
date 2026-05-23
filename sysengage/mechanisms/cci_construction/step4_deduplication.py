@@ -438,6 +438,7 @@ def _ai_cluster_review(
             "description": cand.description,
             "signal_refs": cand.signal_refs,
             "confidence": cand.confidence,
+            "is_named_instance": cand.is_named_instance,
             "_candidate_idx": idx,
         })
 
@@ -457,6 +458,27 @@ def _ai_cluster_review(
 
     for classification_type, group_items in type_groups.items():
         if len(group_items) <= 1:
+            continue
+
+        # ------------------------------------------------------------------ #
+        # Named-instance bypass (DM) — per spec v0.9 §4.4                   #
+        # If every new candidate in the group carries is_named_instance=True, #
+        # treat the whole group as Distinct without an AI call.              #
+        # ------------------------------------------------------------------ #
+        new_items_in_group = [
+            it for it in group_items if it["source"] == "new_candidate"
+        ]
+        if new_items_in_group and all(
+            it.get("is_named_instance", False) for it in new_items_in_group
+        ):
+            execution_warnings.append(ExecutionWarning(
+                warning_type="stage4b_named_instance_bypass",
+                detail={
+                    "cell_id": cell_id,
+                    "classification_type": classification_type,
+                    "member_count": len(group_items),
+                },
+            ))
             continue
 
         # ------------------------------------------------------------------ #
