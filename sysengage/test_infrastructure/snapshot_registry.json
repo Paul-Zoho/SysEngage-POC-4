@@ -6,11 +6,11 @@
       "phase": "ph03",
       "pass": "3a",
       "row": "R1",
-      "state_description": "Post-3a: PMT R1 state (source capture + prior CCI runs)",
-      "created_at": "2026-05-23T15:58:12.042219+00:00",
+      "state_description": "Post-3a: PMT all rows, Signals committed, 0 CCIs (clean baseline)",
+      "created_at": "2026-05-23T17:52:40.362564+00:00",
       "status": "VERIFIED",
       "ver_criteria_passed": [],
-      "neon_branch_id": "br-lucky-lake-abdzg79e",
+      "neon_branch_id": "br-royal-thunder-ab36vbf3",
       "neon_project_id": "sparkling-tree-75414608"
     },
     {
@@ -19,11 +19,11 @@
       "phase": "ph03",
       "pass": "3a",
       "row": "R5",
-      "state_description": "Post-3a: NQPS all rows, Signals committed, 0 CCIs",
-      "created_at": "2026-05-23T16:19:42.711152+00:00",
+      "state_description": "Post-3a: NQPS all rows, Signals committed, 0 CCIs (clean baseline)",
+      "created_at": "2026-05-23T17:52:42.099036+00:00",
       "status": "VERIFIED",
       "ver_criteria_passed": [],
-      "neon_branch_id": "br-icy-leaf-ab24uk1g",
+      "neon_branch_id": "br-aged-pine-abpisdky",
       "neon_project_id": "sparkling-tree-75414608"
     },
     {
@@ -32,11 +32,11 @@
       "phase": "ph03",
       "pass": "3a",
       "row": "R1",
-      "state_description": "Post-3a: ROW project Row 1, Signals committed, 0 CCIs",
-      "created_at": "2026-05-23T16:19:49.350628+00:00",
+      "state_description": "Post-3a: ROW project Row 1, Signals committed, 0 CCIs (clean baseline)",
+      "created_at": "2026-05-23T17:52:44.812763+00:00",
       "status": "VERIFIED",
       "ver_criteria_passed": [],
-      "neon_branch_id": "br-soft-hall-abdgevqc",
+      "neon_branch_id": "br-square-morning-ab39zq8g",
       "neon_project_id": "sparkling-tree-75414608"
     }
   ]
