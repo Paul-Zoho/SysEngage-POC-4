@@ -630,18 +630,31 @@ def _apply_duplicate_cluster(
                 surviving_candidates[idx] = None  # type: ignore[assignment]
 
     else:
-        # All new candidates — merge into one, discard the rest
+        # All new candidates — commit the highest-confidence one as a new CCI.
+        # Per spec v0.8 §4.4: do NOT discard all candidates; exactly one merged
+        # candidate must survive per duplicate cluster.
         if not new_members:
             return
 
-        # Highest-confidence new candidate is the base
-        base = max(new_members, key=lambda m: m["confidence"])
-        base_idx = base.get("_candidate_idx")
-        if base_idx is None:
-            return
+        # Find the first viable base: highest-confidence new candidate whose
+        # slot in surviving_candidates is still live (not already consumed by a
+        # prior overlapping cluster within this group).  Iterating in descending
+        # confidence order ensures we always pick the best available option.
+        base_cand: CandidateCCI | None = None
+        base_idx: int | None = None
+        for nm in sorted(new_members, key=lambda m: m["confidence"], reverse=True):
+            idx = nm.get("_candidate_idx")
+            if idx is None:
+                continue
+            cand = surviving_candidates[idx]
+            if cand is not None:
+                base_idx = idx
+                base_cand = cand
+                break
 
-        base_cand = surviving_candidates[base_idx]
-        if base_cand is None:
+        if base_cand is None or base_idx is None:
+            # Every member was already consumed by a prior overlapping cluster.
+            # Leave any still-live members intact rather than silently losing data.
             return
 
         # Gather justifications from the CandidateCCI structs (group_items dicts
@@ -672,9 +685,8 @@ def _apply_duplicate_cluster(
             )
         )
 
+        # Install merged candidate at base slot; discard all other members.
         surviving_candidates[base_idx] = merged_candidate
-
-        # Discard all other new candidates in the cluster
         for nm in new_members:
             idx = nm.get("_candidate_idx")
             if idx is not None and idx != base_idx:
