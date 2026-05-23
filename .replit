@@ -24,12 +24,12 @@ args = "CCI E2E Runner"
 name = "CCI E2E Runner"
 author = "agent"
 
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "python -u sysengage/run_row1_cci_e2e.py"
-
 [workflows.workflow.metadata]
 outputType = "console"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "python -u sysengage/run_pmt_cci_r1_r5.py"
 
 [agent]
 stack = "PNPM_WORKSPACE"
