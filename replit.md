@@ -10,7 +10,8 @@ AI-powered Systems Engineering tool that runs stateful mechanism passes (Source 
 - `pnpm --filter @workspace/api-spec run codegen` — regenerate API hooks and Zod schemas from the OpenAPI spec
 - `pnpm --filter @workspace/db run push` — push DB schema changes (dev only)
 - `python -u sysengage/run_row1_cci_e2e.py` — run CCI Construction E2E (ROW project, Row 1, skip_dedup=True)
-- `python -u sysengage/run_pmt_cci_r1.py` — run CCI Construction for PMT Row 1
+- `python -u sysengage/run_pmt_cci_r1.py` — run CCI Construction for PMT Row 1 (dedup ON)
+- `python -u sysengage/run_pmt_cci_r1_branch_test.py` — branch-isolated PMT Row 1 comparison (dedup ON vs OFF)
 
 ## Required Secrets
 
@@ -95,6 +96,7 @@ NEON_PROJECT_ID is auto-detected from NEON_API_KEY if you have a single Neon pro
 - **DB tests crash with exit code -1** when run as a full suite — this is OOM/Neon pool interference. Always run class batches or individual tests.
 - **CCI verification criteria tests** (`test_verification_criteria.py`) must be run one at a time: `pytest "tests/cci_construction/test_verification_criteria.py::ClassName::test_name"`.
 - **`NEON_DATABASE_URL` and `DATABASE_URL`** — the app reads `NEON_DATABASE_URL` first. `DATABASE_URL` is the Replit Helium fallback. Always update `NEON_DATABASE_URL` when rotating the Neon connection string.
+- **`NEON_PROJECT_ID`** — if your Neon API key is project-scoped (the common case), the branch manager auto-detects the project ID from the API error response on first run. Set `NEON_PROJECT_ID=sparkling-tree-75414608` in Secrets to skip this detection on every call.
 - **Never `pnpm run dev` at workspace root** — individual artifacts run via Replit workflows with `PORT` and `BASE_PATH` wired up.
 - **Port**: API server binds to `PORT` env var (workflow sets it); default 8080 in production.
 

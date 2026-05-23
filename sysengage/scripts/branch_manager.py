@@ -98,20 +98,59 @@ def _get_project_id() -> str:
     explicit = os.environ.get("NEON_PROJECT_ID", "")
     if explicit:
         return explicit
-    data = _neon_request("GET", "/projects")
-    projects = data.get("projects", [])
-    if len(projects) == 1:
-        return projects[0]["id"]
-    if not projects:
-        print("ERROR: No Neon projects found for this API key.", file=sys.stderr)
+
+    # Try listing projects (works with account-level keys)
+    url = f"{NEON_API_BASE}/projects"
+    headers = {
+        "Authorization": f"Bearer {_api_key()}",
+        "Accept": "application/json",
+    }
+    req = urllib.request.Request(url, headers=headers, method="GET")
+    try:
+        with urllib.request.urlopen(req, timeout=30) as resp:
+            data = json.loads(resp.read())
+            projects = data.get("projects", [])
+            if len(projects) == 1:
+                return projects[0]["id"]
+            if not projects:
+                print("ERROR: No Neon projects found for this API key.", file=sys.stderr)
+                sys.exit(1)
+            names = [f"  {p['id']}  ({p['name']})" for p in projects]
+            print(
+                "ERROR: Multiple Neon projects found. Set NEON_PROJECT_ID to one of:\n"
+                + "\n".join(names),
+                file=sys.stderr,
+            )
+            sys.exit(1)
+    except urllib.error.HTTPError as exc:
+        body_text = exc.read().decode(errors="replace")
+        # Project-scoped API keys return 403/404 for /projects but embed the
+        # project ID in the error body. The body is JSON; parse it first so we
+        # search the unescaped message string, not the raw JSON bytes.
+        try:
+            body_json = json.loads(body_text)
+            search_text = body_json.get("message", body_text)
+        except Exception:
+            search_text = body_text
+        m = re.search(r'subject_project_id:"([^"]+)"', search_text)
+        if m:
+            project_id = m.group(1)
+            print(
+                f"[branch-manager] Project-scoped API key detected — "
+                f"using project: {project_id}\n"
+                f"  Tip: set NEON_PROJECT_ID={project_id} to skip auto-detection.",
+                file=sys.stderr,
+            )
+            return project_id
+        print(
+            f"ERROR: Cannot list Neon projects (HTTP {exc.code}): {body_text}\n"
+            "Set NEON_PROJECT_ID explicitly and try again.",
+            file=sys.stderr,
+        )
         sys.exit(1)
-    names = [f"  {p['id']}  ({p['name']})" for p in projects]
-    print(
-        "ERROR: Multiple Neon projects found. Set NEON_PROJECT_ID to one of:\n"
-        + "\n".join(names),
-        file=sys.stderr,
-    )
-    sys.exit(1)
+    except Exception as exc:
+        print(f"ERROR: Neon project detection failed: {exc}", file=sys.stderr)
+        sys.exit(1)
 
 
 def _list_branches(project_id: str) -> list[dict]:
