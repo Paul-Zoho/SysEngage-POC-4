@@ -22,7 +22,7 @@ PRACTITIONER_ID = "SH001"
 ROW = 1
 OUT_DIR = Path(__file__).parent.parent / "verification_outputs"
 
-print(f"[runner] Phase 3b CCI Construction — {PROJECT_ID}  Row {ROW}  skip_dedup=True", flush=True)
+print(f"[runner] Phase 3b CCI Construction — {PROJECT_ID}  Row {ROW}  skip_dedup=False", flush=True)
 print(flush=True)
 
 try:
@@ -30,7 +30,7 @@ try:
         project_id=PROJECT_ID,
         practitioner_id=PRACTITIONER_ID,
         row_ref=ROW,
-        skip_deduplication=True,
+        skip_deduplication=False,
     )
 except Exception as exc:
     print(f"[runner] FAILED: {exc}", file=sys.stderr, flush=True)
