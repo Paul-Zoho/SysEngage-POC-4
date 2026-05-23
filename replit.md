@@ -17,12 +17,16 @@ AI-powered Systems Engineering tool that runs stateful mechanism passes (Source 
 
 | Secret | Purpose |
 |---|---|
-| `NEON_DATABASE_URL` | Neon Postgres connection string (main development branch) |
+| `DATABASE_URL_MAIN` | Permanent main-branch connection string — **never** pointed at a test branch |
+| `NEON_DATABASE_URL` | Active connection string — normally equals `DATABASE_URL_MAIN`; switched to a test branch connection string for the duration of a test run |
 | `NEON_API_KEY` | Neon API key — required for branch manager (test isolation) |
+| `NEON_PROJECT_ID` | Neon project ID — `sparkling-tree-75414608`; set this to skip auto-detection on each branch manager call |
 | `ANTHROPIC_API_KEY` | Claude API key for AI mechanism steps |
 | `SESSION_SECRET` | Express session secret |
 
-**`DATABASE_URL_MAIN` convention:** The main development connection string lives in `NEON_DATABASE_URL`. When running test branches, set `NEON_DATABASE_URL` to the test branch connection string for the duration of the test. Never overwrite `NEON_DATABASE_URL` with a test branch value permanently — restore it after the test.
+**`DATABASE_URL_MAIN` rule (from spec §5, Rule 4):** `DATABASE_URL_MAIN` is a stable, permanent secret that always holds the main development branch connection string. It is **never** overwritten. `NEON_DATABASE_URL` is the active connection used by the application; during test branch runs the orchestrator passes the test branch URL as `NEON_DATABASE_URL` to subprocesses only — the parent process environment is never mutated. After a test run, `NEON_DATABASE_URL` reverts automatically (it was never changed in the first place).
+
+Set both `DATABASE_URL_MAIN` and `NEON_DATABASE_URL` to the same main branch connection string in Replit Secrets. Only `NEON_DATABASE_URL` changes between runs; `DATABASE_URL_MAIN` is your permanent safe copy.
 
 ## Stack
 
@@ -96,6 +100,7 @@ NEON_PROJECT_ID is auto-detected from NEON_API_KEY if you have a single Neon pro
 - **DB tests crash with exit code -1** when run as a full suite — this is OOM/Neon pool interference. Always run class batches or individual tests.
 - **CCI verification criteria tests** (`test_verification_criteria.py`) must be run one at a time: `pytest "tests/cci_construction/test_verification_criteria.py::ClassName::test_name"`.
 - **`NEON_DATABASE_URL` and `DATABASE_URL`** — the app reads `NEON_DATABASE_URL` first. `DATABASE_URL` is the Replit Helium fallback. Always update `NEON_DATABASE_URL` when rotating the Neon connection string.
+- **Secrets vs env vars** — credentials (`NEON_DATABASE_URL`, `DATABASE_URL_MAIN`, `NEON_API_KEY`, `ANTHROPIC_API_KEY`) must be stored as Replit **Secrets** (padlock icon), not regular environment variables. Secrets are encrypted and not stored in `.replit`. Regular env vars are stored in `.replit` in plaintext.
 - **`NEON_PROJECT_ID`** — if your Neon API key is project-scoped (the common case), the branch manager auto-detects the project ID from the API error response on first run. Set `NEON_PROJECT_ID=sparkling-tree-75414608` in Secrets to skip this detection on every call.
 - **Never `pnpm run dev` at workspace root** — individual artifacts run via Replit workflows with `PORT` and `BASE_PATH` wired up.
 - **Port**: API server binds to `PORT` env var (workflow sets it); default 8080 in production.

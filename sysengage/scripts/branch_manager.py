@@ -198,15 +198,18 @@ def _create_branch(
     # Extract connection URI (Neon returns one per role)
     uris = data.get("connection_uris", [])
     if not uris:
-        # Fallback: construct from endpoint host
+        # Fallback: construct from endpoint host using the stable main-branch URL
+        # as the credential template. Prefer DATABASE_URL_MAIN (the permanent
+        # main URL per spec Rule 4) over NEON_DATABASE_URL (which may be
+        # pointing at a test branch during a test run).
         endpoints = data.get("endpoints", [])
         host = endpoints[0]["host"] if endpoints else ""
-        # Use same credentials as main branch (same project role)
-        main_url = os.environ.get("NEON_DATABASE_URL", "")
+        main_url = (
+            os.environ.get("DATABASE_URL_MAIN")
+            or os.environ.get("NEON_DATABASE_URL", "")
+        )
         if main_url and host:
-            # Replace the host portion in the main URL
-            import re as _re
-            conn_uri = _re.sub(r"@[^/]+/", f"@{host}/", main_url)
+            conn_uri = re.sub(r"@[^/]+/", f"@{host}/", main_url)
         else:
             conn_uri = f"(endpoint host: {host} — build connection string manually)"
     else:
@@ -458,10 +461,14 @@ def _build_conn_uri_for_branch(project_id: str, branch_id: str) -> str:
     if not endpoints:
         return "(no endpoint found)"
     host = endpoints[0]["host"]
-    main_url = os.environ.get("NEON_DATABASE_URL", "")
+    # Use DATABASE_URL_MAIN (permanent main URL) as the credential template per
+    # spec Rule 4. Fall back to NEON_DATABASE_URL if DATABASE_URL_MAIN is not set.
+    main_url = (
+        os.environ.get("DATABASE_URL_MAIN")
+        or os.environ.get("NEON_DATABASE_URL", "")
+    )
     if main_url and host:
-        import re as _re
-        return _re.sub(r"@[^/]+/", f"@{host}/", main_url)
+        return re.sub(r"@[^/]+/", f"@{host}/", main_url)
     return f"(endpoint: {host})"
 
 
@@ -531,6 +538,17 @@ def _build_parser() -> argparse.ArgumentParser:
 def main() -> None:
     parser = _build_parser()
     args = parser.parse_args()
+
+    # Warn if DATABASE_URL_MAIN is not set — spec Rule 4 requires it as the
+    # permanent safe copy of the main branch connection string.
+    if args.command != "list_snapshots" and not os.environ.get("DATABASE_URL_MAIN"):
+        print(
+            "WARNING: DATABASE_URL_MAIN is not set. "
+            "Set it in Replit Secrets to the main branch connection string "
+            "so it is never accidentally overwritten during test branch operations "
+            "(spec §5 Rule 4).",
+            file=sys.stderr,
+        )
 
     dispatch = {
         "create_snapshot": cmd_create_snapshot,
