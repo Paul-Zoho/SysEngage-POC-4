@@ -100,6 +100,11 @@ A single Signal may produce CCIs in multiple columns if it contains content rele
 **Rule 5 — Named instances (CRITICAL)**
 When a Signal describes multiple DISTINCT NAMED ITEMS of the same classification_type, you MUST produce ONE SEPARATE CCI PER NAMED ITEM. Do NOT aggregate named items into a single CCI description. Set `is_named_instance: true` on EACH CCI in the named-instance group.
 
+GROUP-FIRST PROCEDURE — follow this exactly for named instances:
+1. Read the Signal and identify the COMPLETE LIST of distinct named items of the same classification_type.
+2. Only after you have the full list, produce one CCI per item.
+3. If you set `is_named_instance: true` on ANY CCI derived from a Signal, you MUST set it on ALL CCIs of the same classification_type derived from that same Signal. There are no partial groups — either all members carry the flag or none do.
+
 Named instances are distinct, individually nameable things — such as:
 - Named platforms or operating systems (iOS, Android, Windows)
 - Named locations or deployment sites (London, New York, Singapore)
