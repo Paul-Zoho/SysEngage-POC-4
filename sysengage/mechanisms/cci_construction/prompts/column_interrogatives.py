@@ -37,7 +37,20 @@ COLUMN_INTERROGATIVES: dict[int, dict[str, str]] = {
     4: {
         "What": "Physical data structures and schemas",
         "How": "Physical processes and components",
-        "Where": "Physical nodes and infrastructure",
+        "Where": (
+            "Physical nodes and infrastructure. "
+            "NAMED DEPLOYMENT TARGETS: When a Signal describes multiple named platforms, "
+            "operating systems, or infrastructure components (e.g. iOS, Android, Windows; "
+            "AWS, Azure, GCP; Server A, Server B), produce ONE CCI per named target. "
+            "Do not consolidate named targets into a single aggregate CCI description. "
+            "Each named target is a distinct physical node that may have different "
+            "constraints, costs, or compatibility requirements downstream. "
+            "Example: a Signal describing 'iOS, Android, and Windows deployment' produces: "
+            "  - Node CCI: \"iOS mobile platform deployment node\"  (signal_refs: [SG_X]) "
+            "  - Node CCI: \"Android mobile platform deployment node\"  (signal_refs: [SG_X]) "
+            "  - Node CCI: \"Windows desktop platform deployment node\"  (signal_refs: [SG_X]) "
+            "Do NOT produce: \"Multi-platform deployment supporting iOS, Android, and Windows\""
+        ),
         "Who": "Technical actors and system components",
         "When": "Physical events and scheduling",
         "Why": "Technical constraints and standards",
@@ -45,7 +58,20 @@ COLUMN_INTERROGATIVES: dict[int, dict[str, str]] = {
     5: {
         "What": "Detailed data definitions and formats",
         "How": "Detailed procedures and algorithms",
-        "Where": "Detailed network and deployment specs",
+        "Where": (
+            "Detailed network and deployment specs. "
+            "NAMED DEPLOYMENT TARGETS: When a Signal describes multiple named platforms, "
+            "operating systems, or infrastructure components (e.g. iOS, Android, Windows; "
+            "AWS, Azure, GCP; Server A, Server B), produce ONE CCI per named target. "
+            "Do not consolidate named targets into a single aggregate CCI description. "
+            "Each named target is a distinct physical node that may have different "
+            "constraints, costs, or compatibility requirements downstream. "
+            "Example: a Signal describing 'iOS, Android, and Windows deployment' produces: "
+            "  - Node CCI: \"iOS mobile platform deployment node\"  (signal_refs: [SG_X]) "
+            "  - Node CCI: \"Android mobile platform deployment node\"  (signal_refs: [SG_X]) "
+            "  - Node CCI: \"Windows desktop platform deployment node\"  (signal_refs: [SG_X]) "
+            "Do NOT produce: \"Multi-platform deployment supporting iOS, Android, and Windows\""
+        ),
         "Who": "Detailed user and system interfaces",
         "When": "Detailed timing and sequencing",
         "Why": "Detailed rules and validation criteria",
