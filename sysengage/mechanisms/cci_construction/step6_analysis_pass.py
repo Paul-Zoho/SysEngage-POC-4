@@ -57,6 +57,7 @@ def build_cci_data(
     consolidation_flags: list[ConsolidationFlag],
     integrity_violations: list[dict],
     execution_warnings: list[ExecutionWarning] | None = None,
+    enumeration_splits: list[dict] | None = None,
 ) -> dict[str, Any]:
     """
     Build the outputs.cci_data sub-structure per spec §7.
@@ -65,6 +66,10 @@ def build_cci_data(
     avoids a DB query against an unflushed session (which would return 0 on
     first-run passes before the transaction is visible).
     All zero-value integer fields are explicitly 0 (not null or omitted).
+
+    enumeration_splits: list of dicts produced by Stage 3a-pre, one entry per
+      Signal that was split into virtual sub-signals.  Empty list if no splits
+      occurred.  Added in v0.14 per spec §4.6.
     """
     populated: set[str] = set()
     for ci_id in new_ci_ids:
@@ -92,6 +97,7 @@ def build_cci_data(
         "consolidation_flags": [f.to_dict() for f in consolidation_flags],
         "integrity_violations": integrity_violations,
         "execution_warnings": [w.to_dict() for w in (execution_warnings or [])],
+        "enumeration_splits": enumeration_splits or [],
     }
 
 

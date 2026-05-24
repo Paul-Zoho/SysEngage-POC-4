@@ -158,14 +158,18 @@ def run(
     # ------------------------------------------------------------------ #
     if eligible_signals:
         try:
-            all_candidates, candidates_rejected_step3, batches_processed, batches_failed = (
-                derive_ccis_for_batches(
-                    batches=batches,
-                    row_ref=row_ref,
-                    project_id=project_id,
-                    eligible_signal_ids=eligible_signal_ids,
-                    pass_data=pass_data,
-                )
+            (
+                all_candidates,
+                candidates_rejected_step3,
+                batches_processed,
+                batches_failed,
+                enumeration_splits,
+            ) = derive_ccis_for_batches(
+                batches=batches,
+                row_ref=row_ref,
+                project_id=project_id,
+                eligible_signal_ids=eligible_signal_ids,
+                pass_data=pass_data,
             )
         except Exception as exc:
             finalise_cci_pass_failed(
@@ -181,6 +185,7 @@ def run(
         candidates_rejected_step3 = 0
         batches_processed = 0
         batches_failed = 0
+        enumeration_splits = []
 
     # If every batch failed with AI, fail fast
     if total_batches > 0 and batches_failed == total_batches:
@@ -288,6 +293,7 @@ def run(
             consolidation_flags=consolidation_flags,
             integrity_violations=pass_data.get("_integrity_violations", []),
             execution_warnings=execution_warnings,
+            enumeration_splits=[s.to_dict() for s in enumeration_splits],
         )
 
         all_confidences = pass_data.get("_collected_confidences", [])
