@@ -258,12 +258,18 @@ def _structural_pre_filter(
                 if similarity >= similarity_threshold:
                     # All three conditions met — structural duplicate: merge now.
                     merged = _merge_two_candidates(a, b, merged_description=None)
-                    merge_records.append(
-                        MergeRecord(
-                            surviving_ci_id="(pending)",
-                            original_descriptions=[a.description, b.description],
-                            merged_signal_refs=merged.signal_refs,
-                        )
+                    _mr = MergeRecord(
+                        surviving_ci_id="(pending)",
+                        original_descriptions=[a.description, b.description],
+                        merged_signal_refs=merged.signal_refs,
+                    )
+                    merge_records.append(_mr)
+                    # Carry forward pending MRs from both legs so the chain
+                    # resolves to the final survivor after Step 5.
+                    merged._pending_mrs = (  # type: ignore[attr-defined]
+                        getattr(a, "_pending_mrs", [])
+                        + getattr(b, "_pending_mrs", [])
+                        + [_mr]
                     )
                     active[i] = merged
                     active.pop(j)
@@ -468,7 +474,13 @@ def _ai_cluster_review(
         new_items_in_group = [
             it for it in group_items if it["source"] == "new_candidate"
         ]
-        if new_items_in_group and all(
+        # Named-instance bypass only applies when all new candidates in the
+        # group share a SINGLE common signal source.  If candidates originate
+        # from different Signals they were independently derived and are not
+        # a named-instance group — they must go through normal AI review.
+        _new_signal_sets = [frozenset(it["signal_refs"]) for it in new_items_in_group]
+        _all_same_signal = len(set(_new_signal_sets)) == 1 if _new_signal_sets else False
+        if new_items_in_group and _all_same_signal and all(
             it.get("is_named_instance", False) for it in new_items_in_group
         ):
             execution_warnings.append(ExecutionWarning(
@@ -699,13 +711,24 @@ def _apply_duplicate_cluster(
             justification=_merge_justifications(cluster_justifications),
         )
 
-        merge_records.append(
-            MergeRecord(
-                surviving_ci_id="(pending)",
-                original_descriptions=all_descriptions,
-                merged_signal_refs=merged_refs,
-            )
+        _mr = MergeRecord(
+            surviving_ci_id="(pending)",
+            original_descriptions=all_descriptions,
+            merged_signal_refs=merged_refs,
         )
+        merge_records.append(_mr)
+
+        # Gather any pending MRs already attached to the consumed candidates
+        # (e.g. from Stage 4a chain merges) and transfer them to the new
+        # merged_candidate so the entire chain resolves after Step 5.
+        _inherited_mrs: list[MergeRecord] = []
+        for nm in new_members:
+            _idx = nm.get("_candidate_idx")
+            if _idx is not None:
+                _c = surviving_candidates[_idx]
+                if _c is not None:
+                    _inherited_mrs.extend(getattr(_c, "_pending_mrs", []))
+        merged_candidate._pending_mrs = _inherited_mrs + [_mr]  # type: ignore[attr-defined]
 
         # Install merged candidate at base slot; discard all other members.
         surviving_candidates[base_idx] = merged_candidate

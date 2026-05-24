@@ -251,6 +251,17 @@ def run(
             project_id=project_id,
         )
 
+        # ------------------------------------------------------------------ #
+        # Resolve pending surviving_ci_ids in merge records.                  #
+        # Step 5 mutates cand.ci_id on each committed candidate.  Walk all   #
+        # surviving candidates and propagate their allocated ci_id to every   #
+        # MergeRecord chained via _pending_mrs (set by Stage 4a/4c).          #
+        # ------------------------------------------------------------------ #
+        for _cand in surviving_candidates:
+            if _cand is not None and _cand.ci_id is not None:
+                for _mr in getattr(_cand, "_pending_mrs", []):
+                    _mr.surviving_ci_id = _cand.ci_id
+
         total_candidates_rejected = candidates_rejected_step3 + candidates_rejected_step5
 
         # ------------------------------------------------------------------ #

@@ -10,7 +10,7 @@ Per CCI Construction Mechanism Spec v0.2 §5.2 and canonical ledger spec v2.12:
 
 from datetime import datetime, timezone
 
-from sqlalchemy import CheckConstraint, DateTime, Float, ForeignKey, ForeignKeyConstraint, String, Text
+from sqlalchemy import Boolean, CheckConstraint, DateTime, Float, ForeignKey, ForeignKeyConstraint, String, Text
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -40,6 +40,7 @@ class CellContentItemModel(Base):
     trigger_condition: Mapped[str | None] = mapped_column(Text, nullable=True)
     justification: Mapped[str | None] = mapped_column(Text, nullable=True)
     confidence: Mapped[float] = mapped_column(Float, nullable=False)
+    is_named_instance: Mapped[bool | None] = mapped_column(Boolean, nullable=True)
     project_id: Mapped[str] = mapped_column(
         String, ForeignKey("project.project_id"), nullable=False, primary_key=True
     )

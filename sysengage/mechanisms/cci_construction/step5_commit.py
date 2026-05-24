@@ -123,9 +123,13 @@ def commit_ccis(
                 trigger_condition=cand.trigger_condition,
                 justification=cand.justification,
                 confidence=cand.confidence,
+                is_named_instance=cand.is_named_instance if cand.is_named_instance else None,
                 project_id=project_id,
             )
             session.add(cci)
+            # Mutate the in-memory candidate so callers can resolve
+            # pending merge records after this function returns.
+            cand.ci_id = ci_id
             new_ci_ids.append(ci_id)
             ccis_created += 1
 

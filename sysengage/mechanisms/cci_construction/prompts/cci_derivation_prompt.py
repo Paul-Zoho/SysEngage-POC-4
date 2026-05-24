@@ -121,10 +121,32 @@ INCORRECT — single aggregated CCI (never do this for named instances):
 
 The INCORRECT form loses the individual named deployment targets. The CORRECT form preserves each as a distinct analytical entity.
 
-`is_named_instance: true` applies ONLY when a single Signal produces multiple CCIs of the SAME classification_type that are distinct named instances of that type. It does NOT apply to CCIs that are simply similar but derived from different Signals, or to CCIs of different classification types.
+`is_named_instance: true` applies ONLY when a SINGLE SIGNAL produces multiple CCIs of the SAME classification_type for distinct named instances of that type.
+
+CRITICAL CONSTRAINT — single Signal required:
+If "Child user actor" is derived from Signal SG201 and "Parent user actor" is derived from a DIFFERENT Signal SG202, these are TWO INDEPENDENTLY DERIVED CCIs — NOT a named-instance group. Do NOT set `is_named_instance: true` on either.
+
+INCORRECT — named-instance from different Signals (never do this):
+  Signal SG201: "Child users access the app directly"
+  Signal SG202: "Parent users manage child accounts"
+  Output (WRONG):
+    {{"column": "Who", "classification_type": "Actor", "description": "Child user actor", "signal_refs": ["SG201"], "confidence": 0.88, "is_named_instance": true}}
+    {{"column": "Who", "classification_type": "Actor", "description": "Parent user actor", "signal_refs": ["SG202"], "confidence": 0.88, "is_named_instance": true}}
+
+CORRECT — each is simply a distinct CCI, independently derived:
+  Output (RIGHT):
+    {{"column": "Who", "classification_type": "Actor", "description": "Child user actor", "signal_refs": ["SG201"], "confidence": 0.88, "is_named_instance": false}}
+    {{"column": "Who", "classification_type": "Actor", "description": "Parent user actor", "signal_refs": ["SG202"], "confidence": 0.88, "is_named_instance": false}}
+
+`is_named_instance: true` also does NOT apply to CCIs of different classification types.
 
 **Rule 6 — Confidence**
 Assign confidence 0.0–1.0 reflecting how clearly the Signal supports the CCI's classification. 0.9+ for unambiguous content; 0.6–0.8 for content requiring inference; below 0.6 for speculative derivation.
+
+**Rule 7 — Coverage preference**
+Prefer producing a CCI at moderate confidence (≥ 0.65) over omitting it entirely. A genuine analytical finding should be recorded even when the evidence is partial. Only omit a CCI when there is truly no classifiable content in the Signal set for that column.
+
+For the "What" column at Row 2 and above (data model, network, technology abstraction levels), produce Entity and Process CCIs at ≥ 0.55 confidence when the Signal is clearly scoped to that abstraction level, even if the wording is indirect. The hard floor for any CCI across all columns is 0.50 — never produce below this threshold, but do not use the floor as a reason to omit something that clearly belongs.
 
 Respond with ONLY a JSON object in this exact format — no preamble, no explanation, no markdown:
 {{
