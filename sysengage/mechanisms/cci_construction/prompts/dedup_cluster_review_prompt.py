@@ -1,18 +1,20 @@
 """
 Stage 4b prompt template — per-cell semantic cluster deduplication review.
 
-Per CCI Construction Mechanism Spec v0.11 §4.4:
+Per CCI Construction Mechanism Spec v0.13 §4.4:
   All members of a classification_type group are presented to the AI in a single
   call.  The AI identifies clusters of semantically equivalent items (Duplicate),
   flags uncertain equivalences (Ambiguous), and treats everything else as Distinct.
   Items not mentioned in any cluster or ambiguous entry are implicitly Distinct.
 
-  Named-instance framing variant: activated when any new candidate in the group
-  carries stage4a_routed=True.  Stage 4a routed these candidates because they
-  share the same classification_type and signal_refs but have materially different
-  descriptions — the signature of genuinely distinct named instances derived from
-  the same Signal.  The AI is asked to determine whether each item represents a
-  genuinely distinct named entity (preserve all) or a reformulation (merge).
+  Named-instance preservation directive variant: activated when any new candidate
+  in the group carries stage4a_routed=True.  Stage 4a routed these candidates
+  because they share the same classification_type and signal_refs but have
+  materially different descriptions — confirming they are distinct named instances
+  derived from the same Signal.  The AI is given a preservation directive: it
+  MUST return ALL items as Distinct.  The AI's latitude to merge is removed
+  entirely for these groups — the distinctness is a structural fact, not a
+  judgment the AI is being asked to make.
 """
 
 from __future__ import annotations
@@ -45,10 +47,12 @@ def build_cluster_review_prompt(
         "confidence":  float
       }
     named_instance_framing : bool
-      When True, use the named-instance framing variant.  Set by Stage 4a when
-      one or more new candidates in this group share the same classification_type
-      and signal_refs but have materially different descriptions — indicating
-      possible distinct named instances rather than reformulations of one concept.
+      When True, use the named-instance preservation directive variant.
+      Set by Stage 4a when one or more new candidates in this group share the
+      same classification_type and signal_refs but have materially different
+      descriptions — confirming they are distinct named instances.  The AI is
+      given a directive to return ALL items as Distinct; its latitude to merge
+      is removed entirely for these groups (spec v0.13 §4.4).
 
     Returns
     -------
@@ -57,20 +61,27 @@ def build_cluster_review_prompt(
     members_json = json.dumps(members, indent=2)
 
     if named_instance_framing:
-        framing_context = """
-## Named-Instance Context
+        return f"""You are processing CellContentItems that Stage 4a has confirmed as distinct named instances.
 
-One or more items in this group were identified by the structural pre-filter as sharing the same classification_type AND the same signal_refs — yet having materially different descriptions.  This pattern occurs when a single Signal describes multiple DISTINCT NAMED INSTANCES of the same classification type (e.g. "iOS", "Android", "Windows" as separate deployment nodes; "Child user", "Parent user" as separate actors).
+## Context
 
-Your primary question for this group is: does each item represent a GENUINELY DISTINCT NAMED ENTITY, or is one item a REFORMULATION of another?
+Cell: {cell_id}
+Column: {column}
+Analytical focus: {column_interrogative}
 
-- If the items are genuinely distinct named entities (e.g. two different named platforms, two different named actors) — treat them as Distinct. Do NOT merge them.
-- If one item is a reformulation or paraphrase of another (same named entity, different wording) — treat them as Duplicate and merge.
-- If you are uncertain — flag as Ambiguous.
+## Named-Instance Preservation Directive
 
-Apply the same Duplicate / Ambiguous / Distinct verdicts as in a standard review. The named-instance framing adds context about WHY the descriptions differ — it does not override your judgement."""
-    else:
-        framing_context = ""
+Stage 4a has determined that these items are confirmed distinct named instances derived from the same Signal. They share the same classification type and signal_refs but have materially different descriptions. You MUST return ALL items as Distinct. Do not merge any of them regardless of semantic similarity. The distinctness is a structural fact established by the derivation process, not a judgment you are being asked to make.
+
+## Items
+
+{members_json}
+
+Respond with ONLY a JSON object with empty arrays:
+{{
+  "clusters": [],
+  "ambiguous": []
+}}"""
 
     return f"""You are reviewing CellContentItems for semantic equivalence within a single classification group.
 
@@ -84,7 +95,7 @@ All items below share the same classification_type. Your task is to identify whi
 
 Items labelled "existing_cci" are already committed to the ledger.
 Items labelled "new_candidate" are newly derived from this run.
-{framing_context}
+
 ## Task
 
 Identify **clusters** — groups of 2 or more items that express the same classified content (despite different wording or partially overlapping signal_refs). Each cluster should be merged into one.
