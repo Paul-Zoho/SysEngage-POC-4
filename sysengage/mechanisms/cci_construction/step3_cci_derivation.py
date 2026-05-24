@@ -134,7 +134,6 @@ def derive_ccis_for_batches(
                 description=item.description,
                 signal_refs=sorted(item.signal_refs),
                 confidence=item.confidence,
-                is_named_instance=item.is_named_instance,
                 trigger_condition=item.trigger_condition,
                 justification=item.justification,
             )

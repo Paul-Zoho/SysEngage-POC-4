@@ -97,13 +97,8 @@ signal_refs must only contain Signal IDs from the list above.
 Assign each CCI to the most appropriate column.
 A single Signal may produce CCIs in multiple columns if it contains content relevant to multiple interrogatives.
 
-**Rule 5 — Named instances (CRITICAL)**
-When a Signal describes multiple DISTINCT NAMED ITEMS of the same classification_type, you MUST produce ONE SEPARATE CCI PER NAMED ITEM. Do NOT aggregate named items into a single CCI description. Set `is_named_instance: true` on EACH CCI in the named-instance group.
-
-GROUP-FIRST PROCEDURE — follow this exactly for named instances:
-1. Read the Signal and identify the COMPLETE LIST of distinct named items of the same classification_type.
-2. Only after you have the full list, produce one CCI per item.
-3. If you set `is_named_instance: true` on ANY CCI derived from a Signal, you MUST set it on ALL CCIs of the same classification_type derived from that same Signal. There are no partial groups — either all members carry the flag or none do.
+**Rule 5 — Named instances**
+When a Signal describes multiple DISTINCT NAMED ITEMS of the same classification_type, produce ONE SEPARATE CCI PER NAMED ITEM. Do NOT aggregate named items into a single CCI description.
 
 Named instances are distinct, individually nameable things — such as:
 - Named platforms or operating systems (iOS, Android, Windows)
@@ -112,38 +107,17 @@ Named instances are distinct, individually nameable things — such as:
 - Named events or triggers (WeeklyReset, MonthlyReview, OnLogin)
 - Named entities or data objects (Transaction, Account, Category)
 
-CORRECT — three separate CCIs, each with is_named_instance: true:
+CORRECT — three separate CCIs:
   Signal: "The platform supports iOS, Android, and Windows deployment"
   Output:
-    {{"column": "Where", "classification_type": "Node", "description": "iOS mobile platform deployment node", "signal_refs": ["SG545"], "confidence": 0.90, "is_named_instance": true}}
-    {{"column": "Where", "classification_type": "Node", "description": "Android mobile platform deployment node", "signal_refs": ["SG545"], "confidence": 0.90, "is_named_instance": true}}
-    {{"column": "Where", "classification_type": "Node", "description": "Windows desktop platform deployment node", "signal_refs": ["SG545"], "confidence": 0.90, "is_named_instance": true}}
+    {{"column": "Where", "classification_type": "Node", "description": "iOS mobile platform deployment node", "signal_refs": ["SG545"], "confidence": 0.90}}
+    {{"column": "Where", "classification_type": "Node", "description": "Android mobile platform deployment node", "signal_refs": ["SG545"], "confidence": 0.90}}
+    {{"column": "Where", "classification_type": "Node", "description": "Windows desktop platform deployment node", "signal_refs": ["SG545"], "confidence": 0.90}}
 
 INCORRECT — single aggregated CCI (never do this for named instances):
   Signal: "The platform supports iOS, Android, and Windows deployment"
   Output:
-    {{"column": "Where", "classification_type": "Node", "description": "Multi-platform deployment supporting iOS, Android, and Windows", "signal_refs": ["SG545"], "confidence": 0.90, "is_named_instance": false}}
-
-The INCORRECT form loses the individual named deployment targets. The CORRECT form preserves each as a distinct analytical entity.
-
-`is_named_instance: true` applies ONLY when a SINGLE SIGNAL produces multiple CCIs of the SAME classification_type for distinct named instances of that type.
-
-CRITICAL CONSTRAINT — single Signal required:
-If "Child user actor" is derived from Signal SG201 and "Parent user actor" is derived from a DIFFERENT Signal SG202, these are TWO INDEPENDENTLY DERIVED CCIs — NOT a named-instance group. Do NOT set `is_named_instance: true` on either.
-
-INCORRECT — named-instance from different Signals (never do this):
-  Signal SG201: "Child users access the app directly"
-  Signal SG202: "Parent users manage child accounts"
-  Output (WRONG):
-    {{"column": "Who", "classification_type": "Actor", "description": "Child user actor", "signal_refs": ["SG201"], "confidence": 0.88, "is_named_instance": true}}
-    {{"column": "Who", "classification_type": "Actor", "description": "Parent user actor", "signal_refs": ["SG202"], "confidence": 0.88, "is_named_instance": true}}
-
-CORRECT — each is simply a distinct CCI, independently derived:
-  Output (RIGHT):
-    {{"column": "Who", "classification_type": "Actor", "description": "Child user actor", "signal_refs": ["SG201"], "confidence": 0.88, "is_named_instance": false}}
-    {{"column": "Who", "classification_type": "Actor", "description": "Parent user actor", "signal_refs": ["SG202"], "confidence": 0.88, "is_named_instance": false}}
-
-`is_named_instance: true` also does NOT apply to CCIs of different classification types.
+    {{"column": "Where", "classification_type": "Node", "description": "Multi-platform deployment supporting iOS, Android, and Windows", "signal_refs": ["SG545"], "confidence": 0.90}}
 
 **Rule 6 — Confidence**
 Assign confidence 0.0–1.0 reflecting how clearly the Signal supports the CCI's classification. 0.9+ for unambiguous content; 0.6–0.8 for content requiring inference; below 0.6 for speculative derivation.
@@ -162,7 +136,6 @@ Respond with ONLY a JSON object in this exact format — no preamble, no explana
       "description": "...",
       "signal_refs": ["SG001"],
       "confidence": 0.85,
-      "is_named_instance": false,
       "trigger_condition": null,
       "justification": "..."
     }}

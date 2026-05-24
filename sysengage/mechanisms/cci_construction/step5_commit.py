@@ -123,7 +123,6 @@ def commit_ccis(
                 trigger_condition=cand.trigger_condition,
                 justification=cand.justification,
                 confidence=cand.confidence,
-                is_named_instance=cand.is_named_instance if cand.is_named_instance else None,
                 project_id=project_id,
             )
             session.add(cci)

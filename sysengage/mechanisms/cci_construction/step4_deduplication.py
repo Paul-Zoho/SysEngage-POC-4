@@ -275,7 +275,11 @@ def _structural_pre_filter(
                     active.pop(j)
                     merged_this_round = True
                 else:
-                    # Conditions 1+2 only — descriptions differ; route to Stage 4b.
+                    # Conditions 1+2 only — descriptions differ materially; route
+                    # both to Stage 4b with named-instance framing marker so the
+                    # AI knows to check for distinct named entities vs reformulations.
+                    a.stage4a_routed = True
+                    b.stage4a_routed = True
                     j += 1
             else:
                 j += 1
@@ -444,7 +448,7 @@ def _ai_cluster_review(
             "description": cand.description,
             "signal_refs": cand.signal_refs,
             "confidence": cand.confidence,
-            "is_named_instance": cand.is_named_instance,
+            "stage4a_routed": cand.stage4a_routed,
             "_candidate_idx": idx,
         })
 
@@ -467,31 +471,26 @@ def _ai_cluster_review(
             continue
 
         # ------------------------------------------------------------------ #
-        # Named-instance bypass (DM) — per spec v0.9 §4.4                   #
-        # If every new candidate in the group carries is_named_instance=True, #
-        # treat the whole group as Distinct without an AI call.              #
+        # Stage 4a routing context — named-instance framing (DM)           #
+        # Per spec v0.11 §4.4: if any new candidate carries                 #
+        # stage4a_routed=True, use named-instance framing for the whole    #
+        # group so the AI distinguishes distinct named entities from        #
+        # reformulations.                                                   #
         # ------------------------------------------------------------------ #
-        new_items_in_group = [
-            it for it in group_items if it["source"] == "new_candidate"
-        ]
-        # Named-instance bypass only applies when all new candidates in the
-        # group share a SINGLE common signal source.  If candidates originate
-        # from different Signals they were independently derived and are not
-        # a named-instance group — they must go through normal AI review.
-        _new_signal_sets = [frozenset(it["signal_refs"]) for it in new_items_in_group]
-        _all_same_signal = len(set(_new_signal_sets)) == 1 if _new_signal_sets else False
-        if new_items_in_group and _all_same_signal and all(
-            it.get("is_named_instance", False) for it in new_items_in_group
-        ):
+        named_instance_framing = any(
+            item.get("stage4a_routed", False)
+            for item in group_items
+            if item["source"] == "new_candidate"
+        )
+        if named_instance_framing:
             execution_warnings.append(ExecutionWarning(
-                warning_type="stage4b_named_instance_bypass",
+                warning_type="stage4a_named_instance_routed",
                 detail={
                     "cell_id": cell_id,
                     "classification_type": classification_type,
                     "member_count": len(group_items),
                 },
             ))
-            continue
 
         # ------------------------------------------------------------------ #
         # Group-size cap: split into sub-groups if > _GROUP_SIZE_CAP        #
@@ -537,6 +536,7 @@ def _ai_cluster_review(
                 column=column,
                 column_interrogative=column_interrogative,
                 members=member_list,
+                named_instance_framing=named_instance_framing,
             )
 
             raw_response = _invoke_with_retry(

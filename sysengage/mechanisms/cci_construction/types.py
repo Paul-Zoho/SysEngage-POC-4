@@ -21,6 +21,12 @@ class CandidateCCI:
 
     ci_id is None until Step 5 allocates the identifier.
     cell_id is derived deterministically from column: ZC-R{row_ref}-C-{column}.
+
+    stage4a_routed is set to True by Stage 4a when conditions 1+2 hold but
+    condition 3 (description similarity) fails — indicating the candidate shares
+    classification_type and signal_refs with another but has a materially
+    different description.  Stage 4b uses named-instance framing for the entire
+    group when any member carries this flag.  Never persisted to the ledger.
     """
 
     cell_id: str
@@ -29,7 +35,7 @@ class CandidateCCI:
     description: str
     signal_refs: list[str]
     confidence: float
-    is_named_instance: bool = False
+    stage4a_routed: bool = False
     trigger_condition: Optional[str] = None
     justification: Optional[str] = None
     ci_id: Optional[str] = None
@@ -96,12 +102,12 @@ class ExecutionWarning:
     """
     Runtime execution condition stored in AnalysisPass outputs.cci_data.execution_warnings.
 
-    warning_type values (per spec v0.9 §4.4):
+    warning_type values (per spec v0.11 §4.4):
       step4_read_failure              — SSL/connection drop during existing CCI read
       step4_nonetype_excluded         — malformed CCI excluded from cluster review
       step4_sub_group_split           — group size exceeded cap and was split into sub-groups
-      stage4b_named_instance_bypass   — all new candidates in group have is_named_instance=True;
-                                        AI cluster review skipped; group treated as Distinct
+      stage4a_named_instance_routed   — one or more candidates in group carry stage4a_routed=True;
+                                        named-instance framing variant used for the AI cluster call
     detail is a freeform dict whose structure varies by warning_type.
     """
 

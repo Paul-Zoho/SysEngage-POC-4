@@ -275,8 +275,6 @@ def _build_cci_element(cci) -> dict[str, Any]:
         payload["trigger_condition"] = cci.trigger_condition
     if cci.justification is not None:
         payload["justification"] = cci.justification
-    if getattr(cci, "is_named_instance", None):
-        payload["is_named_instance"] = True
     return {
         "element_type": "CellContentItem",
         "element_id": cci.ci_id,
