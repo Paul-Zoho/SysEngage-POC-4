@@ -126,3 +126,9 @@ id = "g3D83fzjUqxzCJLuwGh1s"
 uri = "file://verification_outputs/PMT_Ph03_3b_CCIConstruction_R5_Run10.json"
 type = "unspecified"
 title = "PMT Ph03 3b CCI Construction R1–R5 Run10 (dedup ON, v0.11)"
+
+[[outputs]]
+id = "QT3fomsqE_23xqaePvMbz"
+uri = "file://verification_outputs/PMT_Ph03_3b_CCIConstruction_R5_Run11.json"
+type = "unspecified"
+title = "PMT Ph03 3b CCI Construction R1–5 Run11 (dedup ON, v0.12)"
