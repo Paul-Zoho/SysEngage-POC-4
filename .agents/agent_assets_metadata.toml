@@ -120,3 +120,9 @@ id = "QaAD1PRAc2WQ3Nez1CwKN"
 uri = "file://verification_outputs/ROW_Ph03_3b_CCIConstruction_R1_Run1.json"
 type = "unspecified"
 title = "ROW1_E2E Ledger — Phase 3b Row 1"
+
+[[outputs]]
+id = "g3D83fzjUqxzCJLuwGh1s"
+uri = "file://verification_outputs/PMT_Ph03_3b_CCIConstruction_R5_Run10.json"
+type = "unspecified"
+title = "PMT Ph03 3b CCI Construction R1–R5 Run10 (dedup ON, v0.11)"
