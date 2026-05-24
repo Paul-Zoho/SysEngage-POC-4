@@ -25,9 +25,10 @@ Registry
 Usage examples
 --------------
   python sysengage/scripts/branch_manager.py create_snapshot --project PMT --phase ph03 --pass 3a --row R1
-  python sysengage/scripts/branch_manager.py create_test_branch --snapshot snap_PMT_ph03_3a_R1 --scenario dedup_on
-  python sysengage/scripts/branch_manager.py delete_test_branch --branch test_PMT_ph03_3a_R1_dedup_on
-  python sysengage/scripts/branch_manager.py promote_to_snapshot --branch test_PMT_ph03_3a_R1_dedup_on --phase ph03 --pass 3b --row R1
+  python sysengage/scripts/branch_manager.py create_test_branch --snapshot snap_PMT_ph03_3a_R1 --scenario Ph3b_Dedup_On
+  python sysengage/scripts/branch_manager.py rename_branch --branch test_PMT_ph03_3a_R1_Ph3b_Dedup_On --new-name test_PMT_ph03_3a_R1_Ph3b_Rerun
+  python sysengage/scripts/branch_manager.py delete_test_branch --branch test_PMT_ph03_3a_R1_Ph3b_Dedup_On
+  python sysengage/scripts/branch_manager.py promote_to_snapshot --branch test_PMT_ph03_3a_R1_Ph3b_Dedup_On --phase ph03 --pass 3b --row R1
   python sysengage/scripts/branch_manager.py list_snapshots
 """
 
@@ -429,6 +430,33 @@ def cmd_promote_to_snapshot(args: argparse.Namespace) -> None:
     _print_snapshot_created(snap_name, branch_id, conn_uri)
 
 
+def cmd_rename_branch(args: argparse.Namespace) -> None:
+    """Rename a test branch in Neon (does not affect snapshots)."""
+    old_name = args.branch
+    new_name = args.new_name
+
+    if not old_name.startswith("test_"):
+        print(
+            f"ERROR: '{old_name}' does not look like a test branch (must start with 'test_').\n"
+            "Snapshot branches cannot be renamed via this command.",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+
+    neon_project = _get_project_id()
+    branch = _find_branch_by_name(neon_project, old_name)
+    if not branch:
+        print(f"ERROR: Branch '{old_name}' not found in Neon.", file=sys.stderr)
+        sys.exit(1)
+
+    _neon_request(
+        "PATCH",
+        f"/projects/{neon_project}/branches/{branch['id']}",
+        body={"branch": {"name": new_name}},
+    )
+    print(f"[branch-manager] Renamed '{old_name}' → '{new_name}'")
+
+
 def cmd_list_snapshots(args: argparse.Namespace) -> None:
     """List all snapshot branches from the local registry."""
     registry = _load_registry()
@@ -515,7 +543,12 @@ def _build_parser() -> argparse.ArgumentParser:
     # create_test_branch
     p = sub.add_parser("create_test_branch", help="Create a test branch from a snapshot.")
     p.add_argument("--snapshot", required=True, help="Snapshot name, e.g. snap_PMT_ph03_3a_R1")
-    p.add_argument("--scenario", required=True, help="Scenario descriptor, e.g. dedup_on")
+    p.add_argument("--scenario", required=True, help="Scenario descriptor — must be prefixed with the pass being tested, e.g. Ph3b_Dedup_On")
+
+    # rename_branch
+    p = sub.add_parser("rename_branch", help="Rename a test branch in Neon.")
+    p.add_argument("--branch", required=True, help="Current test branch name")
+    p.add_argument("--new-name", required=True, dest="new_name", help="New test branch name")
 
     # delete_test_branch
     p = sub.add_parser("delete_test_branch", help="Delete a test branch after analysis.")
@@ -553,6 +586,7 @@ def main() -> None:
     dispatch = {
         "create_snapshot": cmd_create_snapshot,
         "create_test_branch": cmd_create_test_branch,
+        "rename_branch": cmd_rename_branch,
         "delete_test_branch": cmd_delete_test_branch,
         "promote_to_snapshot": cmd_promote_to_snapshot,
         "list_snapshots": cmd_list_snapshots,

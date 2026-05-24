@@ -64,17 +64,18 @@ test_{ProjectID}_{phase}_{pass}_R{row}_{scenario}
 
 | **Field** | **Format** | **Example** |
 | --- | --- | --- |
-| `{scenario}` | Short descriptor of what is being tested | `dedup_on`, `dedup_off`, `rerun`, `batchsize20` |
+| `{scenario}` | `Ph{pass}_{descriptor}` — must be prefixed with the pass being tested so the branch name is self-describing regardless of which snapshot it was cloned from | `Ph3b_Dedup_On`, `Ph3b_Dedup_Off`, `Ph3b_Rerun`, `Ph3c_First` |
 
 **Examples:**
 
 | **Test branch** | **Cloned from** | **Tests** |
 | --- | --- | --- |
-| `test_PMT_ph03_3b_R1_dedup_off` | `snap_PMT_ph03_3a_R1` | Pass 3b, deduplication disabled |
-| `test_PMT_ph03_3b_R1_dedup_on` | `snap_PMT_ph03_3a_R1` | Pass 3b, deduplication enabled |
-| `test_PMT_ph03_3b_R1_rerun` | `snap_PMT_ph03_3a_R1` | Pass 3b re-run after Concern resolution |
-| `test_ROW_ph03_3b_R1_batchsize20` | `snap_ROW_ph03_3a_R1` | Pass 3b with 223 signals, batch_size=20 |
-| `test_NQPS_ph03_3c_R1_first` | `snap_NQPS_ph03_3b_R5` | Pass 3c first run |
+| `test_PMT_ph03_3a_R1_Ph3b_Dedup_Off` | `snap_PMT_ph03_3a_R1` | Pass 3b, deduplication disabled |
+| `test_PMT_ph03_3a_R1_Ph3b_Dedup_On` | `snap_PMT_ph03_3a_R1` | Pass 3b, deduplication enabled |
+| `test_PMT_ph03_3a_R1_Ph3b_Dedup_v09` | `snap_PMT_ph03_3a_R1` | Pass 3b, dedup enabled, v0.9 named-instance bypass |
+| `test_PMT_ph03_3a_R1_Ph3b_Rerun` | `snap_PMT_ph03_3a_R1` | Pass 3b re-run after Concern resolution |
+| `test_ROW_ph03_3a_R1_Ph3b_Batchsize20` | `snap_ROW_ph03_3a_R1` | Pass 3b with 223 signals, batch_size=20 |
+| `test_NQPS_ph03_3b_R5_Ph3c_First` | `snap_NQPS_ph03_3b_R5` | Pass 3c first run |
 
 ---
 

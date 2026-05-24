@@ -72,7 +72,7 @@ python sysengage/scripts/branch_manager.py create_snapshot \
 
 # 2. Clone a disposable test branch for one scenario
 python sysengage/scripts/branch_manager.py create_test_branch \
-  --snapshot snap_PMT_ph03_3a_R1 --scenario dedup_on
+  --snapshot snap_PMT_ph03_3a_R1 --scenario Ph3b_Dedup_On
 # → outputs the connection string; set NEON_DATABASE_URL to it
 
 # 3. Run your mechanism test against the test branch
@@ -80,7 +80,7 @@ python -u sysengage/run_pmt_cci_r1.py
 
 # 4. Analyse output, then delete the test branch
 python sysengage/scripts/branch_manager.py delete_test_branch \
-  --branch test_PMT_ph03_3a_R1_dedup_on
+  --branch test_PMT_ph03_3a_R1_Ph3b_Dedup_On
 
 # List all registered snapshots
 python sysengage/scripts/branch_manager.py list_snapshots
