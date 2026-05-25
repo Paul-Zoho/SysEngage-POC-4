@@ -1,5 +1,5 @@
 """
-Named entity vocabulary for Stage 3a-pre heuristic detection (v0.14).
+Named entity vocabulary for Stage 3a-pre heuristic detection (v0.15).
 
 Used by the enumeration pre-processor in step3_cci_derivation.py to evaluate:
   Criterion 2 — items are proper nouns or named entities
@@ -219,50 +219,6 @@ NAMED_ENTITY_CATEGORIES: dict[str, dict] = {
             "compliance officer",
             "data controller",
             "data processor",
-        },
-    },
-    "data_entity": {
-        "column_affinity": "What",
-        "terms": {
-            "transaction",
-            "account",
-            "record",
-            "entity",
-            "document",
-            "category",
-            "profile",
-            "report",
-            "ledger",
-            "log",
-            "event",
-            "order",
-            "invoice",
-            "payment",
-            "subscription",
-            "product",
-            "item",
-            "asset",
-            "contract",
-            "claim",
-            "ticket",
-            "request",
-            "response",
-            "message",
-            "notification",
-            "session",
-            "token",
-            "credential",
-            "permission",
-            "policy",
-            "rule",
-            "configuration",
-            "setting",
-            "preference",
-            "workflow",
-            "pipeline",
-            "task",
-            "job",
-            "schedule",
         },
     },
 }

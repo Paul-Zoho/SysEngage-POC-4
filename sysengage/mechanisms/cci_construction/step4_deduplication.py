@@ -539,11 +539,31 @@ def _ai_cluster_review(
                 named_instance_framing=named_instance_framing,
             )
 
+            # ------------------------------------------------------------ #
+            # v0.15 diagnostic logging — required until OQ-3b-11 resolved  #
+            # Logs exact prompt and response for stage4a_routed groups to   #
+            # determine if Android dropout is prompt failure or Stage 4c bug #
+            # ------------------------------------------------------------ #
+            if named_instance_framing:
+                print(
+                    f"[STAGE4B_DIAGNOSTIC] cell_id={cell_id}"
+                    f" classification_type={classification_type}"
+                    f" member_count={len(sub_group)}",
+                    flush=True,
+                )
+                print(f"[STAGE4B_PROMPT] {prompt}", flush=True)
+
             raw_response = _invoke_with_retry(
                 client=client,
                 prompt=prompt,
                 label=f"{cell_id} {classification_type}",
             )
+
+            if named_instance_framing and raw_response is not None:
+                print(
+                    f"[STAGE4B_RESPONSE] {json.dumps(raw_response.get('content', {}))}",
+                    flush=True,
+                )
 
             if raw_response is None:
                 pass_data.setdefault("_dedup_failures", []).append(
@@ -562,6 +582,21 @@ def _ai_cluster_review(
 
             if cluster_response is None:
                 continue
+
+            if named_instance_framing:
+                if cluster_response.clusters:
+                    for _dc in cluster_response.clusters:
+                        print(
+                            f"[STAGE4B_VERDICT] surviving_ci_id=(pending)"
+                            f" merge_applied=True merged_refs={_dc.member_refs}",
+                            flush=True,
+                        )
+                else:
+                    print(
+                        f"[STAGE4B_VERDICT] merge_applied=False"
+                        f" (no Duplicate clusters — all Distinct or Ambiguous)",
+                        flush=True,
+                    )
 
             all_cluster_entries.extend(cluster_response.clusters)
             all_ambiguous_entries.extend(cluster_response.ambiguous)

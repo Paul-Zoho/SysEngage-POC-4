@@ -4,13 +4,15 @@ Step 3 — Per-Batch CCI Construction.
 Mode: DM (Stage 3a-pre) + IM (Stage 3a) + DM (Stage 3b, 3c). Per-batch iteration.
 No ledger write — all output held in memory until Step 5.
 
-Per CCI Construction Mechanism Spec v0.14 §4.3:
+Per CCI Construction Mechanism Spec v0.15 §4.3:
   Stage 3a-pre — Named-item enumeration pre-processor (DM): scan each Signal for
     comma/conjunction lists of named entities; split qualifying Signals into virtual
     sub-signals (one per named item) before the AI call.  All five criteria must hold:
     1. Enumeration pattern detected (comma/conjunction list, items 1–4 words each)
-    2. Items are proper nouns or named entities (capitalisation + vocabulary)
-    3. Category homogeneity (all items same semantic class)
+    2. Items are proper nouns or named entities (vocabulary membership required;
+       verbs, adjectives, and generic common nouns are excluded — v0.15)
+    3. Category homogeneity (all items in same vocabulary category; items absent
+       from vocabulary are disqualifying — tightened v0.15)
     4. Column affinity supports named instances (Where, Who, or What)
     5. List length 2–10
   Stage 3a — AI derivation: one Claude call per (expanded) batch; all six column
@@ -65,6 +67,69 @@ _STOPWORDS = frozenset({
     "we", "our", "they", "their", "he", "she", "i", "you",
     "when", "where", "who", "what", "why", "how",
     "if", "then", "else", "so", "as", "than", "also",
+})
+
+# v0.15 Criterion 2: words that must NEVER be accepted as named entities
+# regardless of capitalisation — verbs (including 3rd-person -s forms),
+# adjectives, and generic common nouns.  This catches sentence-initial
+# capitalisation artefacts such as "Captures", "Mandates", "Historical".
+_NON_ENTITY_WORDS = frozenset({
+    # Verbs — base forms and common inflections
+    "capture", "captures", "captured", "capturing",
+    "mandate", "mandates", "mandated", "mandating",
+    "enable", "enables", "enabled", "enabling",
+    "provide", "provides", "provided", "providing",
+    "require", "requires", "required", "requiring",
+    "allow", "allows", "allowed", "allowing",
+    "support", "supports", "supported", "supporting",
+    "define", "defines", "defined", "defining",
+    "describe", "describes", "described", "describing",
+    "specify", "specifies", "specified", "specifying",
+    "ensure", "ensures", "ensured", "ensuring",
+    "contain", "contains", "contained", "containing",
+    "manage", "manages", "managed", "managing",
+    "handle", "handles", "handled", "handling",
+    "process", "processes", "processed", "processing",
+    "validate", "validates", "validated", "validating",
+    "store", "stores", "stored", "storing",
+    "record", "records", "recorded", "recording",
+    "track", "tracks", "tracked", "tracking",
+    "report", "reports", "reported", "reporting",
+    "generate", "generates", "generated", "generating",
+    "create", "creates", "created", "creating",
+    "update", "updates", "updated", "updating",
+    "delete", "deletes", "deleted", "deleting",
+    "retrieve", "retrieves", "retrieved", "retrieving",
+    "send", "sends", "sent", "sending",
+    "receive", "receives", "received", "receiving",
+    "display", "displays", "displayed", "displaying",
+    "apply", "applies", "applied", "applying",
+    "include", "includes", "included", "including",
+    "exclude", "excludes", "excluded", "excluding",
+    "assign", "assigns", "assigned", "assigning",
+    "schedule", "schedules", "scheduled", "scheduling",
+    "maintain", "maintains", "maintained", "maintaining",
+    "enforce", "enforces", "enforced", "enforcing",
+    "govern", "governs", "governed", "governing",
+    "represent", "represents", "represented", "representing",
+    "indicate", "indicates", "indicated", "indicating",
+    "determine", "determines", "determined", "determining",
+    "retain", "retains", "retained", "retaining",
+    # Adjectives — including participial adjectives
+    "historical", "available", "completed", "required", "active", "inactive",
+    "current", "previous", "valid", "invalid", "enabled", "disabled",
+    "pending", "approved", "rejected", "optional", "mandatory", "accessible",
+    "logical", "physical", "temporal", "persistent", "constrained",
+    # Generic common nouns
+    "task", "tasks", "data", "record", "records", "item", "items",
+    "information", "content", "details", "result", "results", "output", "outputs",
+    "input", "inputs", "entity", "entities", "object", "objects",
+    "resource", "resources", "type", "types", "concept", "concepts",
+    "process", "function", "feature", "capability", "requirement", "requirements",
+    "constraint", "constraints", "condition", "conditions",
+    "rule", "rules", "setting", "settings", "configuration", "configurations",
+    "purpose", "visibility", "inventory", "accessibility", "persistence",
+    "retention", "period", "periods", "boundary", "boundaries",
 })
 
 # Separators used to normalise comma/conjunction lists before splitting.
@@ -123,13 +188,20 @@ class EnumerationSplitRecord:
 
 def _qualifies_as_named_entity(phrase: str, vocab_lookup: dict) -> bool:
     """
-    Criterion 2: return True if phrase is a proper noun or a known named entity.
+    Criterion 2 (tightened v0.15): return True if phrase is a known named entity.
 
     Accepts:
-    - Phrases whose first word starts with a capital letter and is not a
-      common English stopword (handles Android, Windows, AWS …)
     - Phrases whose lowercase form appears in the named-entity vocabulary
-      (handles iOS, macOS, eBay …)
+      (handles iOS, macOS, Android, AWS, Windows …)
+
+    Rejects (v0.15 additions):
+    - Any phrase whose lowercase form is in _NON_ENTITY_WORDS (verbs, adjectives,
+      generic common nouns) — even if capitalised at the start of a sentence.
+    - Phrases that start with a capital letter but are not in the vocabulary AND
+      are in the _NON_ENTITY_WORDS exclusion set.
+
+    The capitalisation fallback (accepting unknown proper nouns by capital letter)
+    is retained only for phrases that pass the non-entity exclusion test.
     """
     s = phrase.strip()
     if not s:
@@ -137,10 +209,15 @@ def _qualifies_as_named_entity(phrase: str, vocab_lookup: dict) -> bool:
     words = s.split()
     if not words or len(words) > 4:
         return False
-    # Vocabulary check (covers lowercase-starting terms like iOS, macOS)
-    if s.lower() in vocab_lookup:
+    s_lower = s.lower()
+    # Vocabulary check (primary path — covers lowercase-starting terms like iOS)
+    if s_lower in vocab_lookup:
         return True
-    # Capitalisation check — first char must be uppercase, first word not a stopword
+    # Non-entity exclusion: verbs, adjectives, generic common nouns — fail always
+    if s_lower in _NON_ENTITY_WORDS:
+        return False
+    # Capitalisation fallback for unknown proper nouns not in exclusion list:
+    # first char must be uppercase and first word must not be a stopword.
     return s[0].isupper() and words[0].lower() not in _STOPWORDS
 
 
@@ -267,14 +344,17 @@ def _detect_named_enumeration(description: str) -> list[str]:
     if not all(1 <= len(item.split()) <= 4 for item in extracted):
         return []
 
-    # Criterion 3: category homogeneity — look up each item in the vocabulary
+    # Criterion 3 (tightened v0.15): ALL items must be in the vocabulary and
+    # map to the same category.  Items absent from the vocabulary are
+    # disqualifying — their presence breaks homogeneity by definition.
     categories: set[str] = set()
     for item in extracted:
         cat = NAMED_ENTITY_LOOKUP.get(item.lower())
-        if cat:
-            categories.add(cat)
+        if not cat:
+            return []  # absent from vocabulary → disqualifying
+        categories.add(cat)
 
-    # If multiple distinct categories → not homogeneous → do not split
+    # Multiple distinct categories → not homogeneous → do not split
     if len(categories) > 1:
         return []
 
