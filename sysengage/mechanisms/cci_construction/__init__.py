@@ -232,6 +232,7 @@ def run(
                 consolidation_threshold=consolidation_threshold,
                 stage4a_similarity_threshold=stage4a_similarity_threshold,
                 pass_data=pass_data,
+                enumeration_splits=[s.to_dict() for s in enumeration_splits],
             )
         except Exception as exc:
             finalise_cci_pass_failed(

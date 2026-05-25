@@ -4,11 +4,21 @@ Step 4 — Per-Cell Deduplication Sweep.
 Mode: DM (Stage 4a) + IM (Stage 4b) + DM (Stage 4c). Per-cell iteration.
 No ledger write — results held in memory until Step 5.
 
-Per CCI Construction Mechanism Spec v0.8 §4.4 and Row 3 Mechanism Spec v0.7 §4:
+Per CCI Construction Mechanism Spec v0.16 §4.4 and Row 3 Mechanism Spec v0.15 §4:
 
 Stage 4a — Structural pre-filter (DM):
-  Exhaustive pairwise comparison of new candidates within each cell.
-  Three-condition rule (v0.8):
+
+  Step 1 — Enumeration split group protection (v0.16):
+    Before the pairwise loop, identify candidates whose single signal_ref
+    appears in enumeration_splits (i.e. they are virtual sub-signals from a
+    Stage 3a-pre split).  Group all sub-signals sharing the same
+    original_signal_id into a protected group; set stage4a_routed=True on
+    every member; exclude them entirely from the pairwise loop; route the
+    whole group directly to Stage 4b.  Record stage4a_named_instance_routed
+    in execution_warnings.
+
+  Step 2 — Pairwise pre-filter for non-protected candidates:
+    Three-condition rule:
     1. classification_type equality
     2. signal_refs set equality
     3. Jaccard token-overlap of descriptions >= stage4a_similarity_threshold
@@ -83,6 +93,7 @@ def deduplicate_per_cell(
     consolidation_threshold: float,
     stage4a_similarity_threshold: float = 0.60,
     pass_data: dict[str, Any],
+    enumeration_splits: list[dict] | None = None,
 ) -> tuple[
     list[CandidateCCI],
     list[ExistingCCIUpdate],
@@ -101,8 +112,11 @@ def deduplicate_per_cell(
     consolidation_threshold       : from ProjectProfile.cci_consolidation_threshold
     stage4a_similarity_threshold  : Jaccard threshold for Stage 4a auto-merge
                                     (from ProjectProfile.stage4a_similarity_threshold,
-                                    default 0.60 per spec v0.8 §3.2)
+                                    default 0.60 per spec v0.16 §3.2)
     pass_data                     : mutable pass dict for fingerprints/confidences
+    enumeration_splits            : list of {original_signal_id, item_count, items}
+                                    dicts produced by Stage 3a-pre; used in
+                                    Stage 4a Step 1 to identify protected groups
 
     Returns
     -------
@@ -110,6 +124,11 @@ def deduplicate_per_cell(
      consolidation_flags, execution_warnings)
     """
     from mechanisms.cci_construction.prompts.column_vocabulary import COLUMNS
+
+    _enumeration_splits: list[dict] = enumeration_splits or []
+    split_signal_ids: set[str] = {
+        s["original_signal_id"] for s in _enumeration_splits
+    }
 
     surviving_candidates: list[CandidateCCI] = []
     existing_updates: list[ExistingCCIUpdate] = []
@@ -133,13 +152,48 @@ def deduplicate_per_cell(
         candidates_in = len(cell_candidates)
 
         # ------------------------------------------------------------------ #
-        # Stage 4a — Structural pre-filter (DM)                              #
+        # Stage 4a Step 1 — Protect enumeration split groups (v0.16 §4.4)   #
+        # Sub-signals from the same Stage 3a-pre split share a single        #
+        # original_signal_id recorded in enumeration_splits.  The entire     #
+        # group bypasses the pairwise loop and routes directly to Stage 4b.  #
         # ------------------------------------------------------------------ #
-        cell_candidates = _structural_pre_filter(
-            candidates=cell_candidates,
+        protected_candidates: list[CandidateCCI] = []
+        unprotected_candidates: list[CandidateCCI] = []
+
+        split_groups: dict[str, list[CandidateCCI]] = {}
+        for cand in cell_candidates:
+            if (
+                len(cand.signal_refs) == 1
+                and cand.signal_refs[0] in split_signal_ids
+            ):
+                split_groups.setdefault(cand.signal_refs[0], []).append(cand)
+            else:
+                unprotected_candidates.append(cand)
+
+        for _orig_id, group in split_groups.items():
+            for member in group:
+                member.stage4a_routed = True
+                protected_candidates.append(member)
+            execution_warnings.append(ExecutionWarning(
+                warning_type="stage4a_named_instance_routed",
+                detail={
+                    "cell_id": cell_id,
+                    "classification_type": group[0].classification_type,
+                    "member_count": len(group),
+                },
+            ))
+
+        # ------------------------------------------------------------------ #
+        # Stage 4a Step 2 — Pairwise pre-filter (non-protected only)         #
+        # ------------------------------------------------------------------ #
+        unprotected_candidates = _structural_pre_filter(
+            candidates=unprotected_candidates,
             merge_records=merge_records,
             similarity_threshold=stage4a_similarity_threshold,
         )
+
+        # Recombine: protected group members skip pairwise; join survivors
+        cell_candidates = protected_candidates + unprotected_candidates
 
         # ------------------------------------------------------------------ #
         # Stage 4b — AI cluster review (IM)                                  #
@@ -539,31 +593,11 @@ def _ai_cluster_review(
                 named_instance_framing=named_instance_framing,
             )
 
-            # ------------------------------------------------------------ #
-            # v0.15 diagnostic logging — required until OQ-3b-11 resolved  #
-            # Logs exact prompt and response for stage4a_routed groups to   #
-            # determine if Android dropout is prompt failure or Stage 4c bug #
-            # ------------------------------------------------------------ #
-            if named_instance_framing:
-                print(
-                    f"[STAGE4B_DIAGNOSTIC] cell_id={cell_id}"
-                    f" classification_type={classification_type}"
-                    f" member_count={len(sub_group)}",
-                    flush=True,
-                )
-                print(f"[STAGE4B_PROMPT] {prompt}", flush=True)
-
             raw_response = _invoke_with_retry(
                 client=client,
                 prompt=prompt,
                 label=f"{cell_id} {classification_type}",
             )
-
-            if named_instance_framing and raw_response is not None:
-                print(
-                    f"[STAGE4B_RESPONSE] {json.dumps(raw_response.get('content', {}))}",
-                    flush=True,
-                )
 
             if raw_response is None:
                 pass_data.setdefault("_dedup_failures", []).append(
@@ -582,21 +616,6 @@ def _ai_cluster_review(
 
             if cluster_response is None:
                 continue
-
-            if named_instance_framing:
-                if cluster_response.clusters:
-                    for _dc in cluster_response.clusters:
-                        print(
-                            f"[STAGE4B_VERDICT] surviving_ci_id=(pending)"
-                            f" merge_applied=True merged_refs={_dc.member_refs}",
-                            flush=True,
-                        )
-                else:
-                    print(
-                        f"[STAGE4B_VERDICT] merge_applied=False"
-                        f" (no Duplicate clusters — all Distinct or Ambiguous)",
-                        flush=True,
-                    )
 
             all_cluster_entries.extend(cluster_response.clusters)
             all_ambiguous_entries.extend(cluster_response.ambiguous)
