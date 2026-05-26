@@ -173,6 +173,7 @@ def deduplicate_per_cell(
         for _orig_id, group in split_groups.items():
             for member in group:
                 member.stage4a_routed = True
+                member.split_protected = True
                 protected_candidates.append(member)
             execution_warnings.append(ExecutionWarning(
                 warning_type="stage4a_named_instance_routed",
@@ -503,6 +504,7 @@ def _ai_cluster_review(
             "signal_refs": cand.signal_refs,
             "confidence": cand.confidence,
             "stage4a_routed": cand.stage4a_routed,
+            "split_protected": cand.split_protected,
             "_candidate_idx": idx,
         })
 
@@ -526,19 +528,32 @@ def _ai_cluster_review(
 
         # ------------------------------------------------------------------ #
         # Stage 4a routing context — named-instance framing (DM)           #
-        # Per spec v0.11 §4.4: if any new candidate carries                 #
+        # Per spec v0.18 §4.4: if any new candidate carries                 #
         # stage4a_routed=True, use named-instance framing for the whole    #
-        # group so the AI distinguishes distinct named entities from        #
-        # reformulations.                                                   #
+        # group.  The split_protected flag distinguishes the routing cause: #
+        #   split_protected=True  → Step 1 enumeration split group         #
+        #                           → warning: stage4a_named_instance_routed#
+        #   split_protected=False → Step 2 pairwise routing                #
+        #                           → warning: stage4a_pairwise_routed     #
         # ------------------------------------------------------------------ #
+        new_candidates_in_group = [
+            item for item in group_items if item["source"] == "new_candidate"
+        ]
         named_instance_framing = any(
-            item.get("stage4a_routed", False)
-            for item in group_items
-            if item["source"] == "new_candidate"
+            item.get("stage4a_routed", False) for item in new_candidates_in_group
         )
         if named_instance_framing:
+            split_protected_present = any(
+                item.get("split_protected", False)
+                for item in new_candidates_in_group
+            )
+            warning_type = (
+                "stage4a_named_instance_routed"
+                if split_protected_present
+                else "stage4a_pairwise_routed"
+            )
             execution_warnings.append(ExecutionWarning(
-                warning_type="stage4a_named_instance_routed",
+                warning_type=warning_type,
                 detail={
                     "cell_id": cell_id,
                     "classification_type": classification_type,
