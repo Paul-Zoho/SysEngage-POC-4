@@ -1,1 +1,2 @@
 - [Project ID conventions](project-id-conventions.md) — registry project_id ≠ actual DB project_id; all E2E runners use the `_E2E` suffix form
+- [Neon snapshot promotion — rename vs create+delete](neon-snapshot-promotion.md) — never create a child branch then delete the parent; Neon refuses deletion of branches with children.
