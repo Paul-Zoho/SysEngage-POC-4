@@ -1,0 +1,1 @@
+- [Project ID conventions](project-id-conventions.md) — registry project_id ≠ actual DB project_id; all E2E runners use the `_E2E` suffix form
