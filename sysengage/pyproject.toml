@@ -35,3 +35,6 @@ include = ["sysengage*"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 asyncio_mode = "auto"
+markers = [
+    "db: marks tests that require a live Neon DB connection (run individually)",
+]

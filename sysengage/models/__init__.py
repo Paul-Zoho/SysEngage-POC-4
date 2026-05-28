@@ -21,6 +21,7 @@ from models.project_profile import ProjectProfileModel
 from models.signal import SignalModel
 from models.concern import ConcernModel
 from models.domain import DomainModel
+from models.domain_cci_membership import DomainCCIMembershipModel
 from models.requirement import RequirementModel
 from models.zachman_cell import ZachmanCellModel
 from models.cell_content_item import CellContentItemModel
@@ -36,6 +37,7 @@ __all__ = [
     "SignalModel",
     "ConcernModel",
     "DomainModel",
+    "DomainCCIMembershipModel",
     "RequirementModel",
     "ZachmanCellModel",
     "CellContentItemModel",

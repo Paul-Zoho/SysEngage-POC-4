@@ -1,2 +1,5 @@
 - [Project ID conventions](project-id-conventions.md) — registry project_id ≠ actual DB project_id; all E2E runners use the `_E2E` suffix form
 - [Neon snapshot promotion — rename vs create+delete](neon-snapshot-promotion.md) — never create a child branch then delete the parent; Neon refuses deletion of branches with children.
+- [Alembic JSONB server_default syntax](alembic-jsonb-server-default.md) — use plain `"[]"` not `"'[]'::jsonb"`; Alembic double-quotes string defaults.
+- [analysis_pass json→jsonb migration](analysis-pass-jsonb-fix.md) — outputs and declared_transformation_modes were `json` in DB (not `jsonb`); fixed in migration 014. JSONB subscript (`col['key']`) requires `jsonb` type.
+- [VER test isolation — orchestrator session commits](ver-test-isolation.md) — orchestrator opens its own session and commits; VER test setup must DELETE prior DD state with an explicit commit before seeding.

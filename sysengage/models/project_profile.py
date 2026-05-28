@@ -13,13 +13,22 @@ Per CCI Construction Mechanism Spec v0.8 §3.2 and §3.3:
   cci_consolidation_threshold — over-consolidation flag threshold (default 0.80).
   cci_batch_size — signals per AI batch invocation in Step 3 (default 20).
   stage4a_similarity_threshold — Jaccard description similarity required for
-    Stage 4a auto-merge (default 0.60). Pairs with matching type + refs but
-    similarity below threshold are routed to Stage 4b instead.
+    Stage 4a auto-merge (default 0.60).
+
+Per Domain Derivation Mechanism Spec v0.13 §13.9 (Understanding v0.17):
+  domain_rerun_threshold — fraction of new CCIs above which FullRerun is triggered
+    instead of IncrementalRerun (default 0.20). NULL → use default.
+  domain_cross_cutting_advisory_threshold — number of Domains a single CCI may
+    appear in before advisory is recorded (default 3). NULL → use default.
+  domain_large_cci_set_advisory_threshold — CCI count above which a large-set
+    advisory fires before the grouping call (default 80). NULL → use default.
 """
 
 from datetime import datetime, timezone
-from sqlalchemy import String, Float, Integer, DateTime, ForeignKey
+
+from sqlalchemy import Float, ForeignKey, Integer, DateTime, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+
 from models.base import Base
 
 
@@ -46,6 +55,15 @@ class ProjectProfileModel(Base):
     )
     stage4a_similarity_threshold: Mapped[float] = mapped_column(
         Float, nullable=False, default=0.60
+    )
+    domain_rerun_threshold: Mapped[float | None] = mapped_column(
+        Float, nullable=True
+    )
+    domain_cross_cutting_advisory_threshold: Mapped[int | None] = mapped_column(
+        Integer, nullable=True
+    )
+    domain_large_cci_set_advisory_threshold: Mapped[int | None] = mapped_column(
+        Integer, nullable=True
     )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
