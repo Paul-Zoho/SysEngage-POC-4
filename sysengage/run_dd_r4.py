@@ -72,10 +72,11 @@ import json
 
 OUT_DIR.mkdir(parents=True, exist_ok=True)
 out_path = OUT_DIR / generate_filename(
-    project_code="PMT",
-    phase="ph03",
-    pass_name="3c_domain_derivation",
+    project_id="PMT",
+    phase=3,
+    pass_="3c",
     row=ROW,
+    out_dir=str(OUT_DIR),
     ext="json",
 )
 with open(out_path, "w") as f:

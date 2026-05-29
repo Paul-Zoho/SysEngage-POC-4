@@ -21,6 +21,7 @@ from __future__ import annotations
 
 import json
 import logging
+import re
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -72,10 +73,16 @@ def _call_repair_ai(prompt: str) -> tuple[Any, dict[str, Any]]:
     return msg, fingerprint
 
 
+def _strip_code_fence(text_: str) -> str:
+    """Strip markdown ```json ... ``` or ``` ... ``` code fences if present."""
+    m = re.search(r"```(?:json)?\s*([\s\S]*?)```", text_, re.DOTALL)
+    return m.group(1).strip() if m else text_.strip()
+
+
 def _parse_repair_response(text_: str) -> DomainRepairResponse | None:
     """Parse AI text as DomainRepairResponse; return None on failure."""
     try:
-        data = json.loads(text_)
+        data = json.loads(_strip_code_fence(text_))
         return DomainRepairResponse.model_validate(data)
     except Exception:
         return None

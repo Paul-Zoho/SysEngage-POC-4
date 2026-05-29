@@ -99,7 +99,7 @@ def run_stage1(
         select(AnalysisPassModel)
         .where(
             AnalysisPassModel.project_id == project_id,
-            AnalysisPassModel.mechanism == "CellContentItemConstruction",
+            AnalysisPassModel.mechanism == "CCIConstruction",
             AnalysisPassModel.execution_status.in_(
                 ["Completed", "CompletedWithWarnings"]
             ),

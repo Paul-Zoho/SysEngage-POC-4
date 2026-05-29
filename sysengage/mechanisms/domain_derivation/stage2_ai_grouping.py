@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import json
 import logging
+import re
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -69,10 +70,16 @@ def _call_ai(prompt: str) -> tuple[Any, dict[str, Any]]:
     return msg, fingerprint
 
 
+def _strip_code_fence(text_: str) -> str:
+    """Strip markdown ```json ... ``` or ``` ... ``` code fences if present."""
+    m = re.search(r"```(?:json)?\s*([\s\S]*?)```", text_, re.DOTALL)
+    return m.group(1).strip() if m else text_.strip()
+
+
 def _parse_grouping_response(text_: str) -> DomainGroupingResponse | None:
     """Parse AI text as DomainGroupingResponse; return None on failure."""
     try:
-        data = json.loads(text_)
+        data = json.loads(_strip_code_fence(text_))
         return DomainGroupingResponse.model_validate(data)
     except Exception:
         return None
@@ -81,7 +88,7 @@ def _parse_grouping_response(text_: str) -> DomainGroupingResponse | None:
 def _parse_incremental_response(text_: str) -> DomainIncrementalResponse | None:
     """Parse AI text as DomainIncrementalResponse; return None on failure."""
     try:
-        data = json.loads(text_)
+        data = json.loads(_strip_code_fence(text_))
         return DomainIncrementalResponse.model_validate(data)
     except Exception:
         return None
