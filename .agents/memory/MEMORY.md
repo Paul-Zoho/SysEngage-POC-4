@@ -3,3 +3,4 @@
 - [Alembic JSONB server_default syntax](alembic-jsonb-server-default.md) — use plain `"[]"` not `"'[]'::jsonb"`; Alembic double-quotes string defaults.
 - [analysis_pass json→jsonb migration](analysis-pass-jsonb-fix.md) — outputs and declared_transformation_modes were `json` in DB (not `jsonb`); fixed in migration 014. JSONB subscript (`col['key']`) requires `jsonb` type.
 - [VER test isolation — orchestrator session commits](ver-test-isolation.md) — orchestrator opens its own session and commits; VER test setup must DELETE prior DD state with an explicit commit before seeding.
+- [AI response code fence stripping](ai-code-fence-parse.md) — Claude wraps JSON in ```json fences; all AI parse helpers need _strip_code_fence() before json.loads().

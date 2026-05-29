@@ -1,0 +1,56 @@
+{
+  "pass_id": "P1484",
+  "execution_status": "Completed",
+  "mechanism_data": {
+    "row_ref": 2,
+    "scenario": "FirstRun",
+    "cci_count_input": 22,
+    "domain_count_produced": 6,
+    "domain_count_retired": 0,
+    "domains_produced": [
+      {
+        "domain_id": "D009",
+        "name": "Task Management",
+        "cci_ref_count": 6,
+        "cross_cutting_cci_count": 3
+      },
+      {
+        "domain_id": "D010",
+        "name": "Child User Participation",
+        "cci_ref_count": 7,
+        "cross_cutting_cci_count": 3
+      },
+      {
+        "domain_id": "D011",
+        "name": "Earnings Calculation and Aggregation",
+        "cci_ref_count": 5,
+        "cross_cutting_cci_count": 3
+      },
+      {
+        "domain_id": "D012",
+        "name": "Parent Oversight and Reporting",
+        "cci_ref_count": 4,
+        "cross_cutting_cci_count": 1
+      },
+      {
+        "domain_id": "D013",
+        "name": "Historical Data Retention",
+        "cci_ref_count": 3,
+        "cross_cutting_cci_count": 0
+      },
+      {
+        "domain_id": "D014",
+        "name": "Temporal Cycle Management",
+        "cci_ref_count": 4,
+        "cross_cutting_cci_count": 4
+      }
+    ],
+    "cci_set_hash": "8f0513becde7d058c0db8fc6cd29795cffd35fb066048846c965532f9fced952",
+    "downstream_rerun_required": false,
+    "retirement_mapping": [],
+    "orphaned_ccis_after_repair": [],
+    "repair_prompt_issued": false,
+    "cross_cutting_advisories": [],
+    "validation_failures": []
+  }
+}

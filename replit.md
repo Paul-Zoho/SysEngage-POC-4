@@ -12,6 +12,7 @@ AI-powered Systems Engineering tool that runs stateful mechanism passes (Source 
 - `python -u sysengage/run_row1_cci_e2e.py` — run CCI Construction E2E (ROW project, Row 1, skip_dedup=True)
 - `python -u sysengage/run_pmt_cci_r1.py` — run CCI Construction for PMT Row 1 (dedup ON)
 - `python -u sysengage/run_pmt_cci_r1_branch_test.py` — branch-isolated PMT Row 1 comparison (dedup ON vs OFF)
+- `python -u sysengage/run_pmt_dd_ph3c.py` — run Pass 3c Domain Derivation for PMT all rows 1–5 (set NEON_DATABASE_URL to test branch first)
 
 ## Required Secrets
 

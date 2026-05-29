@@ -1,0 +1,44 @@
+{
+  "pass_id": "P1485",
+  "execution_status": "CompletedWithWarnings",
+  "mechanism_data": {
+    "row_ref": 3,
+    "scenario": "FirstRun",
+    "cci_count_input": 6,
+    "domain_count_produced": 4,
+    "domain_count_retired": 0,
+    "domains_produced": [
+      {
+        "domain_id": "D015",
+        "name": "Child Task Lifecycle Management",
+        "cci_ref_count": 2,
+        "cross_cutting_cci_count": 0
+      },
+      {
+        "domain_id": "D016",
+        "name": "Child Access Control and Data Visibility",
+        "cci_ref_count": 1,
+        "cross_cutting_cci_count": 0
+      },
+      {
+        "domain_id": "D017",
+        "name": "Child Financial Computation and Reporting",
+        "cci_ref_count": 2,
+        "cross_cutting_cci_count": 0
+      },
+      {
+        "domain_id": "D018",
+        "name": "Historical Data Persistence Requirements",
+        "cci_ref_count": 1,
+        "cross_cutting_cci_count": 0
+      }
+    ],
+    "cci_set_hash": "825de0d7d53116154123615ab44f58c385446b5a5cfe8288238c2e6ac6423b77",
+    "downstream_rerun_required": false,
+    "retirement_mapping": [],
+    "orphaned_ccis_after_repair": [],
+    "repair_prompt_issued": false,
+    "cross_cutting_advisories": [],
+    "validation_failures": []
+  }
+}

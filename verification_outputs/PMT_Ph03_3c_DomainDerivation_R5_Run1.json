@@ -1,0 +1,44 @@
+{
+  "pass_id": "P1487",
+  "execution_status": "Completed",
+  "mechanism_data": {
+    "row_ref": 5,
+    "scenario": "FirstRun",
+    "cci_count_input": 9,
+    "domain_count_produced": 4,
+    "domain_count_retired": 0,
+    "domains_produced": [
+      {
+        "domain_id": "D020",
+        "name": "Multi-Platform Deployment Infrastructure",
+        "cci_ref_count": 3,
+        "cross_cutting_cci_count": 0
+      },
+      {
+        "domain_id": "D021",
+        "name": "Child Role User Experience Layer",
+        "cci_ref_count": 2,
+        "cross_cutting_cci_count": 0
+      },
+      {
+        "domain_id": "D022",
+        "name": "Parent Role Administrative Interface",
+        "cci_ref_count": 2,
+        "cross_cutting_cci_count": 0
+      },
+      {
+        "domain_id": "D023",
+        "name": "Weekly Scheduling and Reset Automation",
+        "cci_ref_count": 2,
+        "cross_cutting_cci_count": 0
+      }
+    ],
+    "cci_set_hash": "31baab0be5fe23fa73fbe63abc8668b4a562826eafafea47a4a088eae16bbff0",
+    "downstream_rerun_required": false,
+    "retirement_mapping": [],
+    "orphaned_ccis_after_repair": [],
+    "repair_prompt_issued": false,
+    "cross_cutting_advisories": [],
+    "validation_failures": []
+  }
+}
