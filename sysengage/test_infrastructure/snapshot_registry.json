@@ -6,7 +6,7 @@
       "phase": "ph03",
       "pass": "3a",
       "row": "R5",
-      "state_description": "Post-3a: PMT, NQPS, ROW all projects — Signals committed, 0 CCIs, 0 cell_content_items (clean 3a baseline). Consolidated from three identical same-second clones.",
+      "state_description": "Post-3a: PMT, NQPS, ROW all projects \u2014 Signals committed, 0 CCIs, 0 cell_content_items (clean 3a baseline). Consolidated from three identical same-second clones.",
       "created_at": "2026-05-23T18:28:32.320205+00:00",
       "status": "VERIFIED",
       "ver_criteria_passed": [],
@@ -37,19 +37,6 @@
       "status": "VERIFIED",
       "ver_criteria_passed": [],
       "neon_branch_id": "br-dark-moon-abirq78k",
-      "neon_project_id": "sparkling-tree-75414608"
-    },
-    {
-      "name": "snap_PMT_ph03_3c_R5",
-      "project_id": "PMT",
-      "phase": "ph03",
-      "pass": "3c",
-      "row": "R5",
-      "state_description": "Post-3c DomainDerivation: PMT all rows 1-5 complete (23 domains D001-D023). Promoted from test_PMT_ph03_3b_R5_Ph3c_DD_AllRows.",
-      "created_at": "2026-05-29T04:41:06.056603+00:00",
-      "status": "VERIFIED",
-      "ver_criteria_passed": [],
-      "neon_branch_id": "br-round-base-abmfm4on",
       "neon_project_id": "sparkling-tree-75414608"
     }
   ]
