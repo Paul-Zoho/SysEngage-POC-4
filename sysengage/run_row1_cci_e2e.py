@@ -43,7 +43,7 @@ def already_completed(project_id: str, row_ref: int) -> str | None:
                 """
                 SELECT pass_id FROM analysis_pass
                 WHERE project_id = :p
-                  AND mechanism = 'CCIConstruction'
+                  AND mechanism IN ('CCIConstruction', 'CellContentItemConstruction')
                   AND evaluated_scope = :scope
                   AND execution_status IN ('Completed', 'CompletedWithWarnings')
                 ORDER BY created_at DESC

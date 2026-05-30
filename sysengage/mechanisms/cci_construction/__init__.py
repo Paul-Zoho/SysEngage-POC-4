@@ -87,7 +87,7 @@ def run(
         practitioner_id=practitioner_id,
         phase_id="PH001",
         pass_type="Per-row",
-        mechanism="CCIConstruction",
+        mechanism="CellContentItemConstruction",
         evaluated_scope=f"All Row {row_ref} Signals",
         confidence=1.0,
     )

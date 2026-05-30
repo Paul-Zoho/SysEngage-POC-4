@@ -10,7 +10,7 @@ Criteria tested:
   VER-3b-04 — signal_refs non-empty for each CCI
   VER-3b-05 — signal_refs resolve to committed Signals in the working set
   VER-3b-06 — All six ZachmanCells upserted per row on each run
-  VER-3b-07 — AnalysisPass mechanism = "CCIConstruction"
+  VER-3b-07 — AnalysisPass mechanism = "CellContentItemConstruction"
   VER-3b-08 — execution_status ∈ {Completed, CompletedWithWarnings}
   VER-3b-09 — mode_active = "DM" on AnalysisPass
   VER-3b-10 — cci_data has all required fields (none null or missing)
@@ -261,15 +261,15 @@ class TestAnalysisPassCriteria:
     def test_ver_3b_07_mechanism_name(
         self, signals_3, project_profile, mock_ai_client
     ):
-        """VER-3b-07: AnalysisPass.mechanism = 'CCIConstruction'."""
+        """VER-3b-07: AnalysisPass.mechanism = 'CellContentItemConstruction'."""
         mock_ai_client.messages.create.return_value = build_mock_message(
             _make_standard_derivation_response(["SG901", "SG902", "SG903"])
         )
         result = _run_mechanism(row_ref=ROW_REF)
         pass_record = _get_analysis_pass(result["pass_id"])
         assert pass_record is not None, "VER-3b-07: AnalysisPass must exist"
-        assert pass_record.mechanism == "CCIConstruction", (
-            f"VER-3b-07: mechanism must be 'CCIConstruction', got '{pass_record.mechanism}'"
+        assert pass_record.mechanism == "CellContentItemConstruction", (
+            f"VER-3b-07: mechanism must be 'CellContentItemConstruction', got '{pass_record.mechanism}'"
         )
 
     def test_ver_3b_08_execution_status(

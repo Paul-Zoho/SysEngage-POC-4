@@ -80,7 +80,7 @@ async def get_cci_construction_result(pass_id: str) -> CCIConstructionResponse:
         record = session.execute(
             select(AnalysisPassModel).where(
                 AnalysisPassModel.pass_id == pass_id,
-                AnalysisPassModel.mechanism == "CCIConstruction",
+                AnalysisPassModel.mechanism.in_(["CCIConstruction", "CellContentItemConstruction"]),
             )
         ).scalar_one_or_none()
     finally:

@@ -24,7 +24,7 @@ PASS_LABEL_MAP: dict[tuple[str, str], str] = {
     ("01", "0a"): "SourceCapture",
     ("01", "0b"): "SegmentCapture",
     ("03", "3a"): "RowLensSourceReanalysis",
-    ("03", "3b"): "CCIConstruction",
+    ("03", "3b"): "CellContentItemConstruction",
     ("03", "3c"): "DomainDerivation",
     ("03", "3d"): "RequirementDerivation",
 }

@@ -80,7 +80,7 @@ class TestGenerateFilenamePassLabels:
         ("01", "0a", "SourceCapture"),
         ("01", "0b", "SegmentCapture"),
         ("03", "3a", "RowLensSourceReanalysis"),
-        ("03", "3b", "CCIConstruction"),
+        ("03", "3b", "CellContentItemConstruction"),
         ("03", "3c", "DomainDerivation"),
         ("03", "3d", "RequirementDerivation"),
     ])
@@ -106,7 +106,7 @@ class TestGenerateFilenamePassLabels:
 
     def test_acme_project_id(self, tmp_path) -> None:
         name = generate_filename("ACME", "03", "3b", "1", str(tmp_path))
-        assert name.startswith("ACME_Ph03_3b_CCIConstruction_R1_Run1")
+        assert name.startswith("ACME_Ph03_3b_CellContentItemConstruction_R1_Run1")
 
     def test_generated_name_passes_validation(self, tmp_path) -> None:
         for (phase, pass_) in PASS_LABEL_MAP:
@@ -131,18 +131,18 @@ class TestRunNumberDerivation:
         assert name.endswith("_Run1.json")
 
     def test_run2_after_one_existing_json(self, tmp_path) -> None:
-        _make_file(str(tmp_path), "PMT_Ph03_3b_CCIConstruction_R1_Run1.json")
+        _make_file(str(tmp_path), "PMT_Ph03_3b_CellContentItemConstruction_R1_Run1.json")
         name = generate_filename("PMT", "03", "3b", "1", str(tmp_path))
         assert name.endswith("_Run2.json")
 
     def test_run3_after_two_existing_files(self, tmp_path) -> None:
-        _make_file(str(tmp_path), "PMT_Ph03_3b_CCIConstruction_R1_Run1.json")
-        _make_file(str(tmp_path), "PMT_Ph03_3b_CCIConstruction_R1_Run2.json")
+        _make_file(str(tmp_path), "PMT_Ph03_3b_CellContentItemConstruction_R1_Run1.json")
+        _make_file(str(tmp_path), "PMT_Ph03_3b_CellContentItemConstruction_R1_Run2.json")
         name = generate_filename("PMT", "03", "3b", "1", str(tmp_path))
         assert name.endswith("_Run3.json")
 
     def test_run_number_not_affected_by_different_row(self, tmp_path) -> None:
-        _make_file(str(tmp_path), "PMT_Ph03_3b_CCIConstruction_R2_Run1.json")
+        _make_file(str(tmp_path), "PMT_Ph03_3b_CellContentItemConstruction_R2_Run1.json")
         name = generate_filename("PMT", "03", "3b", "1", str(tmp_path))
         assert name.endswith("_Run1.json"), (
             "Files for R2 should not affect run counter for R1"
@@ -156,8 +156,8 @@ class TestRunNumberDerivation:
         )
 
     def test_run_number_counts_highest_not_total(self, tmp_path) -> None:
-        _make_file(str(tmp_path), "PMT_Ph03_3b_CCIConstruction_R1_Run1.json")
-        _make_file(str(tmp_path), "PMT_Ph03_3b_CCIConstruction_R1_Run3.json")
+        _make_file(str(tmp_path), "PMT_Ph03_3b_CellContentItemConstruction_R1_Run1.json")
+        _make_file(str(tmp_path), "PMT_Ph03_3b_CellContentItemConstruction_R1_Run3.json")
         name = generate_filename("PMT", "03", "3b", "1", str(tmp_path))
         assert name.endswith("_Run4.json"), (
             "Run number should be max(existing) + 1, not count + 1"
