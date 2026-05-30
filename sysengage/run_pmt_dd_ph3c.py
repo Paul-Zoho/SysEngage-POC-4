@@ -5,8 +5,11 @@ Runs Domain Derivation for rows 1–5 of the PMT_E2E project in order.
 Each row is an independent dd.run() call; the orchestrator builds on
 committed state from the prior row automatically.
 
+After all rows complete, exports the full canonical ledger for the project
+(same pattern as run_pmt_cci_r1.py / run_row1_cci_e2e.py).
+
 Usage:
-  python -u sysengage/run_pmt_dd_ph3c.py
+  NEON_DATABASE_URL="<branch-url>" python -u sysengage/run_pmt_dd_ph3c.py
 
 Expects NEON_DATABASE_URL to point at the correct branch (test or main).
 Per replit.md: project-specific runner — does not modify the canonical E2E runner.
@@ -14,16 +17,18 @@ Per replit.md: project-specific runner — does not modify the canonical E2E run
 
 from __future__ import annotations
 
-import json
 import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
 
 import mechanisms.domain_derivation as dd
+from core.db import get_session
 from core.output_naming import generate_filename
+from mechanisms.ledger_export import run_ledger_export
 
 PROJECT_ID = "PMT_E2E"
+PROJECT_CODE = "PMT"
 PRACTITIONER_ID = "SH001"
 ROWS = [1, 2, 3, 4, 5]
 OUT_DIR = Path(__file__).parent.parent / "verification_outputs"
@@ -81,23 +86,43 @@ for row in ROWS:
             f"cross-cutting={d.get('cross_cutting_cci_count', 0)}",
             flush=True,
         )
-
-    out_path = OUT_DIR / generate_filename(
-        project_id="PMT",
-        phase=3,
-        pass_="3c",
-        row=row,
-        out_dir=str(OUT_DIR),
-        ext="json",
-    )
-    with open(out_path, "w") as f:
-        json.dump(result, f, indent=2, default=str)
-    print(f"  output → {out_path.name}", flush=True)
     print(flush=True)
 
-print(flush=True)
-if all_ok:
-    print("[runner] All rows completed successfully.", flush=True)
-else:
-    print("[runner] One or more rows failed — check output above.", file=sys.stderr, flush=True)
+if not all_ok:
+    print(
+        "[runner] One or more rows failed — skipping ledger export.",
+        file=sys.stderr,
+        flush=True,
+    )
     sys.exit(1)
+
+# Full ledger export — one canonical file covering all rows (row 5 naming convention)
+print("[runner] Exporting full ledger...", flush=True)
+basename = generate_filename(
+    project_id=PROJECT_CODE,
+    phase=3,
+    pass_="3c",
+    row=5,
+    out_dir=str(OUT_DIR),
+)
+session = get_session()
+try:
+    export_result = run_ledger_export(project_id=PROJECT_ID, session=session)
+finally:
+    session.close()
+
+ledger_path = OUT_DIR / basename
+with open(ledger_path, "w", encoding="utf-8", newline="\n") as f:
+    f.write(export_result.json_str)
+
+ledger = export_result.ledger
+n_elements = len(ledger.get("elements", []))
+n_registers = len(ledger.get("register_index", []))
+hash_prefix = ledger.get("content_hash", {}).get("hash", "")[:16]
+
+print(f"[runner] Ledger written: {basename}", flush=True)
+print(f"[runner]   Elements:  {n_elements}", flush=True)
+print(f"[runner]   Registers: {n_registers}", flush=True)
+print(f"[runner]   Hash:      {hash_prefix}...", flush=True)
+print(flush=True)
+print("[runner] All rows completed successfully.", flush=True)
