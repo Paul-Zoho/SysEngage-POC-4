@@ -4,3 +4,5 @@
 - [analysis_pass json→jsonb migration](analysis-pass-jsonb-fix.md) — outputs and declared_transformation_modes were `json` in DB (not `jsonb`); fixed in migration 014. JSONB subscript (`col['key']`) requires `jsonb` type.
 - [VER test isolation — orchestrator session commits](ver-test-isolation.md) — orchestrator opens its own session and commits; VER test setup must DELETE prior DD state with an explicit commit before seeding.
 - [AI response code fence stripping](ai-code-fence-parse.md) — Claude wraps JSON in ```json fences; all AI parse helpers need _strip_code_fence() before json.loads().
+- [Branch merge via common ancestor](branch-merge-common-ancestor.md) — to delete source branches after merge, clone from common ancestor not from a source branch.
+- [Neon branch merge — JSONB and sequence gotchas](neon-branch-merge-gotchas.md) — two psycopg2 pitfalls when copying rows across Neon branches.
