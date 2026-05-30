@@ -221,11 +221,16 @@ def _build_stakeholder_element(sh) -> dict[str, Any]:
 
 
 def _build_domain_element(dom) -> dict[str, Any]:
+    cci_refs = _sort_list([m.ci_id for m in dom.memberships])
     payload: dict[str, Any] = {
         "domain_id": dom.domain_id,
         "name": dom.name,
+        "description": dom.description,
         "row_target": dom.row_target,
+        "cell_content_item_refs": cci_refs,
     }
+    if dom.classification_type is not None:
+        payload["classification_type"] = dom.classification_type
     return {
         "element_type": "Domain",
         "element_id": dom.domain_id,
