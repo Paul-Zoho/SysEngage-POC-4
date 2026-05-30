@@ -564,7 +564,7 @@ class TestVerificationCriteria:
 
         assert result["execution_status"] in ("Completed", "CompletedWithWarnings")
         md = result["mechanism_data"]
-        assert md["orphaned_ccis_after_repair"] == [], "VER-3c-01: All CCIs must be assigned"
+        assert md["orphaned_ccis"] == [], "VER-3c-01: All CCIs must be assigned"
 
         rows = self._session.execute(
             text(

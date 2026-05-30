@@ -62,9 +62,9 @@ for d in md.get("domains_produced", []):
         flush=True,
     )
 
-if md.get("orphaned_ccis_after_repair"):
+if md.get("orphaned_ccis"):
     print(
-        f"\n[runner] WARNING: orphaned CCIs after repair: {md['orphaned_ccis_after_repair']}",
+        f"\n[runner] WARNING: orphaned CCIs after repair: {md['orphaned_ccis']}",
         flush=True,
     )
 

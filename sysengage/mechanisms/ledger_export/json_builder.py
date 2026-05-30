@@ -22,7 +22,7 @@ from typing import Any
 from mechanisms.ledger_export.db_reader import ProjectData
 
 SPEC_VERSION = "2.12"
-SCHEMA_ID = "sysengage.ledger.instance.v2_11"
+SCHEMA_ID = "sysengage.ledger.instance.v2_12"
 GENERATOR_NAME = "sysengage-ledger-export"
 GENERATOR_VERSION = "1.0"
 
@@ -65,11 +65,12 @@ _ELEMENT_TYPE_ORDER: list[str] = [
 _TYPE_RANK: dict[str, int] = {t: i for i, t in enumerate(_ELEMENT_TYPE_ORDER)}
 
 _EXECUTION_STATUS_MAP: dict[str, str] = {
-    "Success": "Success",
-    "Completed": "Success",
-    "CompletedWithWarnings": "PartialSuccess",
-    "PartialSuccess": "PartialSuccess",
+    "Success": "Completed",
+    "Completed": "Completed",
+    "CompletedWithWarnings": "CompletedWithWarnings",
+    "PartialSuccess": "CompletedWithWarnings",
     "Failed": "Failed",
+    "Aborted": "Aborted",
 }
 
 

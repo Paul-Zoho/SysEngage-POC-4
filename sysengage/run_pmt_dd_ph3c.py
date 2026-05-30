@@ -75,7 +75,7 @@ for row in ROWS:
         flush=True,
     )
 
-    orphans = md.get("orphaned_ccis_after_repair", [])
+    orphans = md.get("orphaned_ccis", [])
     if orphans:
         print(f"  WARNING orphaned CCIs: {orphans}", flush=True)
 
