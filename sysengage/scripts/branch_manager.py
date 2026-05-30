@@ -9,6 +9,7 @@ Operations
   create_snapshot      Create a snapshot branch from the current main branch state.
   create_test_branch   Create a disposable test branch from a named snapshot.
   delete_test_branch   Delete a test branch after analysis.
+  delete_snapshot      Delete a snapshot branch from Neon and remove it from the registry.
   promote_to_snapshot  Create a snapshot from a verified test branch and delete the branch.
   list_snapshots       List all snapshot branches from the local registry.
 
@@ -28,6 +29,7 @@ Usage examples
   python sysengage/scripts/branch_manager.py create_test_branch --snapshot snap_PMT_ph03_3a_R1 --scenario Ph3b_Dedup_On
   python sysengage/scripts/branch_manager.py rename_branch --branch test_PMT_ph03_3a_R1_Ph3b_Dedup_On --new-name test_PMT_ph03_3a_R1_Ph3b_Rerun
   python sysengage/scripts/branch_manager.py delete_test_branch --branch test_PMT_ph03_3a_R1_Ph3b_Dedup_On
+  python sysengage/scripts/branch_manager.py delete_snapshot --snapshot snap_PMT_ph03_3a_R1
   python sysengage/scripts/branch_manager.py promote_to_snapshot --branch test_PMT_ph03_3a_R1_Ph3b_Dedup_On --phase ph03 --pass 3b --row R1
   python sysengage/scripts/branch_manager.py list_snapshots
 """
@@ -327,15 +329,23 @@ def cmd_create_test_branch(args: argparse.Namespace) -> None:
     scenario = args.scenario
 
     match = SNAP_NAME_RE.match(snapshot_name)
-    if not match:
-        print(
-            f"ERROR: snapshot name '{snapshot_name}' does not match "
-            "snap_{{PROJECT}}_{{phase}}_{{pass}}_R{{row}}",
-            file=sys.stderr,
-        )
-        sys.exit(1)
+    if match:
+        project_code, phase, pass_, row_num = match.groups()
+    else:
+        # Non-standard name (e.g. snap_ph03_3a_AllProjects) — fall back to registry
+        entry = _registry_get(snapshot_name)
+        if not entry:
+            print(
+                f"ERROR: snapshot name '{snapshot_name}' does not match "
+                "snap_{{PROJECT}}_{{phase}}_{{pass}}_R{{row}} and is not in the registry.",
+                file=sys.stderr,
+            )
+            sys.exit(1)
+        project_code = entry.get("project_id", "ALL")
+        phase = entry.get("phase", "")
+        pass_ = entry.get("pass", "")
+        row_num = entry.get("row", "R0").lstrip("R")
 
-    project_code, phase, pass_, row_num = match.groups()
     test_branch_name = f"test_{project_code}_{phase}_{pass_}_R{row_num}_{scenario}"
     print(f"[branch-manager] Creating test branch: {test_branch_name}")
     print(f"[branch-manager] Cloning from snapshot: {snapshot_name}")
@@ -379,6 +389,53 @@ def cmd_delete_test_branch(args: argparse.Namespace) -> None:
     _delete_branch(neon_project, branch["id"])
     _registry_remove(branch_name)
     print(f"[branch-manager] Deleted test branch: {branch_name}")
+
+
+def cmd_delete_snapshot(args: argparse.Namespace) -> None:
+    """Delete a snapshot branch from Neon and remove it from the registry."""
+    snap_name = args.snapshot
+
+    entry = _registry_get(snap_name)
+    if not entry:
+        print(
+            f"ERROR: Snapshot '{snap_name}' not found in registry.\n"
+            "Run 'list_snapshots' to see available snapshots.",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+
+    neon_project = _get_project_id()
+    branch = _find_branch_by_name(neon_project, snap_name)
+
+    if branch:
+        # Safety: refuse if this branch has children in Neon.
+        # Neon's parent-child tree means deleting a parent also prevents
+        # deleting it when children exist — see branch management spec.
+        all_branches = _list_branches(neon_project)
+        children = [b["name"] for b in all_branches if b.get("parent_id") == branch["id"]]
+        if children:
+            print(
+                f"ERROR: '{snap_name}' has {len(children)} child branch(es) — cannot delete:\n"
+                + "\n".join(f"  {c}" for c in children),
+                file=sys.stderr,
+            )
+            print(
+                "Delete child branches first (use delete_test_branch for test_ branches, "
+                "or delete_snapshot for snapshot children), then retry.",
+                file=sys.stderr,
+            )
+            sys.exit(1)
+
+        _delete_branch(neon_project, branch["id"])
+        print(f"[branch-manager] Deleted Neon branch: {snap_name} ({branch['id']})")
+    else:
+        print(
+            f"[branch-manager] '{snap_name}' not found in Neon — "
+            "removing stale registry entry."
+        )
+
+    _registry_remove(snap_name)
+    print(f"[branch-manager] Removed from registry: {snap_name}")
 
 
 def cmd_promote_to_snapshot(args: argparse.Namespace) -> None:
@@ -554,6 +611,13 @@ def _build_parser() -> argparse.ArgumentParser:
     p = sub.add_parser("delete_test_branch", help="Delete a test branch after analysis.")
     p.add_argument("--branch", required=True, help="Test branch name, e.g. test_PMT_ph03_3a_R1_dedup_on")
 
+    # delete_snapshot
+    p = sub.add_parser(
+        "delete_snapshot",
+        help="Delete a snapshot branch from Neon and remove it from the registry.",
+    )
+    p.add_argument("--snapshot", required=True, help="Snapshot name as it appears in the registry")
+
     # promote_to_snapshot
     p = sub.add_parser("promote_to_snapshot", help="Promote a verified test branch to a snapshot.")
     p.add_argument("--branch", required=True, help="Test branch name to promote")
@@ -588,6 +652,7 @@ def main() -> None:
         "create_test_branch": cmd_create_test_branch,
         "rename_branch": cmd_rename_branch,
         "delete_test_branch": cmd_delete_test_branch,
+        "delete_snapshot": cmd_delete_snapshot,
         "promote_to_snapshot": cmd_promote_to_snapshot,
         "list_snapshots": cmd_list_snapshots,
     }
