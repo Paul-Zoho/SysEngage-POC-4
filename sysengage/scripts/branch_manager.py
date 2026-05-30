@@ -392,17 +392,41 @@ def cmd_delete_test_branch(args: argparse.Namespace) -> None:
 
 
 def cmd_delete_snapshot(args: argparse.Namespace) -> None:
-    """Delete a snapshot branch from Neon and remove it from the registry."""
+    """Delete a snapshot branch from Neon and remove it from the registry.
+
+    Use --force to delete a branch that has already been deregistered (i.e. no
+    longer appears in list_snapshots) but still occupies a Neon branch slot.
+    This is the correct path for structural parent branches that were deregistered
+    by a prior cleanup pass but could not be deleted at that time because they
+    still had children.
+
+    Example — NQPS chain cleanup (after NQPS Phase 3c is complete):
+        # 1. Delete the registered child first:
+        python sysengage/scripts/branch_manager.py delete_snapshot \\
+            --snapshot snap_NQPS_ph03_3b_R5
+        # 2. Delete the deregistered parent (now a leaf) with --force:
+        python sysengage/scripts/branch_manager.py delete_snapshot \\
+            --snapshot snap_NQPS_ph03_3a_R5 --force
+    """
     snap_name = args.snapshot
+    force = getattr(args, "force", False)
 
     entry = _registry_get(snap_name)
-    if not entry:
+    if not entry and not force:
         print(
             f"ERROR: Snapshot '{snap_name}' not found in registry.\n"
-            "Run 'list_snapshots' to see available snapshots.",
+            "Run 'list_snapshots' to see available snapshots.\n"
+            "If this branch was already deregistered but still exists in Neon, "
+            "use --force to delete it anyway.",
             file=sys.stderr,
         )
         sys.exit(1)
+
+    if not entry and force:
+        print(
+            f"[branch-manager] '{snap_name}' not in registry — "
+            "proceeding with --force to delete from Neon only."
+        )
 
     neon_project = _get_project_id()
     branch = _find_branch_by_name(neon_project, snap_name)
@@ -431,11 +455,14 @@ def cmd_delete_snapshot(args: argparse.Namespace) -> None:
     else:
         print(
             f"[branch-manager] '{snap_name}' not found in Neon — "
-            "removing stale registry entry."
+            + ("nothing to delete from Neon." if force else "removing stale registry entry.")
         )
 
-    _registry_remove(snap_name)
-    print(f"[branch-manager] Removed from registry: {snap_name}")
+    if entry:
+        _registry_remove(snap_name)
+        print(f"[branch-manager] Removed from registry: {snap_name}")
+    elif force:
+        print(f"[branch-manager] '{snap_name}' was already deregistered — registry unchanged.")
 
 
 def cmd_promote_to_snapshot(args: argparse.Namespace) -> None:
@@ -617,6 +644,14 @@ def _build_parser() -> argparse.ArgumentParser:
         help="Delete a snapshot branch from Neon and remove it from the registry.",
     )
     p.add_argument("--snapshot", required=True, help="Snapshot name as it appears in the registry")
+    p.add_argument(
+        "--force",
+        action="store_true",
+        help=(
+            "Delete the Neon branch even if it is no longer in the registry. "
+            "Use for deregistered structural parents that still consume a Neon branch slot."
+        ),
+    )
 
     # promote_to_snapshot
     p = sub.add_parser("promote_to_snapshot", help="Promote a verified test branch to a snapshot.")
