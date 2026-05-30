@@ -1,18 +1,19 @@
 """
 Domain ORM model — full Pass 3c implementation.
 
-Per Domain Derivation Mechanism Spec v0.13 §5.1 and canonical ledger spec v2.12:
+Per Domain Derivation Mechanism Spec v0.14 §5.1 and canonical ledger spec v2.12:
   domain_id format: D### (D001–D999); composite PK (domain_id, project_id).
   retired_at IS NULL = active; non-null = retired (FullRerun soft-delete).
   domain_qualifier and upstream_domain_ref are WITHDRAWN — neither column here.
   Six canonical attributes: domain_id, name, description, classification_type,
-    row_target, cell_content_item_refs (assembled at query time from
-    domain_cci_membership).
+    row_target, cell_content_item_refs (JSONB array directly on domain row —
+    no join table; see MD-4 in spec v0.14).
 """
 
 from datetime import datetime, timezone
 
 from sqlalchemy import CheckConstraint, DateTime, ForeignKeyConstraint, String, Text
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from models.base import Base
@@ -42,6 +43,9 @@ class DomainModel(Base):
     description: Mapped[str] = mapped_column(Text, nullable=False)
     classification_type: Mapped[str | None] = mapped_column(Text, nullable=True)
     row_target: Mapped[str] = mapped_column(String(1), nullable=False)
+    cell_content_item_refs: Mapped[list] = mapped_column(
+        JSONB, nullable=False, server_default="'[]'::jsonb"
+    )
     retired_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
@@ -56,9 +60,4 @@ class DomainModel(Base):
         "RequirementModel",
         back_populates="domain",
         overlaps="project,requirements",
-    )
-    memberships = relationship(
-        "DomainCCIMembershipModel",
-        back_populates="domain",
-        cascade="all, delete-orphan",
     )

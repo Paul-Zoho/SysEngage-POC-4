@@ -221,7 +221,7 @@ def _build_stakeholder_element(sh) -> dict[str, Any]:
 
 
 def _build_domain_element(dom) -> dict[str, Any]:
-    cci_refs = _sort_list([m.ci_id for m in dom.memberships])
+    cci_refs = _sort_list(list(dom.cell_content_item_refs or []))
     payload: dict[str, Any] = {
         "domain_id": dom.domain_id,
         "name": dom.name,

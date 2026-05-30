@@ -6,9 +6,8 @@ Per Domain Derivation Mechanism Spec v0.13 §4.4:
   4.4.2  Domain entity construction (six canonical attributes).
   4.4.3  Ledger transaction:
            FullRerun retirement UPDATE
-           INSERT domain rows
-           INSERT domain_cci_membership (new domains) — step 3a
-           INSERT domain_cci_membership (incremental assigns) — step 3b
+           INSERT domain rows (with cell_content_item_refs JSONB)
+           UPDATE domain.cell_content_item_refs for incremental assigns — step 3b
            UPDATE register member_ids (project-wide, no row_target filter)
   4.4.4  FullRerun retirement mapping (Jaccard token overlap, threshold 0.50).
   4.4.5  downstream_rerun_required flag.
@@ -232,14 +231,14 @@ def run_stage4(
                 {"now": now, "pid": project_id, "row": str(row_ref)},
             )
 
-        # Step 2: INSERT new Domain entities
+        # Step 2: INSERT new Domain entities (six canonical attributes per spec v0.14)
         for proposal, domain_id in zip(stage3.proposals, new_ids):
             session.execute(
                 text(
                     "INSERT INTO domain "
                     "(domain_id, project_id, name, description, "
-                    " classification_type, row_target, created_at) "
-                    "VALUES (:did, :pid, :name, :desc, :ctype, :row, :now)"
+                    " classification_type, row_target, cell_content_item_refs, created_at) "
+                    "VALUES (:did, :pid, :name, :desc, :ctype, :row, CAST(:ccirefs AS jsonb), :now)"
                 ),
                 {
                     "did": domain_id,
@@ -248,33 +247,24 @@ def run_stage4(
                     "desc": proposal.description,
                     "ctype": proposal.classification_type,
                     "row": str(row_ref),
+                    "ccirefs": json.dumps(sorted(proposal.cci_refs)),
                     "now": now,
                 },
             )
 
-        # Step 3a: INSERT domain_cci_membership for new Domain proposals
-        for proposal, domain_id in zip(stage3.proposals, new_ids):
-            for ci_id in proposal.cci_refs:
-                session.execute(
-                    text(
-                        "INSERT INTO domain_cci_membership "
-                        "(domain_id, project_id, ci_id) "
-                        "VALUES (:did, :pid, :cid) "
-                        "ON CONFLICT DO NOTHING"
-                    ),
-                    {"did": domain_id, "pid": project_id, "cid": ci_id},
-                )
-
-        # Step 3b: IncrementalRerun — INSERT assign_membership_inserts
+        # Step 3b: IncrementalRerun — append new ci_ids to existing domain rows
+        # Group by domain_id so each domain gets one UPDATE with all its new refs.
+        _assigns: dict[str, list[str]] = {}
         for existing_domain_id, ci_id in stage3.assign_membership_inserts:
+            _assigns.setdefault(existing_domain_id, []).append(ci_id)
+        for did, ci_ids in _assigns.items():
             session.execute(
                 text(
-                    "INSERT INTO domain_cci_membership "
-                    "(domain_id, project_id, ci_id) "
-                    "VALUES (:did, :pid, :cid) "
-                    "ON CONFLICT DO NOTHING"
+                    "UPDATE domain "
+                    "SET cell_content_item_refs = cell_content_item_refs || CAST(:new_refs AS jsonb) "
+                    "WHERE domain_id = :did AND project_id = :pid AND retired_at IS NULL"
                 ),
-                {"did": existing_domain_id, "pid": project_id, "cid": ci_id},
+                {"did": did, "pid": project_id, "new_refs": json.dumps(sorted(ci_ids))},
             )
 
         # Insert concern entities if any persistent orphans

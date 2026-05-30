@@ -160,14 +160,11 @@ def _run_incremental_path(
     existing_domain_rows = session.execute(
         text(
             "SELECT d.domain_id, d.name, d.description, "
-            "       COUNT(dcm.ci_id) AS cci_ref_count "
+            "       jsonb_array_length(d.cell_content_item_refs) AS cci_ref_count "
             "FROM domain d "
-            "LEFT JOIN domain_cci_membership dcm "
-            "  ON d.domain_id = dcm.domain_id AND d.project_id = dcm.project_id "
             "WHERE d.project_id = :pid "
             "  AND d.row_target = :row "
-            "  AND d.retired_at IS NULL "
-            "GROUP BY d.domain_id, d.name, d.description"
+            "  AND d.retired_at IS NULL"
         ),
         {"pid": project_id, "row": str(row_ref)},
     ).fetchall()
@@ -182,13 +179,11 @@ def _run_incremental_path(
     ]
     existing_domain_ids = {d["domain_id"] for d in existing_domains}
 
-    # Determine new CCIs (not yet in any domain membership)
+    # Determine new CCIs (not yet covered by any active domain's cell_content_item_refs)
     committed_rows = session.execute(
         text(
-            "SELECT DISTINCT dcm.ci_id "
-            "FROM domain_cci_membership dcm "
-            "JOIN domain d ON dcm.domain_id = d.domain_id "
-            "  AND dcm.project_id = d.project_id "
+            "SELECT DISTINCT jsonb_array_elements_text(d.cell_content_item_refs) AS ci_id "
+            "FROM domain d "
             "WHERE d.project_id = :pid "
             "  AND d.row_target = :row "
             "  AND d.retired_at IS NULL"

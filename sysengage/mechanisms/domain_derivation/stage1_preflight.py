@@ -209,13 +209,11 @@ def run_stage1(
         result.scenario = "FirstRun"
         return result
 
-    # Query committed CCI ids for this row/project from domain_cci_membership
+    # Query committed CCI ids for this row/project from domain.cell_content_item_refs
     committed_rows = session.execute(
         text(
-            "SELECT DISTINCT dcm.ci_id "
-            "FROM domain_cci_membership dcm "
-            "JOIN domain d ON dcm.domain_id = d.domain_id "
-            "  AND dcm.project_id = d.project_id "
+            "SELECT DISTINCT jsonb_array_elements_text(d.cell_content_item_refs) AS ci_id "
+            "FROM domain d "
             "WHERE d.project_id = :pid "
             "  AND d.row_target = :row "
             "  AND d.retired_at IS NULL"

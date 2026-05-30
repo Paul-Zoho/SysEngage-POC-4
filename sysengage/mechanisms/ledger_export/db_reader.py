@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-from sqlalchemy.orm import Session, selectinload
+from sqlalchemy.orm import Session
 
 from models.analysis_pass import AnalysisPassModel
 from models.cell_content_item import CellContentItemModel
@@ -119,7 +119,6 @@ def read_project_data(project_id: str, session: Session) -> ProjectData:
 
     domains = (
         session.query(DomainModel)
-        .options(selectinload(DomainModel.memberships))
         .filter(DomainModel.project_id == project_id)
         .order_by(DomainModel.domain_id)
         .all()

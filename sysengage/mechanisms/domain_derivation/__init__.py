@@ -102,6 +102,10 @@ def run(
         pass_type="Universal",
         evaluated_scope=f"Row {row_ref} CCIs for project {project_id}",
     )
+    # Correct mode fields — audit_trail default is "LPM" (shared); DD is IM-primary
+    # Per spec v0.14 §6: mode_active="IM", declared_transformation_modes=["IM","DM"]
+    pass_data["mode_active"] = "IM"
+    pass_data["declared_transformation_modes"] = ["IM", "DM"]
 
     session = get_session()
     try:
