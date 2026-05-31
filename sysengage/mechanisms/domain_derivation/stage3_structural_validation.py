@@ -1,7 +1,7 @@
 """
 Stage 3 — Structural Validation (DM, with conditional IM repair).
 
-Per Domain Derivation Mechanism Spec v0.18 §4.3:
+Per Domain Derivation Mechanism Spec v0.21 §4.3:
   All checks run in sequence on the AI proposal in-memory. No DB calls
   except the optional repair AI calls (CHK-3c-04 and CHK-3c-07 IM sub-acts).
 
@@ -465,21 +465,26 @@ def run_stage3(
                 "%d single-CCI domain(s) left in place", len(single_cci_proposals)
             )
 
-    # ADVC-3c-01 — Domain count soft-bounds advisory
-    from math import ceil
+    # ADVC-3c-01 — Domain count soft-bounds advisory (v0.21 §4.3)
+    # Inverted-range guard: when eligible_count <= 3 the formula produces
+    # upper_bound < lower_bound (e.g. 1 CCI → lower=2, upper=0).  That is an
+    # incoherent range; skip the advisory entirely in that case.
+    from math import ceil, floor
 
     eligible_count = len(stage1.eligible_ccis)
     proposal_count = len(proposals)
     lower_bound = 1 + ceil(eligible_count / 15)
-    upper_bound_val = eligible_count / 2
-    if proposal_count < lower_bound or proposal_count > upper_bound_val:
+    upper_bound = floor(eligible_count / 2)
+    if upper_bound >= lower_bound and (
+        proposal_count < lower_bound or proposal_count > upper_bound
+    ):
         result.execution_warnings.append(
             {
                 "type": "domain_count_advisory",
                 "domain_count": proposal_count,
                 "cci_count": eligible_count,
                 "lower_bound": lower_bound,
-                "upper_bound": int(upper_bound_val),
+                "upper_bound": upper_bound,
             }
         )
 

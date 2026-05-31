@@ -1,7 +1,7 @@
 """
 Domain grouping prompt template — used for FirstRun and FullRerun scenarios.
 
-Per Domain Derivation Mechanism Spec v0.20 §4.2 and §5.4:
+Per Domain Derivation Mechanism Spec v0.21 §4.2 and §5.4:
   Injects: row_ref, row_guidance, cci_set, cci_count.
   ROW_GUIDANCE is defined inline here per §5.4 — no separate vocabulary module.
   Multi-line guidance blocks (Rows 1–5) are injected verbatim as a prompt
@@ -14,6 +14,8 @@ Per Domain Derivation Mechanism Spec v0.20 §4.2 and §5.4:
 LPM constraint: prompt instructs AI not to copy CCI descriptions verbatim.
 Expected response format: {"proposals": [...]} per domain_grouping_response_schema.py.
 
+v0.21 delta (from v0.20): No prompt changes — ADVC-3c-01 inverted-range guard
+  added in stage3_structural_validation.py only.
 v0.20 delta (from v0.19): ROW_GUIDANCE["3"], ["4"], ["5"] each replaced from
   a short phrase with a structured principle-based guidance block (same template
   as Rows 1–2). Validated against PMT Row 3 (6 CCIs), Row 4 (1 CCI), Row 5
