@@ -487,6 +487,8 @@ def run_stage3(
 
     # CHK-3c-08 — Over-concentrated domain split (IM conditional)
     # Per spec v0.22 §4.3: after CHK-3c-07, before ADVC-3c-01.
+    # eligible_count must be computed here so CHK-3c-08 and ADVC-3c-01 share it.
+    eligible_count = len(stage1.eligible_ccis)
     # Fires when any Domain has len(cci_refs) > floor(eligible_count / 2).
     # Exceptions: eligible_count <= 4 (sparse); len(proposals) == 1 (nothing to
     # split into); all proposals concentrated (circular split risk).
@@ -780,9 +782,9 @@ def run_stage3(
     # Inverted-range guard: when eligible_count <= 3 the formula produces
     # upper_bound < lower_bound (e.g. 1 CCI → lower=2, upper=0).  That is an
     # incoherent range; skip the advisory entirely in that case.
+    # eligible_count already computed above (before CHK-3c-08).
     from math import ceil, floor
 
-    eligible_count = len(stage1.eligible_ccis)
     proposal_count = len(proposals)
     lower_bound = 1 + ceil(eligible_count / 15)
     upper_bound = floor(eligible_count / 2)
