@@ -7,3 +7,5 @@
 - [Branch merge via common ancestor](branch-merge-common-ancestor.md) — to delete source branches after merge, clone from common ancestor not from a source branch.
 - [Neon branch merge — JSONB and sequence gotchas](neon-branch-merge-gotchas.md) — two psycopg2 pitfalls when copying rows across Neon branches.
 - [Domain Derivation execution_status logic](domain-derivation-execution-status.md) — CompletedWithWarnings only for 3 conditions; advisory warnings (chk3c07_repair_failed etc.) are informational only.
+- [branch_manager _build_conn_uri_for_branch is fragile](branch-manager-conn-uri.md) — existing-branch path reconstructs URL via regex on DATABASE_URL_MAIN; breaks silently. Always delete+recreate the test branch to get the URI from the Neon API directly.
+- [Alembic script_location — absolute path from workflow root](alembic-script-location-workflow.md) — when alembic is invoked from workspace root (not sysengage/), script_location = "alembic" resolves against CWD and fails. Always call set_main_option("script_location", str(SYSENGAGE_DIR / "alembic")) after loading the ini.
