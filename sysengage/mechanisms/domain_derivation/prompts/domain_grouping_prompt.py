@@ -1,11 +1,11 @@
 """
 Domain grouping prompt template — used for FirstRun and FullRerun scenarios.
 
-Per Domain Derivation Mechanism Spec v0.19 §4.2 and §5.4:
+Per Domain Derivation Mechanism Spec v0.20 §4.2 and §5.4:
   Injects: row_ref, row_guidance, cci_set, cci_count.
   ROW_GUIDANCE is defined inline here per §5.4 — no separate vocabulary module.
-  Multi-line guidance blocks (Row 1, Row 2) are injected verbatim as a prompt
-  section. Single-phrase entries (Rows 3–6) are injected inline.
+  Multi-line guidance blocks (Rows 1–5) are injected verbatim as a prompt
+  section. Single-phrase entry (Row 6) is injected inline.
 
   Detection: if '\n' in guidance → verbatim block; else → inline phrase.
   This is future-proof — adding a structured block for any row requires only
@@ -14,9 +14,10 @@ Per Domain Derivation Mechanism Spec v0.19 §4.2 and §5.4:
 LPM constraint: prompt instructs AI not to copy CCI descriptions verbatim.
 Expected response format: {"proposals": [...]} per domain_grouping_response_schema.py.
 
-v0.19 delta (from v0.18): ROW_GUIDANCE["2"] replaced from short phrase with
-  structured principle-based guidance block (same format as Row 1).
-  ROW_GUIDANCE["1"] updated to the canonical v0.19 structured form.
+v0.20 delta (from v0.19): ROW_GUIDANCE["3"], ["4"], ["5"] each replaced from
+  a short phrase with a structured principle-based guidance block (same template
+  as Rows 1–2). Validated against PMT Row 3 (6 CCIs), Row 4 (1 CCI), Row 5
+  (9 CCIs). Row 6 remains a short phrase pending its own validation cycle.
 """
 
 from __future__ import annotations
@@ -149,9 +150,211 @@ them as a separate actor domain.
 - Do NOT use workflow or function verbs in domain names
 - Do NOT create domains whose boundaries cannot be explained to a business owner""",
 
-    "3": "logical design level — logical structures, behaviours, interactions, and state models; technology-agnostic",
-    "4": "physical builder level — specific technologies, components, deployment targets, and implementation patterns",
-    "5": "detailed design level — algorithms, data formats, implementation specifications, and detailed configurations",
+    "3": """\
+## Row 3 — Designer / Logical Level
+
+At this row you are working at the logical design level — the view of a system
+designer who is translating business obligations into logical structures, behaviours,
+and rules, without committing to any specific technology or implementation.
+
+### What a Row 3 domain represents
+A Row 3 domain is a bounded logical design responsibility — a coherent cluster of
+logical structures, behaviours, or constraints that must be designed together and
+can be assessed for logical completeness independently. It IS NOT:
+- A business capability (that belongs at Row 2)
+- A physical technology component or platform (that belongs at Row 4)
+- A code module, class, or implementation unit
+- A deployment or runtime concern
+
+A Row 3 domain should be describable to a technically-minded architect without
+naming any specific technology. If the name requires knowing the implementation
+platform, it is at the wrong level.
+
+### Row 3 Zachman column semantics
+- **WHAT**: Logical data structures — entities, relationships, attributes, and
+  constraints expressed as a logical model (not physical tables or schemas)
+- **HOW**: Logical processes and rules — how the system logically transforms,
+  validates, or routes information; logical state transitions; NOT code or algorithms
+- **WHERE**: Logical system boundary and interaction topology — how logical components
+  relate and communicate; NOT physical deployment targets or infrastructure
+- **WHO**: Logical actors and roles — the system's logical participants and their
+  authorisation boundaries; NOT UI components or physical user interfaces
+- **WHEN**: Logical event and state model — what conditions trigger logical state
+  changes; NOT schedules, timers, or cron configurations
+- **WHY**: Logical constraints and integrity rules — the design-level invariants the
+  system must enforce; NOT business policies (Row 2) or code assertions (Row 5)
+
+### Domain qualification questions
+- Does this cluster of CCIs share a logical design boundary that can be assessed
+  for completeness independently?
+- Would a change to this logical design necessarily ripple through all CCIs in
+  the cluster?
+- Does this domain fail differently from neighbouring domains — in a way that a
+  designer (not a business owner, not a developer) would recognise?
+- Can the domain be described in one sentence without naming any technology?
+
+### Vocabulary signals
+Row 3 domain names use logical design vocabulary:
+  Appropriate: logical model, logical structure, logical behaviour, state management,
+               constraint enforcement, data model, interaction model, access model,
+               visibility model, computation model, lifecycle
+  Avoid: physical technology names (PostgreSQL, React, Redis, AWS, iOS), code
+         patterns (class, function, module, endpoint), business policy language
+         (obligation, stewardship, entitlement — those are Row 2)
+
+### Cross-column integration
+Row 3 domains should integrate logical structure (WHAT) with logical behaviour (HOW)
+and logical constraints (WHY). A domain drawing from only HOW is likely a process
+description, not a logical design responsibility. A domain drawing from only WHY is
+likely a constraint definition that should be anchored to a structural or behavioural
+domain.
+
+### Sparse CCI sets at Row 3
+Row 3 sometimes has few CCIs if the source document is operationally-framed. When
+the CCI set is sparse (fewer than 8 CCIs), expect 2–3 domains. Do not force more
+domains than the CCI content supports — a smaller number of richer domains is
+preferable to many thin ones.
+
+### Prohibition rules
+- Do NOT create a domain containing only one CCI (unless cci_count_input == 1)
+- Do NOT name a domain after a technology, platform, or framework
+- Do NOT use business-obligation language (Row 2 vocabulary) in domain names
+- Do NOT create domains that only describe a single Zachman column in isolation""",
+
+    "4": """\
+## Row 4 — Builder / Physical Level
+
+At this row you are working at the physical builder level — the view of a builder
+who is making concrete technology choices and specifying physical components,
+without yet writing code or configuring runtime details.
+
+### What a Row 4 domain represents
+A Row 4 domain is a bounded physical construction responsibility — a coherent cluster
+of physical technology choices, component specifications, or platform decisions that
+must be built together. It IS NOT:
+- A business responsibility (Row 2)
+- A logical design concern (Row 3)
+- A code-level implementation detail, configuration value, or runtime parameter (Row 5)
+
+A Row 4 domain names a physical technology area that a builder would take
+responsibility for constructing. The domain name can and should reference specific
+technologies, platforms, or physical components.
+
+### Row 4 Zachman column semantics
+- **WHAT**: Physical data artefacts — physical schemas, storage formats, data
+  structures as they will actually be built
+- **HOW**: Physical processes and algorithms — the concrete mechanisms that realise
+  logical behaviours; specific APIs, service contracts, integration patterns
+- **WHERE**: Physical deployment targets — specific platforms, infrastructure nodes,
+  hosting environments (e.g. iOS, Android, Windows, AWS region)
+- **WHO**: Physical user interfaces and system interfaces — the concrete components
+  through which actors interact with the system
+- **WHEN**: Physical scheduling and triggering — specific timers, cron jobs, event
+  queues, scheduling mechanisms
+- **WHY**: Physical constraints — platform version requirements, hardware limits,
+  compliance mandates expressed as build-level constraints
+
+### Domain qualification questions
+- Does this cluster of CCIs require the same physical technology or platform context?
+- Would a builder owning this domain have a coherent, bounded construction scope?
+- Does this domain fail differently from neighbouring domains — in the way a builder
+  (not a designer, not a developer) would recognise?
+- Can the domain be described in terms of physical artefacts without describing code?
+
+### Vocabulary signals
+Row 4 domain names use physical construction vocabulary:
+  Appropriate: platform, component, infrastructure, deployment, interface,
+               integration, physical schema, service, API, build, configuration
+  Avoid: business-level language (Row 2), logical abstractions without physical
+         specifics (Row 3), code-level implementation detail (Row 5)
+
+### Sparse CCI sets at Row 4
+Row 4 is often sparse for systems whose primary content is conceptual or logical.
+A single-CCI row is legitimate — if only one physical constraint or component exists
+in the source material, one domain is the correct outcome. Do not invent domains to
+fill expected counts. The CHK-3c-07 single-CCI absorption rule does not fire when
+cci_count_input == 1.
+
+### Cross-column integration
+Row 4 domains should reflect genuine physical construction boundaries. A deployment
+platform domain (WHERE-heavy) is valid at Row 4 because physical platform concerns
+are genuinely coherent at this level. A domain drawing from only WHY (a physical
+constraint) is thinner but may be unavoidable when the source material contains
+only a constraint at this row.
+
+### Prohibition rules
+- Do NOT create domains that describe business obligations (Row 2 vocabulary)
+- Do NOT create domains that describe logical design without physical specifics
+- Do NOT name a domain after a logical concept without its physical realisation""",
+
+    "5": """\
+## Row 5 — Implementer / Detailed Design Level
+
+At this row you are working at the detailed design level — the view of an implementer
+who is specifying the precise detail needed to build and configure the system:
+algorithms, data formats, platform-specific configurations, interface contracts,
+and detailed runtime behaviours.
+
+### What a Row 5 domain represents
+A Row 5 domain is a bounded detailed implementation responsibility — a coherent
+cluster of detailed specifications that an implementer must produce together.
+It IS NOT:
+- A business responsibility (Row 2)
+- A logical design concern (Row 3)
+- A high-level physical construction decision (Row 4)
+
+A Row 5 domain represents a coherent area of detailed specification — the things
+an implementer needs to fully specify before a developer can write code without
+making additional design decisions.
+
+### Row 5 Zachman column semantics
+- **WHAT**: Detailed data specifications — exact field definitions, data types,
+  format constraints, validation rules, enumeration values
+- **HOW**: Detailed algorithms and process specifications — step-by-step logic,
+  precise transformation rules, error handling specifications
+- **WHERE**: Detailed deployment specifications — exact platform versions, node
+  configurations, network topology details, infrastructure parameters
+- **WHO**: Detailed interface specifications — precise UI component definitions,
+  interaction specifications, user interface configurations per actor
+- **WHEN**: Detailed timing specifications — exact cycle durations, timeout values,
+  scheduling parameters, event sequencing constraints
+- **WHY**: Detailed constraint specifications — precise validation rules, platform
+  version requirements expressed as implementable constraints
+
+### Domain qualification questions
+- Does this cluster of CCIs share a detailed specification boundary that an
+  implementer would own together?
+- Could an implementer produce a complete detailed specification for this domain
+  without needing decisions from neighbouring domains?
+- Does this domain fail differently from neighbouring domains — in a way that an
+  implementer (not a designer, not a business owner) would recognise?
+
+### Vocabulary signals
+Row 5 domain names use detailed implementation vocabulary:
+  Appropriate: interface, configuration, specification, deployment, platform-specific,
+               detailed, implementation, cycle, timing, format, contract
+  Avoid: business-level language (Row 2), logical abstractions (Row 3), generic
+         high-level physical terms without specifics (Row 4)
+
+### Column-sparse CCI sets at Row 5
+Row 5 CCIs often cluster in specific columns depending on the source document's
+focus. A Row 5 CCI set containing only WHERE and WHO CCIs (platform deployment
+nodes and user interface actors) is legitimate — group them by their natural
+implementation boundary. WHERE CCIs (deployment nodes) naturally form a deployment
+infrastructure domain. WHO CCIs (UI actors) naturally form a user interface
+specification domain. WHEN CCIs (timing cycles) may be absorbed into the domain
+whose behaviour they govern.
+
+For sparse CCI sets, prefer fewer, richer domains over many thin ones. A domain
+containing 2–3 CCIs from complementary columns is preferable to isolated single-
+column domains.
+
+### Prohibition rules
+- Do NOT create a domain containing only one CCI (unless cci_count_input == 1)
+- Do NOT use business-level or logical-level vocabulary in domain names
+- Do NOT create overlapping domains where the same specification concern appears twice
+- Do NOT force more domains than the CCI content supports""",
+
     "6": "operational level — runtime procedures, user interactions, support processes, and operational behaviours",
 }
 

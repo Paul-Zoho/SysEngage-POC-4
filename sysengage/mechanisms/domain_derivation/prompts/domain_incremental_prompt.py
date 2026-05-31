@@ -1,15 +1,15 @@
 """
 Domain incremental prompt template — used for IncrementalRerun scenario.
 
-Per Domain Derivation Mechanism Spec v0.19 §4.2:
+Per Domain Derivation Mechanism Spec v0.20 §4.2:
   Injects: row_guidance, existing_domains, new_ccis, new_cci_count.
   Response: {"actions": [...]} per domain_incremental_response_schema.py.
   Actions: assign (domain_id + new_cci_refs) | new (full domain proposal).
 
 ROW_GUIDANCE imported from domain_grouping_prompt.py since it is
 defined there per spec §5.4 (single definition per module, not reduplicated).
-Multi-line guidance blocks (currently Rows 1 and 2) are injected verbatim;
-single-phrase entries (Rows 3–6) are injected inline. Detection: '\n' in guidance.
+Multi-line guidance blocks (Rows 1–5) are injected verbatim;
+Row 6 single-phrase entry is injected inline. Detection: '\n' in guidance.
 """
 
 from __future__ import annotations
