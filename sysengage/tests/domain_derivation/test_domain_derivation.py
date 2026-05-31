@@ -355,6 +355,97 @@ class TestStage3Validation:
             "CHK-3c-06: should fail when no domains survive structural validation"
         )
 
+    # CHK-3c-07: single-CCI domain absorption fires and absorbs the isolated domain
+    def test_chk_3c_07_absorbs_single_cci_domain(self):
+        """
+        CHK-3c-07: When one proposal has exactly 1 CCI ref and cci_count_input > 1
+        and len(proposals) > 1, the single-CCI domain is absorbed into a neighbouring
+        domain via the repair prompt.
+
+        After absorption:
+          - single_cci_absorption_issued == True
+          - absorptions list has the expected entry
+          - the absorbed CCI now lives in the target domain's refs
+          - the single-CCI domain proposal is removed
+        """
+        import json
+
+        proposals = _make_proposals(
+            [
+                ("Infrastructure Domain", "Auth and data concerns", [
+                    "CCI-ROW4-C-What-001", "CCI-ROW4-C-How-001",
+                    "CCI-ROW4-C-What-002", "CCI-ROW4-C-How-002",
+                ]),
+                ("Deployment Domain", "Cloud targets — single-CCI, should be absorbed", [
+                    "CCI-ROW4-C-Where-001",
+                ]),
+            ]
+        )
+
+        repair_response_json = json.dumps({
+            "assignments": [{
+                "ci_id": "CCI-ROW4-C-Where-001",
+                "target_domain_name": "Infrastructure Domain",
+                "rationale": "Deployment is integral to the infrastructure concerns.",
+            }]
+        })
+
+        with patch(
+            "mechanisms.domain_derivation.stage3_structural_validation._call_repair_ai"
+        ) as mock_repair:
+            mock_repair.return_value = (
+                MagicMock(
+                    content=[MagicMock(text=repair_response_json)],
+                    model="claude-test",
+                    usage=MagicMock(input_tokens=50, output_tokens=80),
+                ),
+                {"stage": "stage3_chk3c07_repair", "model": "claude-test"},
+            )
+            result = self._run_stage3(proposals, _FIVE_CCIS)
+
+        assert result.single_cci_absorption_issued is True, (
+            "CHK-3c-07: single_cci_absorption_issued must be True after successful absorption"
+        )
+        assert len(result.absorptions) == 1, (
+            "CHK-3c-07: one absorption entry expected"
+        )
+        assert result.absorptions[0]["ci_id"] == "CCI-ROW4-C-Where-001"
+        assert result.absorptions[0]["absorbed_into_domain_name"] == "Infrastructure Domain"
+
+        surviving_names = [p.name for p in result.proposals]
+        assert "Deployment Domain" not in surviving_names, (
+            "CHK-3c-07: single-CCI domain must be removed after absorption"
+        )
+        infra = next(p for p in result.proposals if p.name == "Infrastructure Domain")
+        assert "CCI-ROW4-C-Where-001" in infra.cci_refs, (
+            "CHK-3c-07: absorbed CCI must appear in target domain refs"
+        )
+
+    # CHK-3c-07: skip when all proposals are single-CCI (circular absorption guard)
+    def test_chk_3c_07_skips_when_all_proposals_single_cci(self):
+        """CHK-3c-07 must not fire when ALL proposals are single-CCI (circular guard)."""
+        eligible = _FIVE_CCIS
+        proposals = _make_proposals([
+            ("Domain A", "Single CCI", ["CCI-ROW4-C-What-001"]),
+            ("Domain B", "Single CCI", ["CCI-ROW4-C-What-002"]),
+            ("Domain C", "Single CCI", ["CCI-ROW4-C-How-001"]),
+            ("Domain D", "Single CCI", ["CCI-ROW4-C-How-002"]),
+            ("Domain E", "Single CCI", ["CCI-ROW4-C-Where-001"]),
+        ])
+        with patch(
+            "mechanisms.domain_derivation.stage3_structural_validation._call_repair_ai"
+        ) as mock_repair:
+            result = self._run_stage3(proposals, eligible)
+
+        assert result.single_cci_absorption_issued is False, (
+            "CHK-3c-07 must skip when all proposals are single-CCI"
+        )
+        assert any(
+            w.get("type") == "chk3c07_all_domains_single_cci"
+            for w in result.execution_warnings
+        ), "advisory chk3c07_all_domains_single_cci expected"
+        mock_repair.assert_not_called()
+
 
 # ---------------------------------------------------------------------------
 # TestSchemaValidation — Pydantic schema round-trip checks
@@ -767,9 +858,9 @@ class TestVerificationCriteria:
             "VER-3c-12: At least one Domain must be produced"
         )
 
-    # VER-3c-13: Stage 1 fails when Pass 3b prerequisite is absent
-    def test_ver_3c_13_fails_without_3b_prereq(self):
-        """VER-3c-13: Mechanism fails if no completed Pass 3b exists for the row."""
+    # Stage 1 prerequisite check: fails when no Pass 3b exists for the project/row
+    def test_stage1_prerequisite_fails_for_missing_project(self):
+        """Stage 1 must fail if no completed Pass 3b exists for the project/row."""
         import mechanisms.domain_derivation as dd
 
         result = dd.run(
@@ -778,8 +869,99 @@ class TestVerificationCriteria:
             row_ref=99,
         )
         assert result["execution_status"] == "Failed", (
-            "VER-3c-13: Must fail when no Pass 3b exists for the project/row"
+            "Must fail when no Pass 3b exists for the project/row"
         )
+
+    # VER-3c-13: No active Domain has exactly 1 CCI ref after CHK-3c-07 absorption
+    def test_ver_3c_13_no_single_cci_domains_after_absorption(self):
+        """
+        VER-3c-13: CHK-3c-07 absorbs single-CCI domains into neighbouring domains.
+        After a successful absorption run, no active domain may have
+        jsonb_array_length(cell_content_item_refs) == 1 (unless cci_count_input == 1).
+
+        Setup: primary AI returns a grouping with one single-CCI domain
+        (Infrastructure Domain: Where-001 only). CHK-3c-07 fires and a second
+        AI call returns an assignment absorbing Where-001 into Authentication Domain.
+        """
+        import json
+        import mechanisms.domain_derivation as dd
+
+        primary_response = make_grouping_response(
+            [
+                {
+                    "name": "Authentication Domain",
+                    "description": "Components and processes for authentication and access control",
+                    "classification_type": "Security",
+                    "cci_refs": [
+                        "CCI-ROW4-C-What-001",
+                        "CCI-ROW4-C-How-001",
+                        "CCI-ROW4-C-What-002",
+                        "CCI-ROW4-C-How-002",
+                    ],
+                },
+                {
+                    "name": "Infrastructure Domain",
+                    "description": "Cloud deployment target — isolated single-CCI domain for absorption",
+                    "classification_type": "Infrastructure",
+                    "cci_refs": ["CCI-ROW4-C-Where-001"],
+                },
+            ]
+        )
+        chk07_repair_response = json.dumps(
+            {
+                "assignments": [
+                    {
+                        "ci_id": "CCI-ROW4-C-Where-001",
+                        "target_domain_name": "Authentication Domain",
+                        "rationale": (
+                            "Cloud deployment is integral to authentication infrastructure."
+                        ),
+                    }
+                ]
+            }
+        )
+
+        with patch("core.ai_client.Anthropic") as mock_anthropic:
+            mock_client = MagicMock()
+            mock_anthropic.return_value = mock_client
+            mock_client.messages.create.side_effect = [
+                self._make_ai_message(primary_response),
+                self._make_ai_message(chk07_repair_response),
+            ]
+            result = dd.run(
+                project_id=PROJECT_ID,
+                practitioner_id=PRACTITIONER_ID,
+                row_ref=ROW_REF,
+            )
+
+        assert result["execution_status"] in ("Completed", "CompletedWithWarnings"), (
+            f"VER-3c-13: unexpected status {result['execution_status']}"
+        )
+
+        md = result["mechanism_data"]
+        assert md["single_cci_absorption_issued"] is True, (
+            "VER-3c-13: single_cci_absorption_issued must be True after successful absorption"
+        )
+        assert len(md["absorptions"]) >= 1, (
+            "VER-3c-13: absorptions list must be non-empty after successful absorption"
+        )
+
+        # Confirm no active domain has exactly 1 CCI ref in the DB
+        cci_count_input = md["cci_count_input"]
+        if cci_count_input > 1:
+            single_cci_domains = self._session.execute(
+                text(
+                    "SELECT domain_id, jsonb_array_length(cell_content_item_refs) AS ref_count "
+                    "FROM domain "
+                    "WHERE project_id = :pid AND row_target = :row AND retired_at IS NULL "
+                    "  AND jsonb_array_length(cell_content_item_refs) = 1"
+                ),
+                {"pid": PROJECT_ID, "row": str(ROW_REF)},
+            ).fetchall()
+            assert single_cci_domains == [], (
+                f"VER-3c-13: {len(single_cci_domains)} active domain(s) still have exactly "
+                f"1 CCI ref after CHK-3c-07 absorption: {single_cci_domains}"
+            )
 
     # VER-3c-03: Every active Domain has ≥1 entry in cell_content_item_refs
     def test_ver_3c_03_every_domain_has_refs(self):
@@ -916,6 +1098,8 @@ class TestVerificationCriteria:
             "large_cci_set_advisory",
             "mode_violations",
             "ai_model_fingerprints",
+            "single_cci_absorption_issued",
+            "absorptions",
         }
 
         with patch("core.ai_client.Anthropic") as mock_anthropic:

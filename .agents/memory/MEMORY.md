@@ -6,3 +6,4 @@
 - [AI response code fence stripping](ai-code-fence-parse.md) — Claude wraps JSON in ```json fences; all AI parse helpers need _strip_code_fence() before json.loads().
 - [Branch merge via common ancestor](branch-merge-common-ancestor.md) — to delete source branches after merge, clone from common ancestor not from a source branch.
 - [Neon branch merge — JSONB and sequence gotchas](neon-branch-merge-gotchas.md) — two psycopg2 pitfalls when copying rows across Neon branches.
+- [Domain Derivation execution_status logic](domain-derivation-execution-status.md) — CompletedWithWarnings only for 3 conditions; advisory warnings (chk3c07_repair_failed etc.) are informational only.

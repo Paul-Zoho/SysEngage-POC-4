@@ -1,10 +1,11 @@
 """
 Domain Derivation mechanism — Pass 3c orchestrator.
 
-Per Domain Derivation Mechanism Spec v0.17 §4:
+Per Domain Derivation Mechanism Spec v0.18 §4:
   Stage 1 — Pre-flight, CCI assembly, re-run scenario detection (DM)
   Stage 2 — AI grouping act (IM)
   Stage 3 — Structural validation with conditional repair (DM + conditional IM)
+             Includes CHK-3c-07 single-CCI domain absorption (new in v0.18)
   Stage 4 — Entity production and ledger commit (DM)
 
 Entry point: run(project_id, practitioner_id, row_ref) → dict
@@ -12,12 +13,13 @@ Entry point: run(project_id, practitioner_id, row_ref) → dict
 Returned dict keys:
   pass_id, execution_status, mechanism_data
 
-mechanism_data keys (per spec §7):
+mechanism_data keys (per spec v0.18 §7):
   row_ref, scenario, cci_count_input, domain_count_produced, domain_count_retired,
   domains_produced, cci_set_hash, downstream_rerun_required, retirement_mapping,
   orphaned_ccis, repair_prompt_issued, cross_cutting_advisories,
   validation_failures, large_cci_set_advisory, mode_violations,
-  ai_model_fingerprints, idempotent (IdempotentRerun only)
+  ai_model_fingerprints, single_cci_absorption_issued, absorptions,
+  idempotent (IdempotentRerun only)
 """
 
 from __future__ import annotations
@@ -153,6 +155,8 @@ def run(
                 "large_cci_set_advisory": False,
                 "mode_violations": [],
                 "ai_model_fingerprints": [],
+                "single_cci_absorption_issued": False,
+                "absorptions": [],
             }
             read_witness: dict[str, Any] = {
                 "cci_count": 0,
@@ -200,6 +204,8 @@ def run(
                         "repair_prompt_issued",
                         "cross_cutting_advisories",
                         "validation_failures",
+                        "single_cci_absorption_issued",
+                        "absorptions",
                     )
                     if k in prior_md
                 },
@@ -333,6 +339,8 @@ def run(
             "large_cci_set_advisory": stage1.large_cci_set_advisory,
             "mode_violations": [],
             "ai_model_fingerprints": pass_data.get("ai_model_fingerprints", []),
+            "single_cci_absorption_issued": stage3.single_cci_absorption_issued,
+            "absorptions": stage3.absorptions,
         }
         read_witness = {
             "cci_count": cci_count,
@@ -362,17 +370,23 @@ def run(
             mechanism_data=mechanism_data,
         )
 
-        # Determine execution status
-        has_warnings = bool(all_warnings) or stage3.status == "ok_with_warnings"
-        incremental_fallback = any(
-            w.get("type") == "incremental_fallback_to_fullrerun"
-            for w in all_warnings
+        # Determine execution_status per spec v0.18 §4.4.6.
+        # CompletedWithWarnings ONLY for:
+        #   (a) persistent orphaned CCIs (stage3.status == "ok_with_warnings")
+        #   (b) incremental_fallback_to_fullrerun in execution_warnings
+        #   (c) mode_violations non-empty
+        # All other advisory warnings (domain_count_advisory, chk3c07_repair_failed,
+        # chk3c07_absorption_performed, large_cci_set_advisory, etc.) are informational
+        # only and do NOT change execution_status.
+        has_status_warnings = (
+            stage3.status == "ok_with_warnings"
+            or any(
+                w.get("type") == "incremental_fallback_to_fullrerun"
+                for w in all_warnings
+            )
+            or bool(mechanism_data.get("mode_violations"))
         )
-        execution_status = (
-            "CompletedWithWarnings"
-            if (has_warnings or incremental_fallback)
-            else "Completed"
-        )
+        execution_status = "CompletedWithWarnings" if has_status_warnings else "Completed"
         pass_data["execution_status"] = execution_status
         if all_warnings:
             pass_data["outputs"]["execution_warnings"] = all_warnings
