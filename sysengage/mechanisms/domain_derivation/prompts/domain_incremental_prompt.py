@@ -1,20 +1,19 @@
 """
 Domain incremental prompt template — used for IncrementalRerun scenario.
 
-Per Domain Derivation Mechanism Spec v0.13 §4.2:
-  Injects: abstraction_level_phrase, existing_domains, new_ccis, new_cci_count.
+Per Domain Derivation Mechanism Spec v0.17 §4.2:
+  Injects: row_guidance, existing_domains, new_ccis, new_cci_count.
   Response: {"actions": [...]} per domain_incremental_response_schema.py.
   Actions: assign (domain_id + new_cci_refs) | new (full domain proposal).
 
-ROW_ABSTRACTION_PHRASES imported from domain_grouping_prompt.py since it is
+ROW_GUIDANCE imported from domain_grouping_prompt.py since it is
 defined there per spec §5.4 (single definition per module, not reduplicated).
+Row 1 injects the full guidance block verbatim; Rows 2–6 use an inline phrase.
 """
 
 from __future__ import annotations
 
-from mechanisms.domain_derivation.prompts.domain_grouping_prompt import (
-    ROW_ABSTRACTION_PHRASES,
-)
+from mechanisms.domain_derivation.prompts.domain_grouping_prompt import ROW_GUIDANCE
 
 
 def build_domain_incremental_prompt(
@@ -29,8 +28,14 @@ def build_domain_incremental_prompt(
 
     existing_domains: list of dicts with domain_id, name, description, cci_ref_count.
     new_ccis: list of dicts with ci_id, column, classification_type, description.
+    Row 1 injects the full ROW_GUIDANCE block verbatim; Rows 2–6 use an inline phrase.
     """
-    phrase = ROW_ABSTRACTION_PHRASES.get(str(row_ref), f"Row {row_ref} abstraction level")
+    row_key = str(row_ref)
+    guidance = ROW_GUIDANCE.get(row_key, f"Row {row_ref} abstraction level")
+    if row_key == "1":
+        abstraction_block = guidance
+    else:
+        abstraction_block = f"Row {row_ref} operates at the {guidance}."
     domain_lines = "\n".join(
         f"  - domain_id={d['domain_id']} | name={d['name']} | {d['cci_ref_count']} CCIs | {d['description']}"
         for d in existing_domains
@@ -41,7 +46,7 @@ def build_domain_incremental_prompt(
     )
     return f"""You are a systems engineering analyst performing incremental Domain Derivation for Row {row_ref} of a Zachman Framework analysis.
 
-Row {row_ref} operates at the {phrase}.
+{abstraction_block}
 
 Existing Domains (already committed — do NOT modify these):
 {domain_lines}

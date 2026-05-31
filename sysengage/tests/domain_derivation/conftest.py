@@ -28,7 +28,6 @@ from core.db import get_session
 from models import (
     AnalysisPassModel,
     CellContentItemModel,
-    DomainCCIMembershipModel,
     DomainModel,
     ProjectModel,
     ProjectProfileModel,

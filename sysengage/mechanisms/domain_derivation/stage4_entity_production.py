@@ -1,7 +1,7 @@
 """
 Stage 4 — Entity Production and Ledger Commit (DM).
 
-Per Domain Derivation Mechanism Spec v0.13 §4.4:
+Per Domain Derivation Mechanism Spec v0.17 §4.4:
   4.4.1  domain_id allocation (global per-project, includes retired).
   4.4.2  Domain entity construction (six canonical attributes).
   4.4.3  Ledger transaction:

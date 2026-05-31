@@ -1,7 +1,7 @@
 """
 Stage 1 — Pre-flight, CCI Assembly, and Re-run Scenario Detection (DM).
 
-Per Domain Derivation Mechanism Spec v0.13 §4.1:
+Per Domain Derivation Mechanism Spec v0.17 §4.1:
   1. Precondition: Pass 3b must be Completed/CompletedWithWarnings for this row.
   2. CCI assembly: eligible CCIs from cell_content_item JOIN zachman_cell.
   3. Zero-CCI early exit: CompletedWithWarnings with no_cci_input warning.

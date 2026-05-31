@@ -1,44 +1,15 @@
 """
-DomainCCIMembership ORM model — join table for Domain ↔ CCI membership.
+RETIRED — domain_cci_membership join table.
 
-Per Domain Derivation Mechanism Spec v0.13 §5.1:
-  Implements cell_content_item_refs as a join table rather than a JSONB array.
-  Enables efficient bidirectional queries and enforces FK integrity.
-  Composite PK: (domain_id, project_id, ci_id).
+Per Domain Derivation Mechanism Spec v0.17 §3.2 MD-4:
+  cell_content_item_refs is stored as a JSONB array directly on the domain
+  table. The domain_cci_membership join table was retired in migration 016
+  after the first PMT production ledger export confirmed it produced Domain
+  entities with cell_content_item_refs absent from the canonical payload.
 
-FKs:
-  (domain_id, project_id) → domain(domain_id, project_id)
-  (ci_id, project_id)     → cell_content_item(ci_id, project_id)
+Migration 016 (016_domain_cell_content_item_refs.py) drops this table and
+adds the cell_content_item_refs JSONB column to the domain table.
+
+Do NOT import DomainCCIMembershipModel — the table no longer exists.
+Do NOT add this file back to models/__init__.py.
 """
-
-from sqlalchemy import ForeignKeyConstraint, String
-from sqlalchemy.orm import Mapped, mapped_column, relationship
-
-from models.base import Base
-
-
-class DomainCCIMembershipModel(Base):
-    __tablename__ = "domain_cci_membership"
-    __table_args__ = (
-        ForeignKeyConstraint(
-            ["domain_id", "project_id"],
-            ["domain.domain_id", "domain.project_id"],
-            name="dcm_domain_fkey",
-            ondelete="CASCADE",
-        ),
-        ForeignKeyConstraint(
-            ["ci_id", "project_id"],
-            ["cell_content_item.ci_id", "cell_content_item.project_id"],
-            name="dcm_cci_fkey",
-        ),
-    )
-
-    domain_id: Mapped[str] = mapped_column(String(10), primary_key=True)
-    project_id: Mapped[str] = mapped_column(String(50), primary_key=True)
-    ci_id: Mapped[str] = mapped_column(String(60), primary_key=True)
-
-    domain = relationship(
-        "DomainModel",
-        back_populates="memberships",
-        foreign_keys="[DomainCCIMembershipModel.domain_id, DomainCCIMembershipModel.project_id]",
-    )

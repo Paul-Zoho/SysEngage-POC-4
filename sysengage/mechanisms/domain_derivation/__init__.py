@@ -1,7 +1,7 @@
 """
 Domain Derivation mechanism — Pass 3c orchestrator.
 
-Per Domain Derivation Mechanism Spec v0.13 §4:
+Per Domain Derivation Mechanism Spec v0.17 §4:
   Stage 1 — Pre-flight, CCI assembly, re-run scenario detection (DM)
   Stage 2 — AI grouping act (IM)
   Stage 3 — Structural validation with conditional repair (DM + conditional IM)
@@ -15,8 +15,9 @@ Returned dict keys:
 mechanism_data keys (per spec §7):
   row_ref, scenario, cci_count_input, domain_count_produced, domain_count_retired,
   domains_produced, cci_set_hash, downstream_rerun_required, retirement_mapping,
-  orphaned_ccis_after_repair, repair_prompt_issued, cross_cutting_advisories,
-  validation_failures, read_witness
+  orphaned_ccis, repair_prompt_issued, cross_cutting_advisories,
+  validation_failures, large_cci_set_advisory, mode_violations,
+  ai_model_fingerprints, idempotent (IdempotentRerun only)
 """
 
 from __future__ import annotations
@@ -149,6 +150,9 @@ def run(
                 "repair_prompt_issued": False,
                 "cross_cutting_advisories": [],
                 "validation_failures": [],
+                "large_cci_set_advisory": False,
+                "mode_violations": [],
+                "ai_model_fingerprints": [],
             }
             read_witness: dict[str, Any] = {
                 "cci_count": 0,
@@ -179,8 +183,11 @@ def run(
                 "row_ref": row_ref,
                 "scenario": "IdempotentRerun",
                 "cci_count_input": len(stage1.eligible_ccis),
-                "idempotent_pass_id": stage1.prior_pass.pass_id,
+                "idempotent": True,
                 "cci_set_hash": stage1.current_hash,
+                "large_cci_set_advisory": stage1.large_cci_set_advisory,
+                "mode_violations": [],
+                "ai_model_fingerprints": [],
                 **{
                     k: prior_md.get(k)
                     for k in (
@@ -323,6 +330,9 @@ def run(
             "repair_prompt_issued": stage3.repair_prompt_issued,
             "cross_cutting_advisories": stage3.cross_cutting_advisories,
             "validation_failures": stage3.validation_failures,
+            "large_cci_set_advisory": stage1.large_cci_set_advisory,
+            "mode_violations": [],
+            "ai_model_fingerprints": pass_data.get("ai_model_fingerprints", []),
         }
         read_witness = {
             "cci_count": cci_count,

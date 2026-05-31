@@ -1,7 +1,7 @@
 """
 Stage 2 — AI Grouping Act (IM).
 
-Per Domain Derivation Mechanism Spec v0.13 §4.2:
+Per Domain Derivation Mechanism Spec v0.17 §4.2:
   FirstRun/FullRerun path: domain_grouping_prompt → DomainGroupingResponse.
     One retry on parse failure; second failure → execution_status = "Failed".
   IncrementalRerun path: domain_incremental_prompt → DomainIncrementalResponse.

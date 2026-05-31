@@ -1,7 +1,7 @@
 """
 Domain ORM model — full Pass 3c implementation.
 
-Per Domain Derivation Mechanism Spec v0.14 §5.1 and canonical ledger spec v2.12:
+Per Domain Derivation Mechanism Spec v0.17 §5.1 and canonical ledger spec v2.12:
   domain_id format: D### (D001–D999); composite PK (domain_id, project_id).
   retired_at IS NULL = active; non-null = retired (FullRerun soft-delete).
   domain_qualifier and upstream_domain_ref are WITHDRAWN — neither column here.

@@ -487,12 +487,6 @@ class TestVerificationCriteria:
         """
         from tests.domain_derivation.conftest import PROJECT_ID as _PID
         session.execute(
-            text(
-                "DELETE FROM domain_cci_membership WHERE project_id = :pid"
-            ),
-            {"pid": _PID},
-        )
-        session.execute(
             text("DELETE FROM domain WHERE project_id = :pid"),
             {"pid": _PID},
         )
@@ -547,7 +541,7 @@ class TestVerificationCriteria:
 
     # VER-3c-01: All eligible CCIs appear in at least one Domain (Non-Loss)
     def test_ver_3c_01_all_ccis_assigned(self):
-        """VER-3c-01: All 5 eligible CCIs must appear in committed domain_cci_membership."""
+        """VER-3c-01: All 5 eligible CCIs must appear in domain.cell_content_item_refs."""
         import mechanisms.domain_derivation as dd
 
         with patch("core.ai_client.Anthropic") as mock_anthropic:
@@ -568,17 +562,16 @@ class TestVerificationCriteria:
 
         rows = self._session.execute(
             text(
-                "SELECT COUNT(DISTINCT dcm.ci_id) "
-                "FROM domain_cci_membership dcm "
-                "JOIN domain d ON dcm.domain_id = d.domain_id "
-                "  AND dcm.project_id = d.project_id "
-                "WHERE d.project_id = :pid "
-                "  AND d.row_target = :row "
-                "  AND d.retired_at IS NULL"
+                "SELECT COUNT(DISTINCT ci_id) "
+                "FROM domain, "
+                "     jsonb_array_elements_text(cell_content_item_refs) AS ci_id "
+                "WHERE domain.project_id = :pid "
+                "  AND domain.row_target = :row "
+                "  AND domain.retired_at IS NULL"
             ),
             {"pid": PROJECT_ID, "row": str(ROW_REF)},
         ).fetchone()
-        assert rows[0] == 5, f"VER-3c-01: expected 5 CCI memberships, got {rows[0]}"
+        assert rows[0] == 5, f"VER-3c-01: expected 5 distinct CCI refs, got {rows[0]}"
 
     # VER-3c-02: domain_id format D### for all produced domains
     def test_ver_3c_02_domain_id_format(self):
@@ -667,6 +660,9 @@ class TestVerificationCriteria:
         )
         assert mock_client2.messages.create.call_count == 0, (
             "VER-3c-04: IdempotentRerun must not call AI"
+        )
+        assert second["mechanism_data"].get("idempotent") is True, (
+            "VER-3c-04: mechanism_data.idempotent must be True on IdempotentRerun"
         )
 
     # VER-3c-07: FullRerun retires prior domains
@@ -783,4 +779,176 @@ class TestVerificationCriteria:
         )
         assert result["execution_status"] == "Failed", (
             "VER-3c-13: Must fail when no Pass 3b exists for the project/row"
+        )
+
+    # VER-3c-03: Every active Domain has ≥1 entry in cell_content_item_refs
+    def test_ver_3c_03_every_domain_has_refs(self):
+        """VER-3c-03: Every active domain must have jsonb_array_length(cell_content_item_refs) >= 1."""
+        import mechanisms.domain_derivation as dd
+
+        with patch("core.ai_client.Anthropic") as mock_anthropic:
+            mock_client = MagicMock()
+            mock_anthropic.return_value = mock_client
+            mock_client.messages.create.return_value = self._make_ai_message(
+                self._default_grouping_response()
+            )
+            result = dd.run(
+                project_id=PROJECT_ID,
+                practitioner_id=PRACTITIONER_ID,
+                row_ref=ROW_REF,
+            )
+
+        assert result["execution_status"] in ("Completed", "CompletedWithWarnings")
+
+        rows = self._session.execute(
+            text(
+                "SELECT domain_id, jsonb_array_length(cell_content_item_refs) AS ref_count "
+                "FROM domain "
+                "WHERE project_id = :pid AND row_target = :row AND retired_at IS NULL"
+            ),
+            {"pid": PROJECT_ID, "row": str(ROW_REF)},
+        ).fetchall()
+        assert len(rows) > 0, "VER-3c-03: at least one active domain must exist"
+        for domain_id, ref_count in rows:
+            assert ref_count >= 1, (
+                f"VER-3c-03: domain {domain_id} has empty cell_content_item_refs"
+            )
+
+    # VER-3c-04: All ci_ids in cell_content_item_refs resolve to cell_content_item with matching row_target
+    def test_ver_3c_04_all_cci_refs_valid(self):
+        """VER-3c-04: Every ci_id in cell_content_item_refs must resolve to a CCI with matching row_target."""
+        import mechanisms.domain_derivation as dd
+
+        with patch("core.ai_client.Anthropic") as mock_anthropic:
+            mock_client = MagicMock()
+            mock_anthropic.return_value = mock_client
+            mock_client.messages.create.return_value = self._make_ai_message(
+                self._default_grouping_response()
+            )
+            result = dd.run(
+                project_id=PROJECT_ID,
+                practitioner_id=PRACTITIONER_ID,
+                row_ref=ROW_REF,
+            )
+
+        assert result["execution_status"] in ("Completed", "CompletedWithWarnings")
+
+        mismatches = self._session.execute(
+            text(
+                "SELECT d.domain_id, refs.ci_id "
+                "FROM domain d "
+                "CROSS JOIN LATERAL jsonb_array_elements_text(d.cell_content_item_refs) AS refs(ci_id) "
+                "LEFT JOIN cell_content_item cci "
+                "       ON cci.ci_id = refs.ci_id AND cci.project_id = d.project_id "
+                "LEFT JOIN zachman_cell zc "
+                "       ON zc.cell_id = cci.cell_id AND zc.project_id = d.project_id "
+                "WHERE d.project_id = :pid "
+                "  AND d.row_target = :row "
+                "  AND d.retired_at IS NULL "
+                "  AND (cci.ci_id IS NULL OR zc.row_target != d.row_target)"
+            ),
+            {"pid": PROJECT_ID, "row": str(ROW_REF)},
+        ).fetchall()
+        assert mismatches == [], (
+            f"VER-3c-04: {len(mismatches)} CCI ref(s) in cell_content_item_refs "
+            f"do not resolve or have mismatched row_target: {mismatches}"
+        )
+
+    # VER-3c-06: DomainRegister member_ids equals the full set of active domain_ids
+    def test_ver_3c_06_register_member_ids_strict_equality(self):
+        """VER-3c-06: register.member_ids must equal the set of all active domain_ids for the project."""
+        import mechanisms.domain_derivation as dd
+
+        with patch("core.ai_client.Anthropic") as mock_anthropic:
+            mock_client = MagicMock()
+            mock_anthropic.return_value = mock_client
+            mock_client.messages.create.return_value = self._make_ai_message(
+                self._default_grouping_response()
+            )
+            dd.run(
+                project_id=PROJECT_ID,
+                practitioner_id=PRACTITIONER_ID,
+                row_ref=ROW_REF,
+            )
+
+        reg_row = self._session.execute(
+            text(
+                "SELECT member_ids FROM register "
+                "WHERE register_type = 'Domain' AND project_id = :pid"
+            ),
+            {"pid": PROJECT_ID},
+        ).fetchone()
+        assert reg_row is not None, "VER-3c-06: DomainRegister row must exist"
+        register_ids = set(reg_row[0])
+
+        active_rows = self._session.execute(
+            text(
+                "SELECT domain_id FROM domain "
+                "WHERE project_id = :pid AND retired_at IS NULL"
+            ),
+            {"pid": PROJECT_ID},
+        ).fetchall()
+        active_ids = {r[0] for r in active_rows}
+
+        assert register_ids == active_ids, (
+            f"VER-3c-06: register member_ids {register_ids} != active domain_ids {active_ids}"
+        )
+
+    # VER-3c-08: mechanism_data field completeness
+    def test_ver_3c_08_mechanism_data_completeness(self):
+        """VER-3c-08: mechanism_data must contain all required fields from spec §7."""
+        import mechanisms.domain_derivation as dd
+
+        required_fields = {
+            "row_ref",
+            "scenario",
+            "cci_count_input",
+            "domain_count_produced",
+            "domain_count_retired",
+            "domains_produced",
+            "cci_set_hash",
+            "downstream_rerun_required",
+            "retirement_mapping",
+            "orphaned_ccis",
+            "repair_prompt_issued",
+            "cross_cutting_advisories",
+            "validation_failures",
+            "large_cci_set_advisory",
+            "mode_violations",
+            "ai_model_fingerprints",
+        }
+
+        with patch("core.ai_client.Anthropic") as mock_anthropic:
+            mock_client = MagicMock()
+            mock_anthropic.return_value = mock_client
+            mock_client.messages.create.return_value = self._make_ai_message(
+                self._default_grouping_response()
+            )
+            result = dd.run(
+                project_id=PROJECT_ID,
+                practitioner_id=PRACTITIONER_ID,
+                row_ref=ROW_REF,
+            )
+
+        assert result["execution_status"] in ("Completed", "CompletedWithWarnings")
+        md = result["mechanism_data"]
+        missing = required_fields - md.keys()
+        assert not missing, (
+            f"VER-3c-08: mechanism_data missing required fields: {sorted(missing)}"
+        )
+
+    # VER-3c-09: domain_qualifier and upstream_domain_ref columns must be absent from domain table
+    def test_ver_3c_09_withdrawn_columns_absent(self):
+        """VER-3c-09: Withdrawn columns domain_qualifier and upstream_domain_ref must not exist on domain table."""
+        withdrawn = {"domain_qualifier", "upstream_domain_ref"}
+        rows = self._session.execute(
+            text(
+                "SELECT column_name FROM information_schema.columns "
+                "WHERE table_name = 'domain' AND column_name = ANY(:cols)"
+            ),
+            {"cols": list(withdrawn)},
+        ).fetchall()
+        present = {r[0] for r in rows}
+        assert not present, (
+            f"VER-3c-09: withdrawn column(s) found on domain table: {present}"
         )
