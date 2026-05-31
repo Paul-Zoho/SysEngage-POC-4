@@ -64,6 +64,16 @@ repair = md.get("repair_prompt_issued")
 if repair:
     print(f"  repair_prompt_issued  = {repair}", flush=True)
 
+absorption = md.get("single_cci_absorption_issued")
+if absorption:
+    print(f"  absorption_issued     = {absorption}", flush=True)
+    for ab in md.get("absorptions", []):
+        print(
+            f"    absorbed {ab['ci_id']} from \"{ab['absorbed_from_domain_name']}\" "
+            f"→ \"{ab['absorbed_into_domain_name']}\"",
+            flush=True,
+        )
+
 cc_advisories = md.get("cross_cutting_advisories", [])
 if cc_advisories:
     print(f"  cross_cutting_advisories ({len(cc_advisories)}):", flush=True)
