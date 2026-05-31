@@ -29,7 +29,7 @@ outputType = "console"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "python -u sysengage/run_pmt_dd_ph3c_r5_branch.py"
+args = "python -u sysengage/run_dd_ph3c_both_branch.py"
 
 [agent]
 stack = "PNPM_WORKSPACE"
