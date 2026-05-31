@@ -4,8 +4,15 @@ run_pmt_dd_ph3c_r1.py — Pass 3c Domain Derivation for PMT_E2E, Row 1 only.
 Runs Domain Derivation for Row 1 of the PMT_E2E project and exports the
 full canonical ledger JSON.
 
-Usage:
+Usage (main branch):
   python -u sysengage/run_pmt_dd_ph3c_r1.py
+
+Usage (test branch — set NEON_DATABASE_URL before running):
+  NEON_DATABASE_URL=<branch_conn_str> python -u sysengage/run_pmt_dd_ph3c_r1.py
+
+Schema migration is applied automatically via alembic upgrade head before
+the run — safe on both main branch (no-op if already at head) and on any
+test branch cloned from a snapshot that predates recent migrations.
 
 Per replit.md: project-specific runner — does not modify the canonical
 all-rows runner (run_pmt_dd_ph3c.py).
@@ -17,6 +24,9 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
+
+from alembic import command as alembic_command
+from alembic.config import Config as AlembicConfig
 
 import mechanisms.domain_derivation as dd
 from core.db import get_session
@@ -30,6 +40,21 @@ ROW = 1
 OUT_DIR = Path(__file__).parent.parent / "verification_outputs"
 OUT_DIR.mkdir(parents=True, exist_ok=True)
 
+# ---------------------------------------------------------------------------
+# Schema migration — bring the target DB to the current migration head.
+# Idempotent: no-op if already at head. Essential for test branches cloned
+# from snapshots that pre-date recent migrations (e.g. snap_ph03_3b_AllProjects
+# sits at migration 008; current head is 016+).
+# ---------------------------------------------------------------------------
+print("[runner] Applying schema migrations (alembic upgrade head)...", flush=True)
+_alembic_cfg = AlembicConfig(str(Path(__file__).parent / "alembic.ini"))
+alembic_command.upgrade(_alembic_cfg, "head")
+print("[runner] Schema up to date.", flush=True)
+print(flush=True)
+
+# ---------------------------------------------------------------------------
+# Domain Derivation run
+# ---------------------------------------------------------------------------
 print(f"[runner] Pass 3c Domain Derivation — {PROJECT_ID}  Row {ROW}", flush=True)
 print(flush=True)
 
