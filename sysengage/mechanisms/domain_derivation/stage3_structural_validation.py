@@ -1,9 +1,9 @@
 """
 Stage 3 — Structural Validation (DM, with conditional IM repair).
 
-Per Domain Derivation Mechanism Spec v0.21 §4.3:
+Per Domain Derivation Mechanism Spec v0.22 §4.3:
   All checks run in sequence on the AI proposal in-memory. No DB calls
-  except the optional repair AI calls (CHK-3c-04 and CHK-3c-07 IM sub-acts).
+  except the optional repair AI calls (CHK-3c-04, CHK-3c-07, CHK-3c-08 IM sub-acts).
 
   CHK-3c-01  No empty cci_refs per proposal.
   CHK-3c-02  All cci_refs resolve to the eligible set (strip invalid refs).
@@ -13,6 +13,8 @@ Per Domain Derivation Mechanism Spec v0.21 §4.3:
   CHK-3c-06  At least one Domain survives after CHK-3c-01..04.
   CHK-3c-07  Single-CCI domain absorption (IM conditional): absorb isolated
              single-CCI Domains into neighbouring Domains via repair prompt.
+  CHK-3c-08  Over-concentrated domain split (IM conditional): split any Domain
+             containing > floor(eligible_count/2) CCIs into sub-domains.
   ADVC-3c-01 Domain count soft-bounds advisory.
 
 assign_membership_inserts from IncrementalRerun are NOT written here — they
@@ -28,11 +30,15 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from core.ai_client import MODEL, get_ai_client
+from mechanisms.domain_derivation.prompts.domain_grouping_prompt import ROW_GUIDANCE
 from mechanisms.domain_derivation.prompts.domain_repair_prompt import (
     build_domain_repair_prompt,
 )
 from mechanisms.domain_derivation.prompts.domain_single_cci_repair_prompt import (
     build_single_cci_repair_prompt,
+)
+from mechanisms.domain_derivation.prompts.domain_split_repair_prompt import (
+    build_split_repair_prompt,
 )
 from mechanisms.domain_derivation.schemas.domain_grouping_response_schema import (
     DomainProposal,
@@ -42,6 +48,9 @@ from mechanisms.domain_derivation.schemas.domain_repair_response_schema import (
 )
 from mechanisms.domain_derivation.schemas.domain_single_cci_repair_response_schema import (
     SingleCCIRepairResponse,
+)
+from mechanisms.domain_derivation.schemas.domain_split_repair_response_schema import (
+    SplitRepairResponse,
 )
 from mechanisms.domain_derivation.stage1_preflight import EligibleCCI, Stage1Result
 from mechanisms.domain_derivation.stage2_ai_grouping import Stage2Result
@@ -62,6 +71,8 @@ class Stage3Result:
     concern_entities: list[dict[str, Any]] = field(default_factory=list)
     single_cci_absorption_issued: bool = False
     absorptions: list[dict[str, Any]] = field(default_factory=list)
+    domain_split_issued: bool = False
+    splits: list[dict[str, Any]] = field(default_factory=list)
     status: str = "ok"
     failure_reason: str | None = None
 
@@ -103,6 +114,15 @@ def _parse_single_cci_repair_response(text_: str) -> SingleCCIRepairResponse | N
     try:
         data = json.loads(_strip_code_fence(text_))
         return SingleCCIRepairResponse.model_validate(data)
+    except Exception:
+        return None
+
+
+def _parse_split_repair_response(text_: str) -> SplitRepairResponse | None:
+    """Parse AI text as SplitRepairResponse; return None on failure."""
+    try:
+        data = json.loads(_strip_code_fence(text_))
+        return SplitRepairResponse.model_validate(data)
     except Exception:
         return None
 
@@ -463,6 +483,297 @@ def run_stage3(
             _log.warning(
                 "CHK-3c-07: repair prompt failed after 2 attempts — "
                 "%d single-CCI domain(s) left in place", len(single_cci_proposals)
+            )
+
+    # CHK-3c-08 — Over-concentrated domain split (IM conditional)
+    # Per spec v0.22 §4.3: after CHK-3c-07, before ADVC-3c-01.
+    # Fires when any Domain has len(cci_refs) > floor(eligible_count / 2).
+    # Exceptions: eligible_count <= 4 (sparse); len(proposals) == 1 (nothing to
+    # split into); all proposals concentrated (circular split risk).
+    concentration_threshold = eligible_count // 2
+    concentrated_proposals = [p for p in proposals if len(p.cci_refs) > concentration_threshold]
+
+    _skip_chk3c08 = False
+    if eligible_count <= 4:
+        _skip_chk3c08 = True
+    elif len(proposals) == 1:
+        _skip_chk3c08 = True
+    elif concentrated_proposals and len(concentrated_proposals) == len(proposals):
+        result.execution_warnings.append({"type": "chk3c08_all_domains_concentrated"})
+        _log.info(
+            "CHK-3c-08: all %d proposals exceed threshold — circular split risk, skipping",
+            len(proposals),
+        )
+        _skip_chk3c08 = True
+
+    if concentrated_proposals and not _skip_chk3c08:
+        row_guidance = ROW_GUIDANCE.get(str(row_ref), f"Row {row_ref} abstraction level")
+        concentrated_dicts = [
+            {"name": p.name, "description": p.description, "cci_refs": list(p.cci_refs)}
+            for p in concentrated_proposals
+        ]
+        concentrated_names: set[str] = {p.name.lower().strip() for p in concentrated_proposals}
+        other_dicts = [
+            {"name": p.name, "description": p.description, "cci_count": len(p.cci_refs)}
+            for p in proposals
+            if p.name.lower().strip() not in concentrated_names
+        ]
+
+        split_prompt = build_split_repair_prompt(
+            concentrated_domains=concentrated_dicts,
+            other_domains=other_dicts,
+            row_guidance=row_guidance,
+            concentration_threshold=concentration_threshold,
+        )
+
+        parsed_split: SplitRepairResponse | None = None
+        for attempt in range(2):
+            try:
+                msg_split, fp_split = _call_repair_ai(
+                    split_prompt, "stage3_chk3c08_split"
+                )
+                result.ai_model_fingerprints.append(fp_split)
+                parsed_split = _parse_split_repair_response(msg_split.content[0].text)
+                if parsed_split is not None:
+                    break
+                _log.warning(
+                    "CHK-3c-08 split parse failure (attempt %d/2)", attempt + 1
+                )
+            except Exception as exc:
+                _log.warning(
+                    "CHK-3c-08 split AI call failed (attempt %d/2): %s",
+                    attempt + 1,
+                    exc,
+                )
+
+        if parsed_split is not None:
+            result.domain_split_issued = True
+
+            # All ci_ids in the concentrated proposals
+            all_concentrated_ci_refs: set[str] = {
+                ref for p in concentrated_proposals for ref in p.cci_refs
+            }
+
+            # Build split sub-proposals from AI response
+            split_sub_proposals: list[DomainProposal] = [
+                DomainProposal(
+                    name=sp.name,
+                    description=sp.description,
+                    classification_type=None,
+                    cci_refs=list(sp.cci_refs),
+                )
+                for sp in parsed_split.proposals
+            ]
+
+            # Non-Loss check: union of split cci_refs must cover all concentrated cci_refs
+            split_covered = {ref for sp in parsed_split.proposals for ref in sp.cci_refs}
+            missing_from_split = all_concentrated_ci_refs - split_covered
+            if missing_from_split:
+                # Patch: add missing ci_ids to the largest split sub-proposal
+                largest_idx = max(
+                    range(len(split_sub_proposals)),
+                    key=lambda i: len(split_sub_proposals[i].cci_refs),
+                )
+                largest = split_sub_proposals[largest_idx]
+                new_refs = list(dict.fromkeys(largest.cci_refs + sorted(missing_from_split)))
+                split_sub_proposals[largest_idx] = DomainProposal(
+                    name=largest.name,
+                    description=largest.description,
+                    classification_type=largest.classification_type,
+                    cci_refs=new_refs,
+                )
+                _log.warning(
+                    "CHK-3c-08 Non-Loss patch: %d CCI(s) missing from split added to"
+                    " '%s': %s",
+                    len(missing_from_split),
+                    largest.name,
+                    sorted(missing_from_split),
+                )
+                result.execution_warnings.append(
+                    {
+                        "type": "chk3c08_noloss_patch",
+                        "recovered_ci_ids": sorted(missing_from_split),
+                    }
+                )
+
+            # Record splits for mechanism_data
+            for p in concentrated_proposals:
+                key = p.name.lower().strip()
+                p_ci_set = set(p.cci_refs)
+                sub_summaries = [
+                    {"name": sp.name, "cci_count": len(sp.cci_refs)}
+                    for sp in split_sub_proposals
+                    if any(ref in p_ci_set for ref in sp.cci_refs)
+                ]
+                result.splits.append(
+                    {
+                        "original_domain_name": p.name,
+                        "split_into": sub_summaries,
+                    }
+                )
+
+            # Replace concentrated proposals with split sub-proposals
+            proposals = [
+                p for p in proposals if p.name.lower().strip() not in concentrated_names
+            ]
+            proposals.extend(split_sub_proposals)
+
+            result.execution_warnings.append(
+                {
+                    "type": "chk3c08_split_performed",
+                    "count": len(concentrated_proposals),
+                }
+            )
+
+            # CHK-3c-04 Non-Loss safety re-check across all proposals after split merge
+            covered_after_split = {ref for p in proposals for ref in p.cci_refs}
+            still_orphaned = eligible_ci_ids - covered_after_split
+            if still_orphaned:
+                _log.warning(
+                    "CHK-3c-08 safety check: %d CCI(s) orphaned after split — %s",
+                    len(still_orphaned),
+                    sorted(still_orphaned),
+                )
+                result.orphaned_ccis = sorted(set(result.orphaned_ccis) | still_orphaned)
+                if result.status != "ok_with_warnings":
+                    result.status = "ok_with_warnings"
+
+            # CHK-3c-07 re-check: any newly single-CCI proposals from the split?
+            # Per spec v0.22 §4.3: "the two checks may chain".
+            new_single_cci_from_split = [
+                p for p in split_sub_proposals if len(p.cci_refs) == 1
+            ]
+            if new_single_cci_from_split and len(proposals) > 1 and eligible_count > 1:
+                non_single = [p for p in proposals if len(p.cci_refs) > 1]
+                if non_single:
+                    isolated_ci_ids_2 = [p.cci_refs[0] for p in new_single_cci_from_split]
+                    isolated_cci_dicts_2 = [
+                        {
+                            "ci_id": c.ci_id,
+                            "column": c.column,
+                            "classification_type": c.classification_type,
+                            "description": c.description,
+                        }
+                        for c in stage1.eligible_ccis
+                        if c.ci_id in isolated_ci_ids_2
+                    ]
+                    available_dicts_2 = [
+                        {
+                            "name": p.name,
+                            "description": p.description,
+                            "cci_count": len(p.cci_refs),
+                        }
+                        for p in non_single
+                    ]
+                    chk07_chain_prompt = build_single_cci_repair_prompt(
+                        isolated_ccis=isolated_cci_dicts_2,
+                        available_domains=available_dicts_2,
+                        row_ref=row_ref,
+                    )
+                    parsed_chain: SingleCCIRepairResponse | None = None
+                    for attempt in range(2):
+                        try:
+                            msg_chain, fp_chain = _call_repair_ai(
+                                chk07_chain_prompt, "stage3_chk3c07_chain_after_split"
+                            )
+                            result.ai_model_fingerprints.append(fp_chain)
+                            parsed_chain = _parse_single_cci_repair_response(
+                                msg_chain.content[0].text
+                            )
+                            if parsed_chain is not None:
+                                break
+                        except Exception as exc:
+                            _log.warning(
+                                "CHK-3c-07 chain (after split) AI call failed"
+                                " (attempt %d/2): %s",
+                                attempt + 1,
+                                exc,
+                            )
+
+                    if parsed_chain is not None:
+                        proposal_name_idx_chain = {
+                            p.name.lower().strip(): i for i, p in enumerate(proposals)
+                        }
+                        chain_absorbed: set[str] = set()
+                        for assignment in parsed_chain.assignments:
+                            ci_id = assignment.ci_id
+                            if ci_id not in isolated_ci_ids_2:
+                                continue
+                            target_key = assignment.target_domain_name.lower().strip()
+                            if target_key in proposal_name_idx_chain:
+                                idx = proposal_name_idx_chain[target_key]
+                                if len(proposals[idx].cci_refs) > 1:
+                                    existing = proposals[idx]
+                                    new_r = list(
+                                        dict.fromkeys(existing.cci_refs + [ci_id])
+                                    )
+                                    proposals[idx] = DomainProposal(
+                                        name=existing.name,
+                                        description=existing.description,
+                                        classification_type=existing.classification_type,
+                                        cci_refs=new_r,
+                                    )
+                                    result.absorptions.append(
+                                        {
+                                            "ci_id": ci_id,
+                                            "absorbed_from_domain_name": next(
+                                                (
+                                                    p.name
+                                                    for p in new_single_cci_from_split
+                                                    if p.cci_refs[0] == ci_id
+                                                ),
+                                                ci_id,
+                                            ),
+                                            "absorbed_into_domain_name": existing.name,
+                                        }
+                                    )
+                                    chain_absorbed.add(ci_id)
+                        if chain_absorbed:
+                            proposals = [
+                                p
+                                for p in proposals
+                                if not (
+                                    len(p.cci_refs) == 1
+                                    and p.cci_refs[0] in chain_absorbed
+                                )
+                            ]
+                            result.single_cci_absorption_issued = True
+                            result.execution_warnings.append(
+                                {
+                                    "type": "chk3c07_absorption_performed",
+                                    "count": len(chain_absorbed),
+                                    "note": "chained after CHK-3c-08 split",
+                                }
+                            )
+                    else:
+                        _log.warning(
+                            "CHK-3c-07 chain (after split): repair failed — "
+                            "%d single-CCI proposal(s) from split left in place",
+                            len(new_single_cci_from_split),
+                        )
+                        result.execution_warnings.append(
+                            {
+                                "type": "chk3c07_repair_failed",
+                                "isolated_ci_ids": isolated_ci_ids_2,
+                                "note": "chained after CHK-3c-08 split",
+                            }
+                        )
+
+        else:
+            # CHK-3c-08 split repair failed after 2 retries — leave in place
+            result.domain_split_issued = False
+            for p in concentrated_proposals:
+                result.execution_warnings.append(
+                    {
+                        "type": "chk3c08_repair_failed",
+                        "concentrated_domain_name": p.name,
+                        "cci_count": len(p.cci_refs),
+                    }
+                )
+            _log.warning(
+                "CHK-3c-08: split repair prompt failed after 2 attempts — "
+                "%d concentrated domain(s) left in place",
+                len(concentrated_proposals),
             )
 
     # ADVC-3c-01 — Domain count soft-bounds advisory (v0.21 §4.3)

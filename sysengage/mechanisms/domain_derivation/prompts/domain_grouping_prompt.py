@@ -128,6 +128,9 @@ For each proposed domain, ask:
 - When this domain fails, does it fail differently from the others?
 - Can it be explained to a business owner in one sentence without using 'and'?
 - Could this responsibility evolve independently without forcing changes to neighbours?
+- Does this domain align with a single business objective, or are multiple objectives
+  being conflated? If multiple, it should be split.
+- Are there overlapping domains that need to be consolidated or separated?
 
 If the answer to any question is 'no', reconsider the boundary.
 
@@ -139,6 +142,8 @@ Row 2 domain names use business responsibility vocabulary:
          (these describe system functions — they belong at Row 3 or below)
   Also avoid: any word that implies a technical mechanism (API, schema, database,
               algorithm, service, endpoint)
+  Also avoid: '&' and 'and' as connectors in domain names — a name requiring 'and'
+              suggests two separate domains that should each have their own entry
 
 ### Stakeholder actors
 Business actors (WHO-column CCIs) are rarely a standalone domain on their own —
@@ -150,7 +155,9 @@ them as a separate actor domain.
 - Do NOT create a domain containing only one CCI
 - Do NOT isolate a stakeholder actor as a standalone domain
 - Do NOT use workflow or function verbs in domain names
-- Do NOT create domains whose boundaries cannot be explained to a business owner""",
+- Do NOT create domains whose boundaries cannot be explained to a business owner
+- Do NOT use '&' or 'and' in domain names — if a name requires 'and', it is
+  probably two domains that should be listed separately""",
 
     "3": """\
 ## Row 3 — Designer / Logical Level

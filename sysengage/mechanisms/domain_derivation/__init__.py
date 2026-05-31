@@ -1,11 +1,12 @@
 """
 Domain Derivation mechanism — Pass 3c orchestrator.
 
-Per Domain Derivation Mechanism Spec v0.18 §4:
+Per Domain Derivation Mechanism Spec v0.22 §4:
   Stage 1 — Pre-flight, CCI assembly, re-run scenario detection (DM)
   Stage 2 — AI grouping act (IM)
   Stage 3 — Structural validation with conditional repair (DM + conditional IM)
-             Includes CHK-3c-07 single-CCI domain absorption (new in v0.18)
+             CHK-3c-07 single-CCI domain absorption
+             CHK-3c-08 over-concentrated domain split (new in v0.22)
   Stage 4 — Entity production and ledger commit (DM)
 
 Entry point: run(project_id, practitioner_id, row_ref) → dict
@@ -13,12 +14,13 @@ Entry point: run(project_id, practitioner_id, row_ref) → dict
 Returned dict keys:
   pass_id, execution_status, mechanism_data
 
-mechanism_data keys (per spec v0.18 §7):
+mechanism_data keys (per spec v0.22 §7):
   row_ref, scenario, cci_count_input, domain_count_produced, domain_count_retired,
   domains_produced, cci_set_hash, downstream_rerun_required, retirement_mapping,
   orphaned_ccis, repair_prompt_issued, cross_cutting_advisories,
   validation_failures, large_cci_set_advisory, mode_violations,
   ai_model_fingerprints, single_cci_absorption_issued, absorptions,
+  domain_split_issued, splits,
   idempotent (IdempotentRerun only)
 """
 
@@ -157,6 +159,8 @@ def run(
                 "ai_model_fingerprints": [],
                 "single_cci_absorption_issued": False,
                 "absorptions": [],
+                "domain_split_issued": False,
+                "splits": [],
             }
             read_witness: dict[str, Any] = {
                 "cci_count": 0,
@@ -206,6 +210,8 @@ def run(
                         "validation_failures",
                         "single_cci_absorption_issued",
                         "absorptions",
+                        "domain_split_issued",
+                        "splits",
                     )
                     if k in prior_md
                 },
@@ -341,6 +347,8 @@ def run(
             "ai_model_fingerprints": pass_data.get("ai_model_fingerprints", []),
             "single_cci_absorption_issued": stage3.single_cci_absorption_issued,
             "absorptions": stage3.absorptions,
+            "domain_split_issued": stage3.domain_split_issued,
+            "splits": stage3.splits,
         }
         read_witness = {
             "cci_count": cci_count,
