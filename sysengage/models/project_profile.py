@@ -22,6 +22,12 @@ Per Domain Derivation Mechanism Spec v0.13 §13.9 (Understanding v0.17):
     appear in before advisory is recorded (default 3). NULL → use default.
   domain_large_cci_set_advisory_threshold — CCI count above which a large-set
     advisory fires before the grouping call (default 80). NULL → use default.
+
+Per Requirement Derivation Mechanism Spec v0.1 §14.2 (Understanding v0.25):
+  requirement_rerun_threshold — new-CCI fraction above which IncrementalRerun
+    escalates to FullRerun (default 0.20). NULL → use default.
+  requirement_large_cci_set_advisory_threshold — row CCI count above which
+    the large-set advisory fires (default 80). NULL → use default.
 """
 
 from datetime import datetime, timezone
@@ -63,6 +69,12 @@ class ProjectProfileModel(Base):
         Integer, nullable=True
     )
     domain_large_cci_set_advisory_threshold: Mapped[int | None] = mapped_column(
+        Integer, nullable=True
+    )
+    requirement_rerun_threshold: Mapped[float | None] = mapped_column(
+        Float, nullable=True
+    )
+    requirement_large_cci_set_advisory_threshold: Mapped[int | None] = mapped_column(
         Integer, nullable=True
     )
     created_at: Mapped[datetime] = mapped_column(

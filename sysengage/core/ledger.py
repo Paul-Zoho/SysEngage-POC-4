@@ -14,6 +14,9 @@ Per Row 4 Applied §5 transactional discipline:
 ensure_domain_register_seeded() is called from Stage 1 pre-flight of Pass 3c
 before the mechanism transaction opens. It seeds a DomainRegister row for the
 project in the register table if one does not already exist.
+
+ensure_requirement_register_seeded() is called from Pass 3d __init__ before
+the mechanism transaction opens. Same pattern as ensure_domain_register_seeded().
 """
 
 from __future__ import annotations
@@ -125,6 +128,54 @@ def ensure_domain_register_seeded(project_id: str) -> None:
                     "cr": (
                         "This register SHALL contain the identifiers of ALL "
                         "Domain elements present in the ledger."
+                    ),
+                },
+            )
+            session.commit()
+        else:
+            session.rollback()
+    except Exception:
+        session.rollback()
+        raise
+    finally:
+        session.close()
+
+
+def ensure_requirement_register_seeded(project_id: str) -> None:
+    """
+    Seed a RequirementRegister row in the register table for project_id if absent.
+
+    Called from Pass 3d __init__ before the mechanism transaction opens.
+    Per Requirement Derivation Mechanism Spec v0.1 §5.1:
+      register_id = 'RR-001', register_type = 'Requirement'.
+      member_ids starts as '[]' — replaced on every Pass 3d run.
+
+    If the register table does not exist (migration not applied), raises
+    immediately so the orchestrator can produce the correct failure_reason.
+    """
+    session = get_session()
+    try:
+        result = session.execute(
+            text(
+                "SELECT register_id FROM register "
+                "WHERE register_type = 'Requirement' AND project_id = :pid"
+            ),
+            {"pid": project_id},
+        ).fetchone()
+        if result is None:
+            session.execute(
+                text(
+                    "INSERT INTO register "
+                    "(register_id, register_type, project_id, member_ids, completeness_rule) "
+                    "VALUES (:rid, 'Requirement', :pid, :mi, :cr)"
+                ),
+                {
+                    "rid": "RR-001",
+                    "pid": project_id,
+                    "mi": json.dumps([]),
+                    "cr": (
+                        "This register SHALL contain the identifiers of ALL "
+                        "Requirement elements present in the ledger."
                     ),
                 },
             )

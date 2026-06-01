@@ -8,6 +8,10 @@ Per Domain Derivation Mechanism Spec v0.17 §5.1 and canonical ledger spec v2.12
   Six canonical attributes: domain_id, name, description, classification_type,
     row_target, cell_content_item_refs (JSONB array directly on domain row —
     no join table; see MD-4 in spec v0.14).
+
+Note: the requirements back-reference was removed in Pass 3d (migration 017).
+  RequirementModel no longer has a direct domain_id FK — domain membership is
+  tracked via JSONB domain_refs on each Requirement row (MD-2).
 """
 
 from datetime import datetime, timezone
@@ -56,8 +60,3 @@ class DomainModel(Base):
     )
 
     project = relationship("ProjectModel", back_populates="domains")
-    requirements = relationship(
-        "RequirementModel",
-        back_populates="domain",
-        overlaps="project,requirements",
-    )
