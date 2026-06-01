@@ -1,7 +1,7 @@
 """
 Domain grouping prompt template — used for FirstRun and FullRerun scenarios.
 
-Per Domain Derivation Mechanism Spec v0.21 §4.2 and §5.4:
+Per Domain Derivation Mechanism Spec v0.23 §4.2 and §5.4:
   Injects: row_ref, row_guidance, cci_set, cci_count.
   ROW_GUIDANCE is defined inline here per §5.4 — no separate vocabulary module.
   Multi-line guidance blocks (Rows 1–5) are injected verbatim as a prompt
@@ -14,8 +14,14 @@ Per Domain Derivation Mechanism Spec v0.21 §4.2 and §5.4:
 LPM constraint: prompt instructs AI not to copy CCI descriptions verbatim.
 Expected response format: {"proposals": [...]} per domain_grouping_response_schema.py.
 
-v0.21 delta (from v0.20): No prompt changes — ADVC-3c-01 inverted-range guard
-  added in stage3_structural_validation.py only.
+v0.23 delta (from v0.22): ROW_GUIDANCE["3"], ["4"], ["5"] — 'and'/'&'
+  prohibition and single-objective test added. ROW_GUIDANCE["3"] vocabulary:
+  'computation model' removed from Appropriate list; 'derivation logic',
+  'decision logic' added; 'computation'/'calculation'/'reporting' added to
+  Avoid (Row 5 vocabulary note). Evidence: PMT Run 9 D014 "Earnings Computation
+  and Reporting Model".
+v0.22 delta (from v0.21): ROW_GUIDANCE["2"] — 'and'/'&' prohibition,
+  single-objective test, and overlap detection question added.
 v0.20 delta (from v0.19): ROW_GUIDANCE["3"], ["4"], ["5"] each replaced from
   a short phrase with a structured principle-based guidance block (same template
   as Rows 1–2). Validated against PMT Row 3 (6 CCIs), Row 4 (1 CCI), Row 5
@@ -201,15 +207,23 @@ platform, it is at the wrong level.
 - Does this domain fail differently from neighbouring domains — in a way that a
   designer (not a business owner, not a developer) would recognise?
 - Can the domain be described in one sentence without naming any technology?
+- Can the domain be described in one sentence **without using 'and' or '&'**?
+  If 'and' is required, it likely contains two distinct logical design concerns — split it.
+- Does it align with a **single logical design objective**, or multiple?
 
 ### Vocabulary signals
 Row 3 domain names use logical design vocabulary:
   Appropriate: logical model, logical structure, logical behaviour, state management,
                constraint enforcement, data model, interaction model, access model,
-               visibility model, computation model, lifecycle
+               visibility model, lifecycle, derivation logic, decision logic
   Avoid: physical technology names (PostgreSQL, React, Redis, AWS, iOS), code
          patterns (class, function, module, endpoint), business policy language
          (obligation, stewardship, entitlement — those are Row 2)
+  Avoid: 'computation', 'calculation', 'reporting' — these imply algorithmic or
+         output-level detail that belongs at Row 5. Prefer 'derivation logic',
+         'decision model', or 'visibility model' at Row 3.
+  Avoid: 'and' or '&' in domain names — these signal two distinct logical concerns
+         merged into one domain
 
 ### Cross-column integration
 Row 3 domains should integrate logical structure (WHAT) with logical behaviour (HOW)
@@ -228,7 +242,12 @@ preferable to many thin ones.
 - Do NOT create a domain containing only one CCI (unless cci_count_input == 1)
 - Do NOT name a domain after a technology, platform, or framework
 - Do NOT use business-obligation language (Row 2 vocabulary) in domain names
-- Do NOT create domains that only describe a single Zachman column in isolation""",
+- Do NOT create domains that only describe a single Zachman column in isolation
+- Do NOT use 'and' or '&' in domain names — if you need 'and', create two domains
+- Do NOT use 'computation', 'calculation', or 'reporting' as primary descriptors —
+  these are Row 5 vocabulary; use 'derivation logic', 'decision model', or
+  'visibility model' instead
+""",
 
     "4": """\
 ## Row 4 — Builder / Physical Level
@@ -269,6 +288,8 @@ technologies, platforms, or physical components.
 - Does this domain fail differently from neighbouring domains — in the way a builder
   (not a designer, not a developer) would recognise?
 - Can the domain be described in terms of physical artefacts without describing code?
+- Can the domain be described without using 'and' or '&'?
+  If 'and' is required, it likely covers two distinct physical construction areas — split it.
 
 ### Vocabulary signals
 Row 4 domain names use physical construction vocabulary:
@@ -276,6 +297,8 @@ Row 4 domain names use physical construction vocabulary:
                integration, physical schema, service, API, build, configuration
   Avoid: business-level language (Row 2), logical abstractions without physical
          specifics (Row 3), code-level implementation detail (Row 5)
+  Avoid: 'and' or '&' in domain names — these signal two distinct physical
+         construction areas merged into one domain
 
 ### Sparse CCI sets at Row 4
 Row 4 is often sparse for systems whose primary content is conceptual or logical.
@@ -294,7 +317,9 @@ only a constraint at this row.
 ### Prohibition rules
 - Do NOT create domains that describe business obligations (Row 2 vocabulary)
 - Do NOT create domains that describe logical design without physical specifics
-- Do NOT name a domain after a logical concept without its physical realisation""",
+- Do NOT name a domain after a logical concept without its physical realisation
+- Do NOT use 'and' or '&' in domain names — if you need 'and', create two domains
+""",
 
     "5": """\
 ## Row 5 — Implementer / Detailed Design Level
@@ -337,6 +362,8 @@ making additional design decisions.
   without needing decisions from neighbouring domains?
 - Does this domain fail differently from neighbouring domains — in a way that an
   implementer (not a designer, not a business owner) would recognise?
+- Can the domain be described without using 'and' or '&'?
+  If 'and' is required, it likely covers two distinct specification areas — split it.
 
 ### Vocabulary signals
 Row 5 domain names use detailed implementation vocabulary:
@@ -344,6 +371,8 @@ Row 5 domain names use detailed implementation vocabulary:
                detailed, implementation, cycle, timing, format, contract
   Avoid: business-level language (Row 2), logical abstractions (Row 3), generic
          high-level physical terms without specifics (Row 4)
+  Avoid: 'and' or '&' in domain names — these signal two distinct specification
+         areas merged into one domain
 
 ### Column-sparse CCI sets at Row 5
 Row 5 CCIs often cluster in specific columns depending on the source document's
@@ -362,7 +391,9 @@ column domains.
 - Do NOT create a domain containing only one CCI (unless cci_count_input == 1)
 - Do NOT use business-level or logical-level vocabulary in domain names
 - Do NOT create overlapping domains where the same specification concern appears twice
-- Do NOT force more domains than the CCI content supports""",
+- Do NOT force more domains than the CCI content supports
+- Do NOT use 'and' or '&' in domain names — if you need 'and', create two domains
+""",
 
     "6": "operational level — runtime procedures, user interactions, support processes, and operational behaviours",
 }
