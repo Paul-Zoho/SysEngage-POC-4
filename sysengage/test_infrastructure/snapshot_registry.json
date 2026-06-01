@@ -25,6 +25,19 @@
       "ver_criteria_passed": [],
       "neon_branch_id": "br-falling-sound-abzj3y5c",
       "neon_project_id": "sparkling-tree-75414608"
+    },
+    {
+      "name": "snap_ph03_3c_AllProjects",
+      "project_id": "ALL",
+      "phase": "ph03",
+      "pass": "3c",
+      "row": "R5",
+      "state_description": "Post-3c DD: PMT and NQPS all rows 1\u20135, domains committed, dedup ON \u2014 PMT_E2E Run12, NQPS_E2E Run6. Pass 3d input baseline.",
+      "created_at": "2026-06-01T18:00:59Z",
+      "status": "VERIFIED",
+      "ver_criteria_passed": [],
+      "neon_branch_id": "br-shiny-sun-ab9f9usv",
+      "neon_project_id": "sparkling-tree-75414608"
     }
   ]
 }
