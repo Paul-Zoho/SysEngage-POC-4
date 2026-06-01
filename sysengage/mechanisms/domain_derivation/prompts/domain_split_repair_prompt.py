@@ -1,7 +1,7 @@
 """
 CHK-3c-08 split repair prompt template.
 
-Per Domain Derivation Mechanism Spec v0.22 §4.3 (CHK-3c-08):
+Per Domain Derivation Mechanism Spec v0.24 §4.3 (CHK-3c-08):
   Issues when any Domain has len(cci_refs) > floor(eligible_count / 2).
   Asks the AI to split the over-concentrated domain into 2+ sub-domains such
   that every original ci_id appears in exactly one sub-domain.
@@ -11,6 +11,15 @@ Parameters:
   other_domains: list of {name, description, cci_count} — non-concentrated for context
   row_guidance: ROW_GUIDANCE[str(row_ref)] block injected verbatim
   concentration_threshold: int — floor(eligible_count/2)
+
+v0.24 delta: Rule 3 updated — two-step "and" test replaces blunt prohibition
+  per §4.3: "Each split domain name must not use 'and' or '&'. If a sub-theme
+  appears to require 'and', find the single concept that unifies those CCIs and
+  use that as the name. The purpose of splitting is to produce coherently-named
+  single-concept domains — not domains whose names are themselves compound."
+  Evidence: PMT R11 D011 "Earnings Derivation and Aggregation Logic" / D013
+  "Task Availability and Persistence Model" produced by CHK-3c-08 without
+  this prohibition in the repair prompt.
 """
 
 from __future__ import annotations
@@ -69,8 +78,10 @@ Rules:
 1. Every ci_id from the original domain MUST appear in exactly ONE sub-domain \
 (Non-Loss constraint — do not omit any ci_id, do not duplicate any ci_id).
 2. Each sub-domain MUST contain at least 2 CCIs — do NOT create single-CCI sub-domains.
-3. Sub-domain names must NOT use '&' or 'and' — if a name requires 'and', it describes \
-two separate domains that should each have their own entry.
+3. Each sub-domain name must NOT use 'and' or '&'. If a sub-theme appears to require \
+'and', find the single concept that unifies those CCIs and use that as the name. \
+The purpose of splitting is to produce coherently-named single-concept domains — \
+not domains whose names are themselves compound.
 4. Sub-domain names must be specific and architecturally meaningful (2–60 characters). \
 Avoid "Miscellaneous", "Other", "General".
 5. Each sub-domain description must be an original description of the sub-domain's \

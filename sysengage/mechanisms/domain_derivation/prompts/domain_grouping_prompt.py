@@ -1,7 +1,7 @@
 """
 Domain grouping prompt template — used for FirstRun and FullRerun scenarios.
 
-Per Domain Derivation Mechanism Spec v0.23 §4.2 and §5.4:
+Per Domain Derivation Mechanism Spec v0.24 §4.2 and §5.4:
   Injects: row_ref, row_guidance, cci_set, cci_count.
   ROW_GUIDANCE is defined inline here per §5.4 — no separate vocabulary module.
   Multi-line guidance blocks (Rows 1–5) are injected verbatim as a prompt
@@ -14,6 +14,14 @@ Per Domain Derivation Mechanism Spec v0.23 §4.2 and §5.4:
 LPM constraint: prompt instructs AI not to copy CCI descriptions verbatim.
 Expected response format: {"proposals": [...]} per domain_grouping_response_schema.py.
 
+v0.24 delta (from v0.23): Nuanced 'and'/'&' test across all rows — two-step
+  test replaces blunt prohibition everywhere. Row 1 gets 'and' test for the
+  first time (previously absent). Row 2 qualification questions updated; 'retain'
+  and 'retention' added to vocabulary avoid list. Rows 3–5 prohibition rules
+  updated to two-step test. Row 4/5 qualification questions updated to two-step
+  phrasing. Evidence: PMT R11 D003 "Earnings Transparency and Stewardship";
+  NQPS D001–D003 with 'and' in names — naming precision failures, not grouping
+  failures; two-step test distinguishes them.
 v0.23 delta (from v0.22): ROW_GUIDANCE["3"], ["4"], ["5"] — 'and'/'&'
   prohibition and single-objective test added. ROW_GUIDANCE["3"] vocabulary:
   'computation model' removed from Appropriate list; 'derivation logic',
@@ -82,7 +90,19 @@ the content does not support it.
 - Do NOT create a domain containing only one CCI
 - Do NOT name a domain after a Zachman interrogative ("WHO Domain", "WHY Domain")
 - Do NOT use feature-level or function-level names for domains
-- Do NOT create overlapping domains where the same concern appears in two groups""",
+- Do NOT create overlapping domains where the same concern appears in two groups
+
+### The "and" test
+If a proposed domain name requires 'and' or '&', apply this two-step test:
+1. **Is there a single concept that encompasses both sub-themes without 'and'?**
+   If yes — use that single concept name. Example: "Regulatory and Social
+   Responsibility" becomes "Corporate Responsibility Governance". The grouping is
+   correct; the name just needs to identify the unifying concept.
+2. **If no single concept exists** — the domain likely contains two distinct
+   enterprise concerns that fail differently. Create two domains instead.
+
+- Do NOT use 'and' or '&' in domain names without first applying the "and" test.
+  If the test yields a single-concept name, use it. If not, split into two domains.""",
 
     "2": """\
 ## Row 2 — Owner / Business Level
@@ -129,14 +149,15 @@ columns. A domain drawing from only one column is likely too narrow.
 
 ### Domain qualification questions
 For each proposed domain, ask:
-- Can a single scope statement be written for it?
+- Can a single scope statement be written for it without using 'and' or '&'?
+  If 'and' / '&' is required, it is probably two domains — split it.
+- Does it align with a **single business objective**, or multiple?
+  If multiple objectives are present, the domain should be split by objective.
 - Does it persist across multiple business contexts and user roles?
 - When this domain fails, does it fail differently from the others?
-- Can it be explained to a business owner in one sentence without using 'and'?
 - Could this responsibility evolve independently without forcing changes to neighbours?
-- Does this domain align with a single business objective, or are multiple objectives
-  being conflated? If multiple, it should be split.
-- Are there overlapping domains that need to be consolidated or separated?
+- Are there **overlapping domains** that need to be consolidated or separated?
+  If a domain's name requires 'and' or '&', it is a candidate for separation into two.
 
 If the answer to any question is 'no', reconsider the boundary.
 
@@ -144,12 +165,13 @@ If the answer to any question is 'no', reconsider the boundary.
 Row 2 domain names use business responsibility vocabulary:
   Appropriate: accountability, entitlement, stewardship, governance, settlement,
                participation, oversight, obligation, responsibility, record
-  Avoid: calculate, process, store, retrieve, aggregate, compute, manage, track
-         (these describe system functions — they belong at Row 3 or below)
+  Avoid: calculate, process, store, retrieve, aggregate, compute, manage, track,
+         retain, retention
+         (these describe system functions or technical storage — they belong at
+         Row 3 or below; use 'stewardship', 'record', or 'accountability' instead)
   Also avoid: any word that implies a technical mechanism (API, schema, database,
               algorithm, service, endpoint)
-  Also avoid: '&' and 'and' as connectors in domain names — a name requiring 'and'
-              suggests two separate domains that should each have their own entry
+  Avoid: 'and' or '&' in domain names without first applying the "and" test above
 
 ### Stakeholder actors
 Business actors (WHO-column CCIs) are rarely a standalone domain on their own —
@@ -161,9 +183,11 @@ them as a separate actor domain.
 - Do NOT create a domain containing only one CCI
 - Do NOT isolate a stakeholder actor as a standalone domain
 - Do NOT use workflow or function verbs in domain names
-- Do NOT create domains whose boundaries cannot be explained to a business owner
-- Do NOT use '&' or 'and' in domain names — if a name requires 'and', it is
-  probably two domains that should be listed separately""",
+- Do NOT use 'and' or '&' in domain names without first applying the "and" test:
+  (1) Is there a single concept that covers both sub-themes? If yes, use it.
+  (2) If no single concept exists, the domain contains two distinct concerns
+      — create two domains instead.
+- Do NOT create domains whose boundaries cannot be explained to a business owner""",
 
     "3": """\
 ## Row 3 — Designer / Logical Level
@@ -243,7 +267,10 @@ preferable to many thin ones.
 - Do NOT name a domain after a technology, platform, or framework
 - Do NOT use business-obligation language (Row 2 vocabulary) in domain names
 - Do NOT create domains that only describe a single Zachman column in isolation
-- Do NOT use 'and' or '&' in domain names — if you need 'and', create two domains
+- Do NOT use 'and' or '&' in domain names without first applying the "and" test:
+  (1) Is there a single concept that covers both sub-themes? If yes, use it.
+  (2) If no single concept exists, the domain contains two distinct concerns
+      — create two domains instead.
 - Do NOT use 'computation', 'calculation', or 'reporting' as primary descriptors —
   these are Row 5 vocabulary; use 'derivation logic', 'decision model', or
   'visibility model' instead
@@ -288,8 +315,9 @@ technologies, platforms, or physical components.
 - Does this domain fail differently from neighbouring domains — in the way a builder
   (not a designer, not a developer) would recognise?
 - Can the domain be described in terms of physical artefacts without describing code?
-- Can the domain be described without using 'and' or '&'?
-  If 'and' is required, it likely covers two distinct physical construction areas — split it.
+- If the domain name requires 'and' or '&', apply the "and" test: first ask
+  whether a single concept covers both sub-themes. If yes, use that concept name.
+  If no single concept exists, the domain has two distinct construction areas — split it.
 
 ### Vocabulary signals
 Row 4 domain names use physical construction vocabulary:
@@ -318,7 +346,10 @@ only a constraint at this row.
 - Do NOT create domains that describe business obligations (Row 2 vocabulary)
 - Do NOT create domains that describe logical design without physical specifics
 - Do NOT name a domain after a logical concept without its physical realisation
-- Do NOT use 'and' or '&' in domain names — if you need 'and', create two domains
+- Do NOT use 'and' or '&' in domain names without first applying the "and" test:
+  (1) Is there a single concept that covers both sub-themes? If yes, use it.
+  (2) If no single concept exists, the domain contains two distinct concerns
+      — create two domains instead.
 """,
 
     "5": """\
@@ -362,8 +393,9 @@ making additional design decisions.
   without needing decisions from neighbouring domains?
 - Does this domain fail differently from neighbouring domains — in a way that an
   implementer (not a designer, not a business owner) would recognise?
-- Can the domain be described without using 'and' or '&'?
-  If 'and' is required, it likely covers two distinct specification areas — split it.
+- If the domain name requires 'and' or '&', apply the "and" test: first ask
+  whether a single concept covers both sub-themes. If yes, use that concept name.
+  If no single concept exists, the domain has two distinct specification areas — split it.
 
 ### Vocabulary signals
 Row 5 domain names use detailed implementation vocabulary:
@@ -392,7 +424,10 @@ column domains.
 - Do NOT use business-level or logical-level vocabulary in domain names
 - Do NOT create overlapping domains where the same specification concern appears twice
 - Do NOT force more domains than the CCI content supports
-- Do NOT use 'and' or '&' in domain names — if you need 'and', create two domains
+- Do NOT use 'and' or '&' in domain names without first applying the "and" test:
+  (1) Is there a single concept that covers both sub-themes? If yes, use it.
+  (2) If no single concept exists, the domain contains two distinct concerns
+      — create two domains instead.
 """,
 
     "6": "operational level — runtime procedures, user interactions, support processes, and operational behaviours",

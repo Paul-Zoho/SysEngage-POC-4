@@ -1,7 +1,7 @@
 """
 CHK-3c-07 single-CCI domain absorption repair prompt.
 
-Per Domain Derivation Mechanism Spec v0.18 §4.3 (CHK-3c-07):
+Per Domain Derivation Mechanism Spec v0.24 §4.3 (CHK-3c-07):
   Invoked when one or more Domain proposals contain exactly one CCI ref.
   Injects: isolated_ccis (from single-CCI proposals), available_domains
   (non-single-CCI proposals), row_guidance.
@@ -12,9 +12,14 @@ Per Domain Derivation Mechanism Spec v0.18 §4.3 (CHK-3c-07):
 
 IMPORTANT: This prompt uses domain_name (not domain_id) to reference the
 receiving Domain. Stage 3 resolves names by case-insensitive match against
-the non-single-CCI proposals. See Mechanism Spec v0.18 §5.2.
+the non-single-CCI proposals. See Mechanism Spec v0.24 §5.2.
 Two retries on parse failure — persistent failure leaves single-CCI domains
 in place (does NOT fail the run).
+
+v0.24 delta: Explicit naming prohibition added per §4.3 — the prompt must
+state that any new domain names must not use 'and'/'&' without first applying
+the two-step test. (CHK-3c-07 only assigns, not creates, but the instruction
+covers edge-case name references.)
 """
 
 from __future__ import annotations
@@ -74,6 +79,10 @@ Rules:
 3. Use the exact Domain name as shown above (case-insensitive matching will be applied).
 4. Choose the Domain whose existing CCIs are most conceptually related to the isolated CCI.
 5. Provide a brief rationale for each assignment.
+6. Any domain name you reference or create must not use 'and' or '&' without first
+   confirming no single concept covers both sub-themes. If a single concept exists,
+   use it as the name. If not, that signals two distinct domains — but this prompt
+   only assigns, not splits.
 
 Respond with a JSON object in this exact format:
 {{
