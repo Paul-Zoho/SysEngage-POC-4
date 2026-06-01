@@ -243,10 +243,23 @@ def _build_requirement_element(req) -> dict[str, Any]:
     payload: dict[str, Any] = {
         "requirement_id": req.requirement_id,
         "statement": req.statement,
+        "requirement_type": req.requirement_type,
         "row_target": req.row_target,
+        "confidence": req.confidence,
+        "cci_refs": req.cci_refs,
+        "domain_refs": req.domain_refs,
+        "answer_refs": req.answer_refs if req.answer_refs else [],
     }
-    if hasattr(req, "domain_id") and req.domain_id:
-        payload["domain_refs"] = [req.domain_id]
+    if req.rationale:
+        payload["rationale"] = req.rationale
+    if req.fit_criteria:
+        payload["fit_criteria"] = req.fit_criteria
+    if req.verification_method:
+        payload["verification_method"] = req.verification_method
+    if req.priority:
+        payload["priority"] = req.priority
+    if req.retired_at:
+        payload["retired_at"] = req.retired_at.isoformat()
     return {
         "element_type": "Requirement",
         "element_id": req.requirement_id,
