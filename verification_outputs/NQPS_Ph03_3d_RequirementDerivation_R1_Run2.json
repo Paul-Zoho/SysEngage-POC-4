@@ -1,0 +1,4192 @@
+{
+  "sysengage_ledger_version": "2.12",
+  "schema_id": "sysengage.ledger.instance.v2_12",
+  "row_target": [
+    "1",
+    "2",
+    "3",
+    "5"
+  ],
+  "run_id": "3c96a527-3668-46c2-be25-91dfd6e5ebdc",
+  "created_utc": "2026-06-02T06:19:31.685131+00:00",
+  "generator": {
+    "name": "sysengage-ledger-export",
+    "version": "1.0"
+  },
+  "elements": [
+    {
+      "element_type": "Source",
+      "element_id": "S2753",
+      "payload": {
+        "source_id": "S2753",
+        "source_text": "\nQUALITY POLICY STATEMENT\nNovus Mechanical Services Limited has established a Quality Policy to be consistent with the purpose and context of our organisation.",
+        "segmentation_context": "multi-line block",
+        "input_material_ref": "/home/runner/workspace/verification_inputs/Novus Quality Policy Statement v1.docx",
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_type": "Source",
+      "element_id": "S2754",
+      "payload": {
+        "source_id": "S2754",
+        "source_text": " It provides a framework for the setting and review of objectives in addition to our commitment to satisfy applicable customers’, regulatory and legislative requirements as well as our commitment to continually improve our management system.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "/home/runner/workspace/verification_inputs/Novus Quality Policy Statement v1.docx",
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_type": "Source",
+      "element_id": "S2755",
+      "payload": {
+        "source_id": "S2755",
+        "source_text": " \n\nCustomer focus: As an organisation we have made a commitment to understand our current and future customers’ needs; meet their requirements and strive to exceed their expectations.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "/home/runner/workspace/verification_inputs/Novus Quality Policy Statement v1.docx",
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_type": "Source",
+      "element_id": "S2756",
+      "payload": {
+        "source_id": "S2756",
+        "source_text": " \nLeadership: Our Top Management have committed to creating and maintaining a working environment in which people become fully involved in achieving our objectives.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "/home/runner/workspace/verification_inputs/Novus Quality Policy Statement v1.docx",
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_type": "Source",
+      "element_id": "S2757",
+      "payload": {
+        "source_id": "S2757",
+        "source_text": " \nEngagement of people: As an organisation we recognise that people are the essence of any good business and that their full involvement enables their abilities to be used for our benefit.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "/home/runner/workspace/verification_inputs/Novus Quality Policy Statement v1.docx",
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_type": "Source",
+      "element_id": "S2758",
+      "payload": {
+        "source_id": "S2758",
+        "source_text": " \nProcess approach: As an organisation we understand that a desired result is achieved more efficiently when activities and related resources are managed as a process or series of interconnected processes.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "/home/runner/workspace/verification_inputs/Novus Quality Policy Statement v1.docx",
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_type": "Source",
+      "element_id": "S2759",
+      "payload": {
+        "source_id": "S2759",
+        "source_text": " \nImprovement: We have committed to achieving continual improvement across all aspects of our quality management system; it is one of our main annual objectives.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "/home/runner/workspace/verification_inputs/Novus Quality Policy Statement v1.docx",
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_type": "Source",
+      "element_id": "S2760",
+      "payload": {
+        "source_id": "S2760",
+        "source_text": " \nEvidence-based decision making: As an organisation we have committed to only make decisions relating to our QMS following an analysis of relevant data and information.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "/home/runner/workspace/verification_inputs/Novus Quality Policy Statement v1.docx",
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_type": "Source",
+      "element_id": "S2761",
+      "payload": {
+        "source_id": "S2761",
+        "source_text": " \nRelationship management: We recognises that an organisation and the relationship it has with its external providers are interdependent and a mutually beneficial relationship enhances the ability of both to create value.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "/home/runner/workspace/verification_inputs/Novus Quality Policy Statement v1.docx",
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_type": "Source",
+      "element_id": "S2762",
+      "payload": {
+        "source_id": "S2762",
+        "source_text": " \nOur policy is also to meet the requirements of our social, environmental, charitable and legislative responsibilities.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "/home/runner/workspace/verification_inputs/Novus Quality Policy Statement v1.docx",
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_type": "Source",
+      "element_id": "S2763",
+      "payload": {
+        "source_id": "S2763",
+        "source_text": "\n\nSigned : \t\t\t\t\t\t\tDate: 22/4/2025\n           \t\nDamian Shacklock\nDirector\nNOVUS MECHANICAL SERVICES LTD.\n",
+        "segmentation_context": "multi-line block",
+        "input_material_ref": "/home/runner/workspace/verification_inputs/Novus Quality Policy Statement v1.docx",
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_type": "SourceRegister",
+      "element_id": "SOURCE_REG001",
+      "payload": {
+        "register_id": "SOURCE_REG001",
+        "register_type": "Source",
+        "member_ids": [
+          "S2753",
+          "S2754",
+          "S2755",
+          "S2756",
+          "S2757",
+          "S2758",
+          "S2759",
+          "S2760",
+          "S2761",
+          "S2762",
+          "S2763"
+        ],
+        "completeness_rule": "This register SHALL contain the identifiers of ALL Source elements present in the ledger.",
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_type": "AnalysisPass",
+      "element_id": "P1479",
+      "payload": {
+        "pass_id": "P1479",
+        "pass_type": "Per-row",
+        "mechanism": "CCIConstruction",
+        "evaluated_scope": "All Row 1 Signals",
+        "execution_status": "Completed",
+        "mode_active": "DM",
+        "declared_transformation_modes": [
+          "IM",
+          "DM"
+        ],
+        "outputs": {
+          "cci_data": {
+            "merges": [],
+            "row_ref": 1,
+            "ccis_merged": 0,
+            "cells_empty": 1,
+            "ccis_created": 34,
+            "batches_failed": 0,
+            "cells_populated": 5,
+            "batches_processed": 1,
+            "enumeration_splits": [],
+            "execution_warnings": [
+              {
+                "detail": {
+                  "cell_id": "ZC-R1-C-Why",
+                  "member_count": 5,
+                  "classification_type": "Constraint"
+                },
+                "warning_type": "stage4a_pairwise_routed"
+              }
+            ],
+            "candidates_rejected": 0,
+            "consolidation_flags": [],
+            "integrity_violations": []
+          },
+          "mode_violations": []
+        },
+        "pass_started_at": "2026-05-26T18:31:52.893379+00:00",
+        "confidence": 0.838529411764706,
+        "pass_completed_at": "2026-05-26T18:32:57.596320+00:00",
+        "elapsed_ms": 65864
+      }
+    },
+    {
+      "element_type": "AnalysisPass",
+      "element_id": "P1480",
+      "payload": {
+        "pass_id": "P1480",
+        "pass_type": "Per-row",
+        "mechanism": "CCIConstruction",
+        "evaluated_scope": "All Row 2 Signals",
+        "execution_status": "Completed",
+        "mode_active": "DM",
+        "declared_transformation_modes": [
+          "IM",
+          "DM"
+        ],
+        "outputs": {
+          "cci_data": {
+            "merges": [
+              {
+                "surviving_ci_id": "CCI-ROW2-C-Why-012",
+                "merged_signal_refs": [
+                  "SG456"
+                ],
+                "original_descriptions": [
+                  "Policy must address social responsibility requirements",
+                  "Policy must address environmental responsibility requirements"
+                ]
+              },
+              {
+                "surviving_ci_id": "CCI-ROW2-C-Why-012",
+                "merged_signal_refs": [
+                  "SG456"
+                ],
+                "original_descriptions": [
+                  "Policy must address social responsibility requirements",
+                  "Policy must address charitable responsibility requirements"
+                ]
+              },
+              {
+                "surviving_ci_id": "CCI-ROW2-C-Why-012",
+                "merged_signal_refs": [
+                  "SG456"
+                ],
+                "original_descriptions": [
+                  "Policy must address social responsibility requirements",
+                  "Policy must address legislative responsibility requirements"
+                ]
+              }
+            ],
+            "row_ref": 2,
+            "ccis_merged": 0,
+            "cells_empty": 2,
+            "ccis_created": 35,
+            "batches_failed": 0,
+            "cells_populated": 4,
+            "batches_processed": 1,
+            "enumeration_splits": [],
+            "execution_warnings": [
+              {
+                "detail": {
+                  "cell_id": "ZC-R2-C-What",
+                  "member_count": 7,
+                  "classification_type": "Entity"
+                },
+                "warning_type": "stage4a_pairwise_routed"
+              }
+            ],
+            "candidates_rejected": 0,
+            "consolidation_flags": [],
+            "integrity_violations": []
+          },
+          "mode_violations": []
+        },
+        "pass_started_at": "2026-05-26T18:32:59.784917+00:00",
+        "confidence": 0.8460526315789473,
+        "pass_completed_at": "2026-05-26T18:34:05.427309+00:00",
+        "elapsed_ms": 66721
+      }
+    },
+    {
+      "element_type": "AnalysisPass",
+      "element_id": "P1481",
+      "payload": {
+        "pass_id": "P1481",
+        "pass_type": "Per-row",
+        "mechanism": "CCIConstruction",
+        "evaluated_scope": "All Row 3 Signals",
+        "execution_status": "Completed",
+        "mode_active": "DM",
+        "declared_transformation_modes": [
+          "IM",
+          "DM"
+        ],
+        "outputs": {
+          "cci_data": {
+            "merges": [],
+            "row_ref": 3,
+            "ccis_merged": 0,
+            "cells_empty": 4,
+            "ccis_created": 3,
+            "batches_failed": 0,
+            "cells_populated": 2,
+            "batches_processed": 1,
+            "enumeration_splits": [],
+            "execution_warnings": [],
+            "candidates_rejected": 0,
+            "consolidation_flags": [],
+            "integrity_violations": []
+          },
+          "mode_violations": []
+        },
+        "pass_started_at": "2026-05-26T18:34:07.596372+00:00",
+        "confidence": 0.71,
+        "pass_completed_at": "2026-05-26T18:34:20.406809+00:00",
+        "elapsed_ms": 13892
+      }
+    },
+    {
+      "element_type": "AnalysisPass",
+      "element_id": "P1482",
+      "payload": {
+        "pass_id": "P1482",
+        "pass_type": "Per-row",
+        "mechanism": "CCIConstruction",
+        "evaluated_scope": "All Row 4 Signals",
+        "execution_status": "Completed",
+        "mode_active": "DM",
+        "declared_transformation_modes": [
+          "IM",
+          "DM"
+        ],
+        "outputs": {
+          "cci_data": {
+            "merges": [],
+            "row_ref": 4,
+            "ccis_merged": 0,
+            "cells_empty": 6,
+            "ccis_created": 0,
+            "batches_failed": 0,
+            "cells_populated": 0,
+            "batches_processed": 0,
+            "enumeration_splits": [],
+            "execution_warnings": [],
+            "candidates_rejected": 0,
+            "consolidation_flags": [],
+            "integrity_violations": []
+          },
+          "mode_violations": []
+        },
+        "pass_started_at": "2026-05-26T18:34:22.580002+00:00",
+        "confidence": 1.0,
+        "pass_completed_at": "2026-05-26T18:34:25.969184+00:00",
+        "elapsed_ms": 4479
+      }
+    },
+    {
+      "element_type": "AnalysisPass",
+      "element_id": "P1483",
+      "payload": {
+        "pass_id": "P1483",
+        "pass_type": "Per-row",
+        "mechanism": "CCIConstruction",
+        "evaluated_scope": "All Row 5 Signals",
+        "execution_status": "Completed",
+        "mode_active": "DM",
+        "declared_transformation_modes": [
+          "IM",
+          "DM"
+        ],
+        "outputs": {
+          "cci_data": {
+            "merges": [],
+            "row_ref": 5,
+            "ccis_merged": 0,
+            "cells_empty": 3,
+            "ccis_created": 3,
+            "batches_failed": 0,
+            "cells_populated": 3,
+            "batches_processed": 1,
+            "enumeration_splits": [],
+            "execution_warnings": [],
+            "candidates_rejected": 1,
+            "consolidation_flags": [],
+            "integrity_violations": []
+          },
+          "mode_violations": []
+        },
+        "pass_started_at": "2026-05-26T18:34:27.997986+00:00",
+        "confidence": 0.7625,
+        "pass_completed_at": "2026-05-26T18:34:44.654213+00:00",
+        "elapsed_ms": 17738
+      }
+    },
+    {
+      "element_type": "AnalysisPass",
+      "element_id": "P1489",
+      "payload": {
+        "pass_id": "P1489",
+        "pass_type": "Universal",
+        "mechanism": "DomainDerivation",
+        "evaluated_scope": "Row 1 CCIs for project NQPS_E2E",
+        "execution_status": "Completed",
+        "mode_active": "IM",
+        "declared_transformation_modes": [
+          "IM",
+          "DM"
+        ],
+        "outputs": {
+          "read_witness": {
+            "row_ref": 1,
+            "cci_count": 34,
+            "project_id": "NQPS_E2E"
+          },
+          "mechanism_data": {
+            "splits": [],
+            "row_ref": 1,
+            "scenario": "FirstRun",
+            "absorptions": [],
+            "cci_set_hash": "3968c95afcf28ff83f3e39218524f68efb42d8885ebaef68e0272cf47ed16ed9",
+            "orphaned_ccis": [],
+            "cci_count_input": 34,
+            "mode_violations": [],
+            "domains_produced": [
+              {
+                "name": "Quality Governance",
+                "domain_id": "D001",
+                "cci_ref_count": 7,
+                "cross_cutting_cci_count": 0
+              },
+              {
+                "name": "Customer Accountability",
+                "domain_id": "D002",
+                "cci_ref_count": 5,
+                "cross_cutting_cci_count": 0
+              },
+              {
+                "name": "Workforce Stewardship",
+                "domain_id": "D003",
+                "cci_ref_count": 8,
+                "cross_cutting_cci_count": 0
+              },
+              {
+                "name": "Strategic Partnership Governance",
+                "domain_id": "D004",
+                "cci_ref_count": 4,
+                "cross_cutting_cci_count": 0
+              },
+              {
+                "name": "Regulatory Obligation",
+                "domain_id": "D005",
+                "cci_ref_count": 6,
+                "cross_cutting_cci_count": 0
+              },
+              {
+                "name": "Continual Improvement Commitment",
+                "domain_id": "D006",
+                "cci_ref_count": 4,
+                "cross_cutting_cci_count": 0
+              }
+            ],
+            "retirement_mapping": [],
+            "domain_split_issued": false,
+            "validation_failures": [],
+            "domain_count_retired": 0,
+            "repair_prompt_issued": false,
+            "ai_model_fingerprints": [
+              {
+                "model": "claude-sonnet-4-5-20250929",
+                "stage": "stage2_primary",
+                "input_tokens": 2339,
+                "output_tokens": 926
+              }
+            ],
+            "domain_count_produced": 6,
+            "large_cci_set_advisory": false,
+            "cross_cutting_advisories": [],
+            "downstream_rerun_required": false,
+            "single_cci_absorption_issued": false
+          },
+          "mode_violations": []
+        },
+        "pass_started_at": "2026-06-01T18:02:22.391907+00:00",
+        "confidence": 1.0,
+        "pass_completed_at": "2026-06-01T18:02:37.392852+00:00",
+        "elapsed_ms": 15000
+      }
+    },
+    {
+      "element_type": "AnalysisPass",
+      "element_id": "P1490",
+      "payload": {
+        "pass_id": "P1490",
+        "pass_type": "Universal",
+        "mechanism": "DomainDerivation",
+        "evaluated_scope": "Row 2 CCIs for project NQPS_E2E",
+        "execution_status": "Completed",
+        "mode_active": "IM",
+        "declared_transformation_modes": [
+          "IM",
+          "DM"
+        ],
+        "outputs": {
+          "read_witness": {
+            "row_ref": 2,
+            "cci_count": 35,
+            "project_id": "NQPS_E2E"
+          },
+          "mechanism_data": {
+            "splits": [],
+            "row_ref": 2,
+            "scenario": "FirstRun",
+            "absorptions": [],
+            "cci_set_hash": "912b43fdfe3460680e560a47150b2b22f7ffab25f404c6eca8d9d4116275cafd",
+            "orphaned_ccis": [],
+            "cci_count_input": 35,
+            "mode_violations": [],
+            "domains_produced": [
+              {
+                "name": "Quality Governance",
+                "domain_id": "D007",
+                "cci_ref_count": 11,
+                "cross_cutting_cci_count": 0
+              },
+              {
+                "name": "Customer Commitment Stewardship",
+                "domain_id": "D008",
+                "cci_ref_count": 6,
+                "cross_cutting_cci_count": 0
+              },
+              {
+                "name": "Process Accountability",
+                "domain_id": "D009",
+                "cci_ref_count": 4,
+                "cross_cutting_cci_count": 0
+              },
+              {
+                "name": "People Capability Stewardship",
+                "domain_id": "D010",
+                "cci_ref_count": 4,
+                "cross_cutting_cci_count": 0
+              },
+              {
+                "name": "Improvement Accountability",
+                "domain_id": "D011",
+                "cci_ref_count": 2,
+                "cross_cutting_cci_count": 0
+              },
+              {
+                "name": "Decision Evidence Governance",
+                "domain_id": "D012",
+                "cci_ref_count": 3,
+                "cross_cutting_cci_count": 0
+              },
+              {
+                "name": "External Partnership Stewardship",
+                "domain_id": "D013",
+                "cci_ref_count": 5,
+                "cross_cutting_cci_count": 0
+              }
+            ],
+            "retirement_mapping": [],
+            "domain_split_issued": false,
+            "validation_failures": [],
+            "domain_count_retired": 0,
+            "repair_prompt_issued": false,
+            "ai_model_fingerprints": [
+              {
+                "model": "claude-sonnet-4-5-20250929",
+                "stage": "stage2_primary",
+                "input_tokens": 2696,
+                "output_tokens": 1145
+              }
+            ],
+            "domain_count_produced": 7,
+            "large_cci_set_advisory": false,
+            "cross_cutting_advisories": [],
+            "downstream_rerun_required": false,
+            "single_cci_absorption_issued": false
+          },
+          "mode_violations": []
+        },
+        "pass_started_at": "2026-06-01T18:02:39.637735+00:00",
+        "confidence": 1.0,
+        "pass_completed_at": "2026-06-01T18:02:57.721202+00:00",
+        "elapsed_ms": 18083
+      }
+    },
+    {
+      "element_type": "AnalysisPass",
+      "element_id": "P1491",
+      "payload": {
+        "pass_id": "P1491",
+        "pass_type": "Universal",
+        "mechanism": "DomainDerivation",
+        "evaluated_scope": "Row 3 CCIs for project NQPS_E2E",
+        "execution_status": "Completed",
+        "mode_active": "IM",
+        "declared_transformation_modes": [
+          "IM",
+          "DM"
+        ],
+        "outputs": {
+          "read_witness": {
+            "row_ref": 3,
+            "cci_count": 3,
+            "project_id": "NQPS_E2E"
+          },
+          "mechanism_data": {
+            "splits": [],
+            "row_ref": 3,
+            "scenario": "FirstRun",
+            "absorptions": [],
+            "cci_set_hash": "0be9301df9349eb0bcb99fab13277186aef7835756983756e26a41b5d3c70b85",
+            "orphaned_ccis": [],
+            "cci_count_input": 3,
+            "mode_violations": [],
+            "domains_produced": [
+              {
+                "name": "Process Orchestration Model",
+                "domain_id": "D014",
+                "cci_ref_count": 2,
+                "cross_cutting_cci_count": 1
+              },
+              {
+                "name": "Decision Logic Model",
+                "domain_id": "D015",
+                "cci_ref_count": 2,
+                "cross_cutting_cci_count": 1
+              }
+            ],
+            "retirement_mapping": [],
+            "domain_split_issued": false,
+            "validation_failures": [],
+            "domain_count_retired": 0,
+            "repair_prompt_issued": false,
+            "ai_model_fingerprints": [
+              {
+                "model": "claude-sonnet-4-5-20250929",
+                "stage": "stage2_primary",
+                "input_tokens": 1603,
+                "output_tokens": 247
+              }
+            ],
+            "domain_count_produced": 2,
+            "large_cci_set_advisory": false,
+            "cross_cutting_advisories": [],
+            "downstream_rerun_required": false,
+            "single_cci_absorption_issued": false
+          },
+          "mode_violations": []
+        },
+        "pass_started_at": "2026-06-01T18:02:59.967592+00:00",
+        "confidence": 1.0,
+        "pass_completed_at": "2026-06-01T18:03:09.177897+00:00",
+        "elapsed_ms": 9210
+      }
+    },
+    {
+      "element_type": "AnalysisPass",
+      "element_id": "P1492",
+      "payload": {
+        "pass_id": "P1492",
+        "pass_type": "Universal",
+        "mechanism": "DomainDerivation",
+        "evaluated_scope": "Row 4 CCIs for project NQPS_E2E",
+        "execution_status": "CompletedWithWarnings",
+        "mode_active": "IM",
+        "declared_transformation_modes": [
+          "IM",
+          "DM"
+        ],
+        "outputs": {
+          "read_witness": {
+            "row_ref": 4,
+            "cci_count": 0,
+            "project_id": "NQPS_E2E"
+          },
+          "mechanism_data": {
+            "splits": [],
+            "row_ref": 4,
+            "scenario": "FirstRun",
+            "absorptions": [],
+            "cci_set_hash": "",
+            "orphaned_ccis": [],
+            "cci_count_input": 0,
+            "mode_violations": [],
+            "domains_produced": [],
+            "retirement_mapping": [],
+            "domain_split_issued": false,
+            "validation_failures": [],
+            "domain_count_retired": 0,
+            "repair_prompt_issued": false,
+            "ai_model_fingerprints": [],
+            "domain_count_produced": 0,
+            "large_cci_set_advisory": false,
+            "cross_cutting_advisories": [],
+            "downstream_rerun_required": false,
+            "single_cci_absorption_issued": false
+          },
+          "mode_violations": [],
+          "execution_warnings": [
+            {
+              "type": "no_cci_input"
+            }
+          ]
+        },
+        "pass_started_at": "2026-06-01T18:03:11.422829+00:00",
+        "confidence": 1.0,
+        "pass_completed_at": "2026-06-01T18:03:12.086264+00:00",
+        "elapsed_ms": 663
+      }
+    },
+    {
+      "element_type": "AnalysisPass",
+      "element_id": "P1493",
+      "payload": {
+        "pass_id": "P1493",
+        "pass_type": "Universal",
+        "mechanism": "DomainDerivation",
+        "evaluated_scope": "Row 5 CCIs for project NQPS_E2E",
+        "execution_status": "Completed",
+        "mode_active": "IM",
+        "declared_transformation_modes": [
+          "IM",
+          "DM"
+        ],
+        "outputs": {
+          "read_witness": {
+            "row_ref": 5,
+            "cci_count": 3,
+            "project_id": "NQPS_E2E"
+          },
+          "mechanism_data": {
+            "splits": [],
+            "row_ref": 5,
+            "scenario": "FirstRun",
+            "absorptions": [],
+            "cci_set_hash": "71568a498c39c13b1b89b6c1f3131e12432cce2c9e5f3c07327287141c4c7546",
+            "orphaned_ccis": [],
+            "cci_count_input": 3,
+            "mode_violations": [],
+            "domains_produced": [
+              {
+                "name": "Policy Approval Signature Implementation",
+                "domain_id": "D016",
+                "cci_ref_count": 3,
+                "cross_cutting_cci_count": 0
+              }
+            ],
+            "retirement_mapping": [],
+            "domain_split_issued": false,
+            "validation_failures": [],
+            "domain_count_retired": 0,
+            "repair_prompt_issued": false,
+            "ai_model_fingerprints": [
+              {
+                "model": "claude-sonnet-4-5-20250929",
+                "stage": "stage2_primary",
+                "input_tokens": 1382,
+                "output_tokens": 161
+              }
+            ],
+            "domain_count_produced": 1,
+            "large_cci_set_advisory": false,
+            "cross_cutting_advisories": [],
+            "downstream_rerun_required": false,
+            "single_cci_absorption_issued": false
+          },
+          "mode_violations": []
+        },
+        "pass_started_at": "2026-06-01T18:03:15.081490+00:00",
+        "confidence": 1.0,
+        "pass_completed_at": "2026-06-01T18:03:21.477916+00:00",
+        "elapsed_ms": 6396
+      }
+    },
+    {
+      "element_type": "AnalysisPass",
+      "element_id": "P1494",
+      "payload": {
+        "pass_id": "P1494",
+        "pass_type": "Universal",
+        "mechanism": "RequirementDerivation",
+        "evaluated_scope": "Row 1 for NQPS_E2E",
+        "execution_status": "Completed",
+        "mode_active": "IM",
+        "declared_transformation_modes": [
+          "IM",
+          "DM"
+        ],
+        "outputs": {
+          "mechanism_data": {
+            "row_ref": 1,
+            "idempotent": false,
+            "run_scenario": "FirstRun",
+            "domain_id_set": [
+              "D001",
+              "D002",
+              "D003",
+              "D004",
+              "D005",
+              "D006"
+            ],
+            "orphaned_ccis": [],
+            "cci_count_input": 34,
+            "mode_violations": [],
+            "domain_count_input": 6,
+            "retirement_mapping": [],
+            "validation_failures": [],
+            "repair_prompt_issued": false,
+            "requirements_produced": [
+              {
+                "domain_refs": [
+                  "D001"
+                ],
+                "cci_ref_count": 3,
+                "requirement_id": "R001",
+                "requirement_type": "Constraint"
+              },
+              {
+                "domain_refs": [
+                  "D001"
+                ],
+                "cci_ref_count": 1,
+                "requirement_id": "R002",
+                "requirement_type": "Constraint"
+              },
+              {
+                "domain_refs": [
+                  "D001"
+                ],
+                "cci_ref_count": 1,
+                "requirement_id": "R003",
+                "requirement_type": "Functional"
+              },
+              {
+                "domain_refs": [
+                  "D001"
+                ],
+                "cci_ref_count": 1,
+                "requirement_id": "R004",
+                "requirement_type": "Constraint"
+              },
+              {
+                "domain_refs": [
+                  "D001"
+                ],
+                "cci_ref_count": 1,
+                "requirement_id": "R005",
+                "requirement_type": "Constraint"
+              },
+              {
+                "domain_refs": [
+                  "D002"
+                ],
+                "cci_ref_count": 2,
+                "requirement_id": "R006",
+                "requirement_type": "Constraint"
+              },
+              {
+                "domain_refs": [
+                  "D002"
+                ],
+                "cci_ref_count": 2,
+                "requirement_id": "R007",
+                "requirement_type": "Constraint"
+              },
+              {
+                "domain_refs": [
+                  "D002"
+                ],
+                "cci_ref_count": 1,
+                "requirement_id": "R008",
+                "requirement_type": "Constraint"
+              },
+              {
+                "domain_refs": [
+                  "D003"
+                ],
+                "cci_ref_count": 3,
+                "requirement_id": "R009",
+                "requirement_type": "Constraint"
+              },
+              {
+                "domain_refs": [
+                  "D003"
+                ],
+                "cci_ref_count": 2,
+                "requirement_id": "R010",
+                "requirement_type": "Constraint"
+              },
+              {
+                "domain_refs": [
+                  "D003"
+                ],
+                "cci_ref_count": 3,
+                "requirement_id": "R011",
+                "requirement_type": "Functional"
+              },
+              {
+                "domain_refs": [
+                  "D003"
+                ],
+                "cci_ref_count": 1,
+                "requirement_id": "R012",
+                "requirement_type": "Constraint"
+              },
+              {
+                "domain_refs": [
+                  "D004"
+                ],
+                "cci_ref_count": 2,
+                "requirement_id": "R013",
+                "requirement_type": "Constraint"
+              },
+              {
+                "domain_refs": [
+                  "D004"
+                ],
+                "cci_ref_count": 1,
+                "requirement_id": "R014",
+                "requirement_type": "Constraint"
+              },
+              {
+                "domain_refs": [
+                  "D004"
+                ],
+                "cci_ref_count": 1,
+                "requirement_id": "R015",
+                "requirement_type": "Constraint"
+              },
+              {
+                "domain_refs": [
+                  "D005"
+                ],
+                "cci_ref_count": 1,
+                "requirement_id": "R016",
+                "requirement_type": "Constraint"
+              },
+              {
+                "domain_refs": [
+                  "D005"
+                ],
+                "cci_ref_count": 2,
+                "requirement_id": "R017",
+                "requirement_type": "Constraint"
+              },
+              {
+                "domain_refs": [
+                  "D005"
+                ],
+                "cci_ref_count": 1,
+                "requirement_id": "R018",
+                "requirement_type": "Constraint"
+              },
+              {
+                "domain_refs": [
+                  "D005"
+                ],
+                "cci_ref_count": 1,
+                "requirement_id": "R019",
+                "requirement_type": "Constraint"
+              },
+              {
+                "domain_refs": [
+                  "D005"
+                ],
+                "cci_ref_count": 1,
+                "requirement_id": "R020",
+                "requirement_type": "Constraint"
+              },
+              {
+                "domain_refs": [
+                  "D006"
+                ],
+                "cci_ref_count": 2,
+                "requirement_id": "R021",
+                "requirement_type": "Constraint"
+              },
+              {
+                "domain_refs": [
+                  "D006"
+                ],
+                "cci_ref_count": 1,
+                "requirement_id": "R022",
+                "requirement_type": "Functional"
+              },
+              {
+                "domain_refs": [
+                  "D006"
+                ],
+                "cci_ref_count": 1,
+                "requirement_id": "R023",
+                "requirement_type": "Constraint"
+              }
+            ],
+            "large_cci_set_advisory": false,
+            "requirement_input_hash": "c757d5e6bcfb6c7c775d23261a0e2b6b8122558c3c39a358da745a648d290670",
+            "subject_vocabulary_flags": [],
+            "downstream_rerun_required": false,
+            "requirement_count_retired": 0,
+            "requirement_count_produced": 23,
+            "requirement_type_distribution": {
+              "Constraint": 20,
+              "Functional": 3,
+              "Performance": 0,
+              "Suitability": 0,
+              "Non-Functional": 0
+            },
+            "duplicate_requirements_collapsed": []
+          },
+          "concern_entities": [],
+          "execution_warnings": [],
+          "ai_model_fingerprints": [
+            {
+              "model": "claude-sonnet-4-5-20250929",
+              "stage": "stage2_domain_D001",
+              "input_tokens": 2162,
+              "output_tokens": 655
+            },
+            {
+              "model": "claude-sonnet-4-5-20250929",
+              "stage": "stage2_domain_D002",
+              "input_tokens": 2079,
+              "output_tokens": 446
+            },
+            {
+              "model": "claude-sonnet-4-5-20250929",
+              "stage": "stage2_domain_D003",
+              "input_tokens": 2194,
+              "output_tokens": 587
+            },
+            {
+              "model": "claude-sonnet-4-5-20250929",
+              "stage": "stage2_domain_D004",
+              "input_tokens": 2036,
+              "output_tokens": 352
+            },
+            {
+              "model": "claude-sonnet-4-5-20250929",
+              "stage": "stage2_domain_D005",
+              "input_tokens": 2100,
+              "output_tokens": 533
+            },
+            {
+              "model": "claude-sonnet-4-5-20250929",
+              "stage": "stage2_domain_D006",
+              "input_tokens": 2038,
+              "output_tokens": 412
+            }
+          ]
+        },
+        "pass_started_at": "2026-06-02T06:18:31.444381+00:00",
+        "confidence": 1.0,
+        "pass_completed_at": "2026-06-02T06:19:28.874303+00:00",
+        "elapsed_ms": 57429
+      }
+    },
+    {
+      "element_type": "AnalysisPass",
+      "element_id": "P565",
+      "payload": {
+        "pass_id": "P565",
+        "pass_type": "Universal",
+        "mechanism": "SourceCapture",
+        "evaluated_scope": "All input material in this project",
+        "execution_status": "Completed",
+        "mode_active": "LPM",
+        "declared_transformation_modes": [
+          "LPM"
+        ],
+        "outputs": {
+          "read_witness": {
+            "file_path": "/home/runner/workspace/verification_inputs/Novus Quality Policy Statement v1.docx",
+            "read_mode": "Full",
+            "byte_count": 1093980,
+            "input_hash": "236515dba508919355fff5da9a80b9b8f13ad8bbfe46707063ea2af68b8208ad",
+            "character_count": 1915,
+            "format_detected": "docx",
+            "partial_failure_detail": null,
+            "read_completion_status": true
+          },
+          "mechanism_data": {
+            "source_ids": [
+              "S2753",
+              "S2754",
+              "S2755",
+              "S2756",
+              "S2757",
+              "S2758",
+              "S2759",
+              "S2760",
+              "S2761",
+              "S2762",
+              "S2763"
+            ],
+            "source_count": 11,
+            "segment_count": 0,
+            "source_atom_count": 0,
+            "non_text_source_ids": [],
+            "cross_source_ordering": [],
+            "source_with_decoding_issues_ids": []
+          },
+          "mode_violations": []
+        },
+        "pass_started_at": "2026-05-16T08:35:11.077260+00:00",
+        "confidence": 1.0,
+        "pass_completed_at": "2026-05-16T08:35:16.319796+00:00",
+        "elapsed_ms": 5242
+      }
+    },
+    {
+      "element_type": "AnalysisPass",
+      "element_id": "P566",
+      "payload": {
+        "pass_id": "P566",
+        "pass_type": "Per-row",
+        "mechanism": "RowLensSourceReanalysis",
+        "evaluated_scope": "All Sources + Row 0 Requirements",
+        "execution_status": "Completed",
+        "mode_active": "IM",
+        "declared_transformation_modes": [
+          "IM",
+          "DM",
+          "LPM"
+        ],
+        "outputs": {
+          "row_lens_data": {
+            "row_ref": 1,
+            "chunk_assignment": {},
+            "out_of_scope_refs": [],
+            "out_of_scope_count": 0,
+            "stream1_source_count": 11,
+            "stream2_domain_count": 0,
+            "ai_model_fingerprints": [
+              "claude-sonnet-4-5-20250929 (residual batch 1)"
+            ],
+            "signal_count_produced": 11,
+            "concern_count_produced": 0,
+            "concern_threshold_used": 0.65,
+            "stream2_requirement_count": 0,
+            "chunk_match_threshold_used": 0.6
+          },
+          "mode_violations": []
+        },
+        "pass_started_at": "2026-05-16T08:35:33.339009+00:00",
+        "confidence": 0.8318181818181819,
+        "pass_completed_at": "2026-05-16T08:35:47.272935+00:00",
+        "elapsed_ms": 16791
+      }
+    },
+    {
+      "element_type": "AnalysisPass",
+      "element_id": "P569",
+      "payload": {
+        "pass_id": "P569",
+        "pass_type": "Per-row",
+        "mechanism": "RowLensSourceReanalysis",
+        "evaluated_scope": "All Sources + Row 1 Requirements",
+        "execution_status": "Completed",
+        "mode_active": "IM",
+        "declared_transformation_modes": [
+          "IM",
+          "DM",
+          "LPM"
+        ],
+        "outputs": {
+          "row_lens_data": {
+            "row_ref": 2,
+            "chunk_assignment": {},
+            "out_of_scope_refs": [
+              "S2763"
+            ],
+            "out_of_scope_count": 1,
+            "stream1_source_count": 11,
+            "stream2_domain_count": 0,
+            "ai_model_fingerprints": [
+              "claude-sonnet-4-5-20250929 (residual batch 1)"
+            ],
+            "signal_count_produced": 10,
+            "concern_count_produced": 0,
+            "concern_threshold_used": 0.65,
+            "stream2_requirement_count": 0,
+            "chunk_match_threshold_used": 0.6
+          },
+          "mode_violations": []
+        },
+        "pass_started_at": "2026-05-16T10:00:11.647913+00:00",
+        "confidence": 0.7454545454545454,
+        "pass_completed_at": "2026-05-16T10:00:27.385558+00:00",
+        "elapsed_ms": 18635
+      }
+    },
+    {
+      "element_type": "AnalysisPass",
+      "element_id": "P571",
+      "payload": {
+        "pass_id": "P571",
+        "pass_type": "Per-row",
+        "mechanism": "RowLensSourceReanalysis",
+        "evaluated_scope": "All Sources + Row 2 Requirements",
+        "execution_status": "Completed",
+        "mode_active": "IM",
+        "declared_transformation_modes": [
+          "IM",
+          "DM",
+          "LPM"
+        ],
+        "outputs": {
+          "row_lens_data": {
+            "row_ref": 3,
+            "chunk_assignment": {},
+            "out_of_scope_refs": [
+              "S2753",
+              "S2754",
+              "S2755",
+              "S2756",
+              "S2757",
+              "S2759",
+              "S2761",
+              "S2762",
+              "S2763"
+            ],
+            "out_of_scope_count": 9,
+            "stream1_source_count": 11,
+            "stream2_domain_count": 0,
+            "ai_model_fingerprints": [
+              "claude-sonnet-4-5-20250929 (residual batch 1)"
+            ],
+            "signal_count_produced": 2,
+            "concern_count_produced": 0,
+            "concern_threshold_used": 0.65,
+            "stream2_requirement_count": 0,
+            "chunk_match_threshold_used": 0.6
+          },
+          "mode_violations": []
+        },
+        "pass_started_at": "2026-05-16T10:12:19.013888+00:00",
+        "confidence": 0.12545454545454546,
+        "pass_completed_at": "2026-05-16T10:12:32.293697+00:00",
+        "elapsed_ms": 14321
+      }
+    },
+    {
+      "element_type": "AnalysisPass",
+      "element_id": "P574",
+      "payload": {
+        "pass_id": "P574",
+        "pass_type": "Per-row",
+        "mechanism": "RowLensSourceReanalysis",
+        "evaluated_scope": "All Sources + Row 3 Requirements",
+        "execution_status": "Completed",
+        "mode_active": "IM",
+        "declared_transformation_modes": [
+          "IM",
+          "DM",
+          "LPM"
+        ],
+        "outputs": {
+          "row_lens_data": {
+            "row_ref": 4,
+            "chunk_assignment": {},
+            "out_of_scope_refs": [
+              "S2753",
+              "S2754",
+              "S2755",
+              "S2756",
+              "S2757",
+              "S2758",
+              "S2759",
+              "S2760",
+              "S2761",
+              "S2762",
+              "S2763"
+            ],
+            "out_of_scope_count": 11,
+            "stream1_source_count": 11,
+            "stream2_domain_count": 0,
+            "ai_model_fingerprints": [
+              "claude-sonnet-4-5-20250929 (residual batch 1)"
+            ],
+            "signal_count_produced": 0,
+            "concern_count_produced": 0,
+            "concern_threshold_used": 0.65,
+            "stream2_requirement_count": 0,
+            "chunk_match_threshold_used": 0.6
+          },
+          "mode_violations": []
+        },
+        "pass_started_at": "2026-05-16T10:23:08.199900+00:00",
+        "confidence": 0.0,
+        "pass_completed_at": "2026-05-16T10:23:21.250378+00:00",
+        "elapsed_ms": 14074
+      }
+    },
+    {
+      "element_type": "AnalysisPass",
+      "element_id": "P577",
+      "payload": {
+        "pass_id": "P577",
+        "pass_type": "Per-row",
+        "mechanism": "RowLensSourceReanalysis",
+        "evaluated_scope": "All Sources + Row 4 Requirements",
+        "execution_status": "Completed",
+        "mode_active": "IM",
+        "declared_transformation_modes": [
+          "IM",
+          "DM",
+          "LPM"
+        ],
+        "outputs": {
+          "row_lens_data": {
+            "row_ref": 5,
+            "chunk_assignment": {},
+            "out_of_scope_refs": [
+              "S2753",
+              "S2754",
+              "S2755",
+              "S2756",
+              "S2757",
+              "S2758",
+              "S2759",
+              "S2760",
+              "S2761",
+              "S2762"
+            ],
+            "out_of_scope_count": 10,
+            "stream1_source_count": 11,
+            "stream2_domain_count": 0,
+            "ai_model_fingerprints": [
+              "claude-sonnet-4-5-20250929 (residual batch 1)"
+            ],
+            "signal_count_produced": 1,
+            "concern_count_produced": 0,
+            "concern_threshold_used": 0.65,
+            "stream2_requirement_count": 0,
+            "chunk_match_threshold_used": 0.6
+          },
+          "mode_violations": []
+        },
+        "pass_started_at": "2026-05-16T10:36:18.578569+00:00",
+        "confidence": 0.06818181818181818,
+        "pass_completed_at": "2026-05-16T10:36:31.774130+00:00",
+        "elapsed_ms": 14227
+      }
+    },
+    {
+      "element_type": "ZachmanCell",
+      "element_id": "ZC-R1-C-How",
+      "payload": {
+        "cell_id": "ZC-R1-C-How",
+        "row_target": "1",
+        "column": "How",
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_type": "ZachmanCell",
+      "element_id": "ZC-R1-C-What",
+      "payload": {
+        "cell_id": "ZC-R1-C-What",
+        "row_target": "1",
+        "column": "What",
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_type": "ZachmanCell",
+      "element_id": "ZC-R1-C-When",
+      "payload": {
+        "cell_id": "ZC-R1-C-When",
+        "row_target": "1",
+        "column": "When",
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_type": "ZachmanCell",
+      "element_id": "ZC-R1-C-Where",
+      "payload": {
+        "cell_id": "ZC-R1-C-Where",
+        "row_target": "1",
+        "column": "Where",
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_type": "ZachmanCell",
+      "element_id": "ZC-R1-C-Who",
+      "payload": {
+        "cell_id": "ZC-R1-C-Who",
+        "row_target": "1",
+        "column": "Who",
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_type": "ZachmanCell",
+      "element_id": "ZC-R1-C-Why",
+      "payload": {
+        "cell_id": "ZC-R1-C-Why",
+        "row_target": "1",
+        "column": "Why",
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_type": "ZachmanCell",
+      "element_id": "ZC-R2-C-How",
+      "payload": {
+        "cell_id": "ZC-R2-C-How",
+        "row_target": "2",
+        "column": "How",
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_type": "ZachmanCell",
+      "element_id": "ZC-R2-C-What",
+      "payload": {
+        "cell_id": "ZC-R2-C-What",
+        "row_target": "2",
+        "column": "What",
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_type": "ZachmanCell",
+      "element_id": "ZC-R2-C-When",
+      "payload": {
+        "cell_id": "ZC-R2-C-When",
+        "row_target": "2",
+        "column": "When",
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_type": "ZachmanCell",
+      "element_id": "ZC-R2-C-Where",
+      "payload": {
+        "cell_id": "ZC-R2-C-Where",
+        "row_target": "2",
+        "column": "Where",
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_type": "ZachmanCell",
+      "element_id": "ZC-R2-C-Who",
+      "payload": {
+        "cell_id": "ZC-R2-C-Who",
+        "row_target": "2",
+        "column": "Who",
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_type": "ZachmanCell",
+      "element_id": "ZC-R2-C-Why",
+      "payload": {
+        "cell_id": "ZC-R2-C-Why",
+        "row_target": "2",
+        "column": "Why",
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_type": "ZachmanCell",
+      "element_id": "ZC-R3-C-How",
+      "payload": {
+        "cell_id": "ZC-R3-C-How",
+        "row_target": "3",
+        "column": "How",
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_type": "ZachmanCell",
+      "element_id": "ZC-R3-C-What",
+      "payload": {
+        "cell_id": "ZC-R3-C-What",
+        "row_target": "3",
+        "column": "What",
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_type": "ZachmanCell",
+      "element_id": "ZC-R3-C-When",
+      "payload": {
+        "cell_id": "ZC-R3-C-When",
+        "row_target": "3",
+        "column": "When",
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_type": "ZachmanCell",
+      "element_id": "ZC-R3-C-Where",
+      "payload": {
+        "cell_id": "ZC-R3-C-Where",
+        "row_target": "3",
+        "column": "Where",
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_type": "ZachmanCell",
+      "element_id": "ZC-R3-C-Who",
+      "payload": {
+        "cell_id": "ZC-R3-C-Who",
+        "row_target": "3",
+        "column": "Who",
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_type": "ZachmanCell",
+      "element_id": "ZC-R3-C-Why",
+      "payload": {
+        "cell_id": "ZC-R3-C-Why",
+        "row_target": "3",
+        "column": "Why",
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_type": "ZachmanCell",
+      "element_id": "ZC-R4-C-How",
+      "payload": {
+        "cell_id": "ZC-R4-C-How",
+        "row_target": "4",
+        "column": "How",
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_type": "ZachmanCell",
+      "element_id": "ZC-R4-C-What",
+      "payload": {
+        "cell_id": "ZC-R4-C-What",
+        "row_target": "4",
+        "column": "What",
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_type": "ZachmanCell",
+      "element_id": "ZC-R4-C-When",
+      "payload": {
+        "cell_id": "ZC-R4-C-When",
+        "row_target": "4",
+        "column": "When",
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_type": "ZachmanCell",
+      "element_id": "ZC-R4-C-Where",
+      "payload": {
+        "cell_id": "ZC-R4-C-Where",
+        "row_target": "4",
+        "column": "Where",
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_type": "ZachmanCell",
+      "element_id": "ZC-R4-C-Who",
+      "payload": {
+        "cell_id": "ZC-R4-C-Who",
+        "row_target": "4",
+        "column": "Who",
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_type": "ZachmanCell",
+      "element_id": "ZC-R4-C-Why",
+      "payload": {
+        "cell_id": "ZC-R4-C-Why",
+        "row_target": "4",
+        "column": "Why",
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_type": "ZachmanCell",
+      "element_id": "ZC-R5-C-How",
+      "payload": {
+        "cell_id": "ZC-R5-C-How",
+        "row_target": "5",
+        "column": "How",
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_type": "ZachmanCell",
+      "element_id": "ZC-R5-C-What",
+      "payload": {
+        "cell_id": "ZC-R5-C-What",
+        "row_target": "5",
+        "column": "What",
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_type": "ZachmanCell",
+      "element_id": "ZC-R5-C-When",
+      "payload": {
+        "cell_id": "ZC-R5-C-When",
+        "row_target": "5",
+        "column": "When",
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_type": "ZachmanCell",
+      "element_id": "ZC-R5-C-Where",
+      "payload": {
+        "cell_id": "ZC-R5-C-Where",
+        "row_target": "5",
+        "column": "Where",
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_type": "ZachmanCell",
+      "element_id": "ZC-R5-C-Who",
+      "payload": {
+        "cell_id": "ZC-R5-C-Who",
+        "row_target": "5",
+        "column": "Who",
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_type": "ZachmanCell",
+      "element_id": "ZC-R5-C-Why",
+      "payload": {
+        "cell_id": "ZC-R5-C-Why",
+        "row_target": "5",
+        "column": "Why",
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_type": "ZachmanCellRegister",
+      "element_id": "ZACHMANCELL_REG001",
+      "payload": {
+        "register_id": "ZACHMANCELL_REG001",
+        "register_type": "ZachmanCell",
+        "member_ids": [
+          "ZC-R1-C-How",
+          "ZC-R1-C-What",
+          "ZC-R1-C-When",
+          "ZC-R1-C-Where",
+          "ZC-R1-C-Who",
+          "ZC-R1-C-Why",
+          "ZC-R2-C-How",
+          "ZC-R2-C-What",
+          "ZC-R2-C-When",
+          "ZC-R2-C-Where",
+          "ZC-R2-C-Who",
+          "ZC-R2-C-Why",
+          "ZC-R3-C-How",
+          "ZC-R3-C-What",
+          "ZC-R3-C-When",
+          "ZC-R3-C-Where",
+          "ZC-R3-C-Who",
+          "ZC-R3-C-Why",
+          "ZC-R4-C-How",
+          "ZC-R4-C-What",
+          "ZC-R4-C-When",
+          "ZC-R4-C-Where",
+          "ZC-R4-C-Who",
+          "ZC-R4-C-Why",
+          "ZC-R5-C-How",
+          "ZC-R5-C-What",
+          "ZC-R5-C-When",
+          "ZC-R5-C-Where",
+          "ZC-R5-C-Who",
+          "ZC-R5-C-Why"
+        ],
+        "completeness_rule": "This register SHALL contain the identifiers of ALL ZachmanCell elements present in the ledger.",
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW1-C-How-001",
+      "payload": {
+        "ci_id": "CCI-ROW1-C-How-001",
+        "cell_id": "ZC-R1-C-How",
+        "classification_type": "Function",
+        "signal_refs": [
+          "SG279"
+        ],
+        "description": "Setting quality objectives across the organization",
+        "confidence": 0.82,
+        "justification": "SG279 defines objective-setting as a strategic function within the quality policy framework."
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW1-C-How-002",
+      "payload": {
+        "ci_id": "CCI-ROW1-C-How-002",
+        "cell_id": "ZC-R1-C-How",
+        "classification_type": "Function",
+        "signal_refs": [
+          "SG280"
+        ],
+        "description": "Understanding and exceeding customer expectations",
+        "confidence": 0.88,
+        "justification": "SG280 articulates customer understanding and expectation-exceeding as core strategic functions."
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW1-C-How-003",
+      "payload": {
+        "ci_id": "CCI-ROW1-C-How-003",
+        "cell_id": "ZC-R1-C-How",
+        "classification_type": "Function",
+        "signal_refs": [
+          "SG282"
+        ],
+        "description": "Engaging people to achieve organizational objectives",
+        "confidence": 0.83,
+        "justification": "SG282 recognizes people engagement as a strategic enabler function for business benefit."
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW1-C-How-004",
+      "payload": {
+        "ci_id": "CCI-ROW1-C-How-004",
+        "cell_id": "ZC-R1-C-How",
+        "classification_type": "Function",
+        "signal_refs": [
+          "SG285"
+        ],
+        "description": "Evidence-based decision making for quality management",
+        "confidence": 0.84,
+        "justification": "SG285 commits to evidence-based decision making as a strategic governance function."
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW1-C-How-005",
+      "payload": {
+        "ci_id": "CCI-ROW1-C-How-005",
+        "cell_id": "ZC-R1-C-How",
+        "classification_type": "Process",
+        "signal_refs": [
+          "SG279"
+        ],
+        "description": "Regulatory compliance management",
+        "confidence": 0.81,
+        "justification": "SG279 defines regulatory compliance as a strategic process within the quality framework."
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW1-C-How-006",
+      "payload": {
+        "ci_id": "CCI-ROW1-C-How-006",
+        "cell_id": "ZC-R1-C-How",
+        "classification_type": "Process",
+        "signal_refs": [
+          "SG279",
+          "SG284"
+        ],
+        "description": "Continual improvement of quality management",
+        "confidence": 0.92,
+        "justification": "SG279 and SG284 both establish continuous improvement as a core strategic process and annual objective."
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW1-C-What-001",
+      "payload": {
+        "ci_id": "CCI-ROW1-C-What-001",
+        "cell_id": "ZC-R1-C-What",
+        "classification_type": "Entity",
+        "signal_refs": [
+          "SG278"
+        ],
+        "description": "Quality policy as strategic governance framework",
+        "confidence": 0.88,
+        "justification": "SG278 establishes quality policy as a foundational governance framework entity aligned with business purpose and context."
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW1-C-What-002",
+      "payload": {
+        "ci_id": "CCI-ROW1-C-What-002",
+        "cell_id": "ZC-R1-C-What",
+        "classification_type": "Entity",
+        "signal_refs": [
+          "SG280"
+        ],
+        "description": "Customer needs and expectations as organizational intelligence",
+        "confidence": 0.82,
+        "justification": "SG280 identifies customer needs and expectations as strategic information entities that drive organizational direction."
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW1-C-What-003",
+      "payload": {
+        "ci_id": "CCI-ROW1-C-What-003",
+        "cell_id": "ZC-R1-C-What",
+        "classification_type": "Entity",
+        "signal_refs": [
+          "SG281"
+        ],
+        "description": "Work environment as organizational resource",
+        "confidence": 0.78,
+        "justification": "SG281 recognizes work environment as a strategic asset entity for achieving objectives."
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW1-C-What-004",
+      "payload": {
+        "ci_id": "CCI-ROW1-C-What-004",
+        "cell_id": "ZC-R1-C-What",
+        "classification_type": "Entity",
+        "signal_refs": [
+          "SG286"
+        ],
+        "description": "External provider relationships",
+        "confidence": 0.8,
+        "justification": "SG286 identifies provider relationships as strategic entities for value creation."
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW1-C-What-005",
+      "payload": {
+        "ci_id": "CCI-ROW1-C-What-005",
+        "cell_id": "ZC-R1-C-What",
+        "classification_type": "Relationship",
+        "signal_refs": [
+          "SG278"
+        ],
+        "description": "Quality policy alignment with business purpose and context",
+        "confidence": 0.85,
+        "justification": "SG278 describes the strategic relationship between quality policy and organizational business purpose."
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW1-C-When-001",
+      "payload": {
+        "ci_id": "CCI-ROW1-C-When-001",
+        "cell_id": "ZC-R1-C-When",
+        "classification_type": "Cycle",
+        "signal_refs": [
+          "SG284"
+        ],
+        "description": "Annual continual improvement cycle",
+        "confidence": 0.89,
+        "justification": "SG284 establishes continual improvement as a core annual organizational cycle."
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW1-C-Who-001",
+      "payload": {
+        "ci_id": "CCI-ROW1-C-Who-001",
+        "cell_id": "ZC-R1-C-Who",
+        "classification_type": "Actor",
+        "signal_refs": [
+          "SG288"
+        ],
+        "description": "Organizational director as policy authority",
+        "confidence": 0.93,
+        "justification": "SG288 identifies the organizational director as the authorizing actor for quality policy governance."
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW1-C-Who-002",
+      "payload": {
+        "ci_id": "CCI-ROW1-C-Who-002",
+        "cell_id": "ZC-R1-C-Who",
+        "classification_type": "Actor",
+        "signal_refs": [
+          "SG280"
+        ],
+        "description": "Customer as stakeholder with needs and expectations",
+        "confidence": 0.87,
+        "justification": "SG280 identifies customers as strategic stakeholders whose needs drive organizational direction."
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW1-C-Who-003",
+      "payload": {
+        "ci_id": "CCI-ROW1-C-Who-003",
+        "cell_id": "ZC-R1-C-Who",
+        "classification_type": "Actor",
+        "signal_refs": [
+          "SG286"
+        ],
+        "description": "External provider as strategic relationship partner",
+        "confidence": 0.79,
+        "justification": "SG286 recognizes external providers as strategic actors in value creation relationships."
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW1-C-Who-004",
+      "payload": {
+        "ci_id": "CCI-ROW1-C-Who-004",
+        "cell_id": "ZC-R1-C-Who",
+        "classification_type": "Role",
+        "signal_refs": [
+          "SG281"
+        ],
+        "description": "Leadership role in creating enabling work environment",
+        "confidence": 0.76,
+        "justification": "SG281 expresses leadership as a strategic role responsible for creating enabling conditions."
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW1-C-Who-005",
+      "payload": {
+        "ci_id": "CCI-ROW1-C-Who-005",
+        "cell_id": "ZC-R1-C-Who",
+        "classification_type": "Role",
+        "signal_refs": [
+          "SG282"
+        ],
+        "description": "Engaged people as contributors to business benefit",
+        "confidence": 0.8,
+        "justification": "SG282 recognizes people in an engagement role as strategic enablers for business benefit."
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW1-C-Why-001",
+      "payload": {
+        "ci_id": "CCI-ROW1-C-Why-001",
+        "cell_id": "ZC-R1-C-Why",
+        "classification_type": "Goal",
+        "signal_refs": [
+          "SG278"
+        ],
+        "description": "Achieve alignment of quality policy with business purpose",
+        "confidence": 0.87,
+        "justification": "SG278 establishes alignment of quality policy with business purpose as a strategic goal."
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW1-C-Why-002",
+      "payload": {
+        "ci_id": "CCI-ROW1-C-Why-002",
+        "cell_id": "ZC-R1-C-Why",
+        "classification_type": "Goal",
+        "signal_refs": [
+          "SG280"
+        ],
+        "description": "Exceed customer expectations",
+        "confidence": 0.9,
+        "justification": "SG280 articulates exceeding customer expectations as an explicit organizational driver and goal."
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW1-C-Why-003",
+      "payload": {
+        "ci_id": "CCI-ROW1-C-Why-003",
+        "cell_id": "ZC-R1-C-Why",
+        "classification_type": "Goal",
+        "signal_refs": [
+          "SG281"
+        ],
+        "description": "Enable achievement of organizational objectives through work environment",
+        "confidence": 0.76,
+        "justification": "SG281 expresses creating an enabling work environment as a strategic goal for achieving objectives."
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW1-C-Why-004",
+      "payload": {
+        "ci_id": "CCI-ROW1-C-Why-004",
+        "cell_id": "ZC-R1-C-Why",
+        "classification_type": "Goal",
+        "signal_refs": [
+          "SG286"
+        ],
+        "description": "Create value through external provider relationships",
+        "confidence": 0.79,
+        "justification": "SG286 recognizes value creation through provider relationships as a strategic driver."
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW1-C-Why-005",
+      "payload": {
+        "ci_id": "CCI-ROW1-C-Why-005",
+        "cell_id": "ZC-R1-C-Why",
+        "classification_type": "Goal",
+        "signal_refs": [
+          "SG284"
+        ],
+        "description": "Achieve continual improvement annually",
+        "confidence": 0.9,
+        "justification": "SG284 establishes continual improvement as a core annual organizational objective."
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW1-C-Why-006",
+      "payload": {
+        "ci_id": "CCI-ROW1-C-Why-006",
+        "cell_id": "ZC-R1-C-Why",
+        "classification_type": "Principle",
+        "signal_refs": [
+          "SG279"
+        ],
+        "description": "Quality policy provides framework for setting objectives and maintaining compliance",
+        "confidence": 0.81,
+        "justification": "SG279 defines the quality policy framework purpose as a guiding principle for governance."
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW1-C-Why-007",
+      "payload": {
+        "ci_id": "CCI-ROW1-C-Why-007",
+        "cell_id": "ZC-R1-C-Why",
+        "classification_type": "Principle",
+        "signal_refs": [
+          "SG280"
+        ],
+        "description": "Customer needs understanding drives organizational direction",
+        "confidence": 0.89,
+        "justification": "SG280 articulates customer needs understanding as a foundational organizational principle."
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW1-C-Why-008",
+      "payload": {
+        "ci_id": "CCI-ROW1-C-Why-008",
+        "cell_id": "ZC-R1-C-Why",
+        "classification_type": "Principle",
+        "signal_refs": [
+          "SG281"
+        ],
+        "description": "Leadership creates enabling environment for success",
+        "confidence": 0.77,
+        "justification": "SG281 expresses leadership commitment to creating enabling conditions as a governance principle."
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW1-C-Why-009",
+      "payload": {
+        "ci_id": "CCI-ROW1-C-Why-009",
+        "cell_id": "ZC-R1-C-Why",
+        "classification_type": "Principle",
+        "signal_refs": [
+          "SG282"
+        ],
+        "description": "People engagement as essential organizational value",
+        "confidence": 0.86,
+        "justification": "SG282 recognizes people engagement as a strategic principle and essential organizational value."
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW1-C-Why-010",
+      "payload": {
+        "ci_id": "CCI-ROW1-C-Why-010",
+        "cell_id": "ZC-R1-C-Why",
+        "classification_type": "Principle",
+        "signal_refs": [
+          "SG283"
+        ],
+        "description": "Process approach drives organizational efficiency",
+        "confidence": 0.72,
+        "justification": "SG283 declares process approach as an organizational efficiency principle."
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW1-C-Why-011",
+      "payload": {
+        "ci_id": "CCI-ROW1-C-Why-011",
+        "cell_id": "ZC-R1-C-Why",
+        "classification_type": "Principle",
+        "signal_refs": [
+          "SG285"
+        ],
+        "description": "Evidence-based decision making guides quality management",
+        "confidence": 0.83,
+        "justification": "SG285 commits to evidence-based decision making as a governance principle."
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW1-C-Why-012",
+      "payload": {
+        "ci_id": "CCI-ROW1-C-Why-012",
+        "cell_id": "ZC-R1-C-Why",
+        "classification_type": "Principle",
+        "signal_refs": [
+          "SG286"
+        ],
+        "description": "Mutually beneficial relationships with external providers",
+        "confidence": 0.8,
+        "justification": "SG286 recognizes mutually beneficial provider relationships as a strategic principle."
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW1-C-Why-013",
+      "payload": {
+        "ci_id": "CCI-ROW1-C-Why-013",
+        "cell_id": "ZC-R1-C-Why",
+        "classification_type": "Constraint",
+        "signal_refs": [
+          "SG279"
+        ],
+        "description": "Commitment to regulatory compliance",
+        "confidence": 0.82,
+        "justification": "SG279 defines regulatory compliance commitment as a strategic constraint on quality management."
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW1-C-Why-014",
+      "payload": {
+        "ci_id": "CCI-ROW1-C-Why-014",
+        "cell_id": "ZC-R1-C-Why",
+        "classification_type": "Constraint",
+        "signal_refs": [
+          "SG287"
+        ],
+        "description": "Social responsibility obligations",
+        "confidence": 0.88,
+        "justification": "SG287 declares social responsibilities as organizational obligations and constraints."
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW1-C-Why-015",
+      "payload": {
+        "ci_id": "CCI-ROW1-C-Why-015",
+        "cell_id": "ZC-R1-C-Why",
+        "classification_type": "Constraint",
+        "signal_refs": [
+          "SG287"
+        ],
+        "description": "Environmental responsibility obligations",
+        "confidence": 0.88,
+        "justification": "SG287 declares environmental responsibilities as organizational obligations and constraints."
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW1-C-Why-016",
+      "payload": {
+        "ci_id": "CCI-ROW1-C-Why-016",
+        "cell_id": "ZC-R1-C-Why",
+        "classification_type": "Constraint",
+        "signal_refs": [
+          "SG287"
+        ],
+        "description": "Charitable responsibility obligations",
+        "confidence": 0.88,
+        "justification": "SG287 declares charitable responsibilities as organizational obligations and constraints."
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW1-C-Why-017",
+      "payload": {
+        "ci_id": "CCI-ROW1-C-Why-017",
+        "cell_id": "ZC-R1-C-Why",
+        "classification_type": "Constraint",
+        "signal_refs": [
+          "SG287"
+        ],
+        "description": "Legislative compliance obligations",
+        "confidence": 0.88,
+        "justification": "SG287 declares legislative responsibilities as organizational obligations and constraints."
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW2-C-How-001",
+      "payload": {
+        "ci_id": "CCI-ROW2-C-How-001",
+        "cell_id": "ZC-R2-C-How",
+        "classification_type": "Process",
+        "signal_refs": [
+          "SG448"
+        ],
+        "description": "Objective-setting as policy framework process",
+        "confidence": 0.85,
+        "justification": "SG448 defines objective-setting as a discrete process within the policy framework."
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW2-C-How-002",
+      "payload": {
+        "ci_id": "CCI-ROW2-C-How-002",
+        "cell_id": "ZC-R2-C-How",
+        "classification_type": "Process",
+        "signal_refs": [
+          "SG449"
+        ],
+        "description": "Customer focus as needs understanding and expectation exceeding",
+        "confidence": 0.85,
+        "justification": "SG449 articulates customer focus as a business process requiring understanding needs, meeting requirements, and exceeding expectations."
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW2-C-How-003",
+      "payload": {
+        "ci_id": "CCI-ROW2-C-How-003",
+        "cell_id": "ZC-R2-C-How",
+        "classification_type": "Process",
+        "signal_refs": [
+          "SG451"
+        ],
+        "description": "People engagement as capability deployment",
+        "confidence": 0.8,
+        "justification": "SG451 identifies people engagement as a process of recognizing and utilizing human capabilities as organizational assets."
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW2-C-How-004",
+      "payload": {
+        "ci_id": "CCI-ROW2-C-How-004",
+        "cell_id": "ZC-R2-C-How",
+        "classification_type": "Process",
+        "signal_refs": [
+          "SG452"
+        ],
+        "description": "Process approach as interconnected activity management",
+        "confidence": 0.9,
+        "justification": "SG452 explicitly establishes process approach as a conceptual model for managing activities and resources."
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW2-C-How-005",
+      "payload": {
+        "ci_id": "CCI-ROW2-C-How-005",
+        "cell_id": "ZC-R2-C-How",
+        "classification_type": "Process",
+        "signal_refs": [
+          "SG453"
+        ],
+        "description": "Continual improvement across quality system aspects",
+        "confidence": 0.85,
+        "justification": "SG453 defines continual improvement as a central business process objective."
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW2-C-How-006",
+      "payload": {
+        "ci_id": "CCI-ROW2-C-How-006",
+        "cell_id": "ZC-R2-C-How",
+        "classification_type": "Process",
+        "signal_refs": [
+          "SG454"
+        ],
+        "description": "Evidence-based decision making through data analysis",
+        "confidence": 0.9,
+        "justification": "SG454 establishes decision making as a process requiring data analysis before QMS decisions."
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW2-C-How-007",
+      "payload": {
+        "ci_id": "CCI-ROW2-C-How-007",
+        "cell_id": "ZC-R2-C-How",
+        "classification_type": "Process",
+        "signal_refs": [
+          "SG455"
+        ],
+        "description": "Relationship management for value creation",
+        "confidence": 0.85,
+        "justification": "SG455 defines relationship management as a process model for managing external provider relationships."
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW2-C-How-008",
+      "payload": {
+        "ci_id": "CCI-ROW2-C-How-008",
+        "cell_id": "ZC-R2-C-How",
+        "classification_type": "Rule",
+        "signal_refs": [
+          "SG454"
+        ],
+        "description": "Data analysis must precede quality management system decisions",
+        "confidence": 0.9,
+        "justification": "SG454 explicitly establishes evidence-based decision making as a business rule requiring data analysis before decisions."
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW2-C-How-009",
+      "payload": {
+        "ci_id": "CCI-ROW2-C-How-009",
+        "cell_id": "ZC-R2-C-How",
+        "classification_type": "Rule",
+        "signal_refs": [
+          "SG452"
+        ],
+        "description": "Activities and resources must be managed as interconnected processes",
+        "confidence": 0.85,
+        "justification": "SG452 establishes process approach as a normative business rule for efficiency."
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW2-C-What-001",
+      "payload": {
+        "ci_id": "CCI-ROW2-C-What-001",
+        "cell_id": "ZC-R2-C-What",
+        "classification_type": "Entity",
+        "signal_refs": [
+          "SG447"
+        ],
+        "description": "Quality policy as documented organizational commitment",
+        "confidence": 0.8,
+        "justification": "SG447 establishes quality policy as a conceptual business entity that embodies organizational purpose and context."
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW2-C-What-002",
+      "payload": {
+        "ci_id": "CCI-ROW2-C-What-002",
+        "cell_id": "ZC-R2-C-What",
+        "classification_type": "Entity",
+        "signal_refs": [
+          "SG448",
+          "SG449"
+        ],
+        "description": "Customer requirement as business data object",
+        "confidence": 0.85,
+        "justification": "SG448 and SG449 define customer requirements as discrete business entities that must be understood, met, and exceeded."
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW2-C-What-003",
+      "payload": {
+        "ci_id": "CCI-ROW2-C-What-003",
+        "cell_id": "ZC-R2-C-What",
+        "classification_type": "Entity",
+        "signal_refs": [
+          "SG448"
+        ],
+        "description": "Quality objective as measurable target",
+        "confidence": 0.85,
+        "justification": "SG448 identifies objectives as distinct entities within the policy framework."
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW2-C-What-004",
+      "payload": {
+        "ci_id": "CCI-ROW2-C-What-004",
+        "cell_id": "ZC-R2-C-What",
+        "classification_type": "Entity",
+        "signal_refs": [
+          "SG448"
+        ],
+        "description": "Regulatory compliance requirement as constraint entity",
+        "confidence": 0.8,
+        "justification": "SG448 defines regulatory compliance as a discrete entity within the policy framework."
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW2-C-What-005",
+      "payload": {
+        "ci_id": "CCI-ROW2-C-What-005",
+        "cell_id": "ZC-R2-C-What",
+        "classification_type": "Entity",
+        "signal_refs": [
+          "SG452"
+        ],
+        "description": "Process as interconnected activity unit",
+        "confidence": 0.85,
+        "justification": "SG452 establishes process as a conceptual entity where activities and resources are managed together."
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW2-C-What-006",
+      "payload": {
+        "ci_id": "CCI-ROW2-C-What-006",
+        "cell_id": "ZC-R2-C-What",
+        "classification_type": "Entity",
+        "signal_refs": [
+          "SG455"
+        ],
+        "description": "External provider relationship as business entity",
+        "confidence": 0.85,
+        "justification": "SG455 defines external provider relationships as discrete business entities requiring management."
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW2-C-What-007",
+      "payload": {
+        "ci_id": "CCI-ROW2-C-What-007",
+        "cell_id": "ZC-R2-C-What",
+        "classification_type": "Entity",
+        "signal_refs": [
+          "SG453",
+          "SG454"
+        ],
+        "description": "Quality management system as organizational framework",
+        "confidence": 0.85,
+        "justification": "SG453 and SG454 reference the QMS as a distinct business entity encompassing all quality management aspects."
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW2-C-What-008",
+      "payload": {
+        "ci_id": "CCI-ROW2-C-What-008",
+        "cell_id": "ZC-R2-C-What",
+        "classification_type": "Relationship",
+        "signal_refs": [
+          "SG448"
+        ],
+        "description": "Quality policy encompasses quality objectives",
+        "confidence": 0.85,
+        "justification": "SG448 defines policy framework as encompassing objective-setting."
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW2-C-What-009",
+      "payload": {
+        "ci_id": "CCI-ROW2-C-What-009",
+        "cell_id": "ZC-R2-C-What",
+        "classification_type": "Relationship",
+        "signal_refs": [
+          "SG449"
+        ],
+        "description": "Customer requirements derive from customer needs",
+        "confidence": 0.8,
+        "justification": "SG449 articulates the conceptual relationship between understanding needs and meeting requirements."
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW2-C-What-010",
+      "payload": {
+        "ci_id": "CCI-ROW2-C-What-010",
+        "cell_id": "ZC-R2-C-What",
+        "classification_type": "Relationship",
+        "signal_refs": [
+          "SG455"
+        ],
+        "description": "External provider relationships create mutual value",
+        "confidence": 0.85,
+        "justification": "SG455 defines interdependent relationships that mutually create value as a core relationship concept."
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW2-C-Who-001",
+      "payload": {
+        "ci_id": "CCI-ROW2-C-Who-001",
+        "cell_id": "ZC-R2-C-Who",
+        "classification_type": "Role",
+        "signal_refs": [
+          "SG448",
+          "SG449"
+        ],
+        "description": "Customer as requirements provider and expectation holder",
+        "confidence": 0.85,
+        "justification": "SG448 and SG449 define customer as a business role with requirements, needs, and expectations."
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW2-C-Who-002",
+      "payload": {
+        "ci_id": "CCI-ROW2-C-Who-002",
+        "cell_id": "ZC-R2-C-Who",
+        "classification_type": "Role",
+        "signal_refs": [
+          "SG450"
+        ],
+        "description": "Leadership as environment creator for objective achievement",
+        "confidence": 0.9,
+        "justification": "SG450 explicitly defines leadership as a business role responsible for creating enabling environments."
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW2-C-Who-003",
+      "payload": {
+        "ci_id": "CCI-ROW2-C-Who-003",
+        "cell_id": "ZC-R2-C-Who",
+        "classification_type": "Role",
+        "signal_refs": [
+          "SG451"
+        ],
+        "description": "People as capability-bearing organizational assets",
+        "confidence": 0.85,
+        "justification": "SG451 identifies people as a core business role whose capabilities are essential organizational assets."
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW2-C-Who-004",
+      "payload": {
+        "ci_id": "CCI-ROW2-C-Who-004",
+        "cell_id": "ZC-R2-C-Who",
+        "classification_type": "Actor",
+        "signal_refs": [
+          "SG455"
+        ],
+        "description": "External provider as value co-creator",
+        "confidence": 0.85,
+        "justification": "SG455 defines external providers as business actors in interdependent relationships."
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW2-C-Why-001",
+      "payload": {
+        "ci_id": "CCI-ROW2-C-Why-001",
+        "cell_id": "ZC-R2-C-Why",
+        "classification_type": "Goal",
+        "signal_refs": [
+          "SG447"
+        ],
+        "description": "Establish quality policy aligned with organizational purpose",
+        "confidence": 0.8,
+        "justification": "SG447 establishes the conceptual foundation as a goal for quality policy."
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW2-C-Why-002",
+      "payload": {
+        "ci_id": "CCI-ROW2-C-Why-002",
+        "cell_id": "ZC-R2-C-Why",
+        "classification_type": "Goal",
+        "signal_refs": [
+          "SG449"
+        ],
+        "description": "Meet customer requirements and exceed expectations",
+        "confidence": 0.85,
+        "justification": "SG449 articulates meeting requirements and exceeding expectations as customer focus goals."
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW2-C-Why-003",
+      "payload": {
+        "ci_id": "CCI-ROW2-C-Why-003",
+        "cell_id": "ZC-R2-C-Why",
+        "classification_type": "Goal",
+        "signal_refs": [
+          "SG450"
+        ],
+        "description": "Enable objective achievement through people involvement",
+        "confidence": 0.85,
+        "justification": "SG450 defines the leadership goal of enabling objective achievement through people."
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW2-C-Why-004",
+      "payload": {
+        "ci_id": "CCI-ROW2-C-Why-004",
+        "cell_id": "ZC-R2-C-Why",
+        "classification_type": "Goal",
+        "signal_refs": [
+          "SG453"
+        ],
+        "description": "Achieve continual improvement across quality management system",
+        "confidence": 0.9,
+        "justification": "SG453 explicitly defines continual improvement as a central business objective."
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW2-C-Why-005",
+      "payload": {
+        "ci_id": "CCI-ROW2-C-Why-005",
+        "cell_id": "ZC-R2-C-Why",
+        "classification_type": "Goal",
+        "signal_refs": [
+          "SG455"
+        ],
+        "description": "Create mutual value through external provider relationships",
+        "confidence": 0.85,
+        "justification": "SG455 defines mutual value creation as the goal of relationship management."
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW2-C-Why-006",
+      "payload": {
+        "ci_id": "CCI-ROW2-C-Why-006",
+        "cell_id": "ZC-R2-C-Why",
+        "classification_type": "Principle",
+        "signal_refs": [
+          "SG449"
+        ],
+        "description": "Customer focus drives business operations",
+        "confidence": 0.85,
+        "justification": "SG449 articulates customer focus as a core business principle requiring understanding and exceeding expectations."
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW2-C-Why-007",
+      "payload": {
+        "ci_id": "CCI-ROW2-C-Why-007",
+        "cell_id": "ZC-R2-C-Why",
+        "classification_type": "Principle",
+        "signal_refs": [
+          "SG450"
+        ],
+        "description": "Leadership creates enabling environments for people",
+        "confidence": 0.85,
+        "justification": "SG450 establishes leadership responsibility as a business principle."
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW2-C-Why-008",
+      "payload": {
+        "ci_id": "CCI-ROW2-C-Why-008",
+        "cell_id": "ZC-R2-C-Why",
+        "classification_type": "Principle",
+        "signal_refs": [
+          "SG451"
+        ],
+        "description": "People capabilities are essential organizational assets",
+        "confidence": 0.85,
+        "justification": "SG451 establishes people engagement as a core business principle recognizing human capabilities."
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW2-C-Why-009",
+      "payload": {
+        "ci_id": "CCI-ROW2-C-Why-009",
+        "cell_id": "ZC-R2-C-Why",
+        "classification_type": "Principle",
+        "signal_refs": [
+          "SG452"
+        ],
+        "description": "Process approach maximizes efficiency through interconnection",
+        "confidence": 0.85,
+        "justification": "SG452 establishes process approach as a conceptual principle for efficiency."
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW2-C-Why-010",
+      "payload": {
+        "ci_id": "CCI-ROW2-C-Why-010",
+        "cell_id": "ZC-R2-C-Why",
+        "classification_type": "Principle",
+        "signal_refs": [
+          "SG454"
+        ],
+        "description": "Evidence-based decision making requires data analysis",
+        "confidence": 0.9,
+        "justification": "SG454 establishes evidence-based decision making as a business principle."
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW2-C-Why-011",
+      "payload": {
+        "ci_id": "CCI-ROW2-C-Why-011",
+        "cell_id": "ZC-R2-C-Why",
+        "classification_type": "Constraint",
+        "signal_refs": [
+          "SG448"
+        ],
+        "description": "Policy must encompass regulatory compliance requirements",
+        "confidence": 0.85,
+        "justification": "SG448 defines regulatory compliance as a mandatory constraint within the policy framework."
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW2-C-Why-012",
+      "payload": {
+        "ci_id": "CCI-ROW2-C-Why-012",
+        "cell_id": "ZC-R2-C-Why",
+        "classification_type": "Constraint",
+        "signal_refs": [
+          "SG456"
+        ],
+        "description": "Policy must address social responsibility requirements",
+        "confidence": 0.8,
+        "justification": "SG456 extends policy scope to include social responsibility as a constraint. | SG456 extends policy scope to include environmental responsibility as a constraint. | SG456 extends policy scope to include charitable responsibility as a constraint. | SG456 extends policy scope to include legislative responsibility as a constraint."
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW3-C-How-001",
+      "payload": {
+        "ci_id": "CCI-ROW3-C-How-001",
+        "cell_id": "ZC-R3-C-How",
+        "classification_type": "Process",
+        "signal_refs": [
+          "SG464"
+        ],
+        "description": "Quality management system decision-making process",
+        "confidence": 0.65,
+        "justification": "Signal SG464 implies a logical process for making QMS decisions that follows data and information analysis, representing the operational manifestation of the evidence-based principle."
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW3-C-Why-001",
+      "payload": {
+        "ci_id": "CCI-ROW3-C-Why-001",
+        "cell_id": "ZC-R3-C-Why",
+        "classification_type": "Principle",
+        "signal_refs": [
+          "SG463"
+        ],
+        "description": "Activities and resources are managed as interconnected processes to achieve results",
+        "confidence": 0.75,
+        "justification": "Signal SG463 explicitly describes a 'process approach principle' establishing a logical management philosophy for treating activities and resources as processes, directly mapping to a design principle in the Why column."
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW3-C-Why-002",
+      "payload": {
+        "ci_id": "CCI-ROW3-C-Why-002",
+        "cell_id": "ZC-R3-C-Why",
+        "classification_type": "Principle",
+        "signal_refs": [
+          "SG464"
+        ],
+        "description": "Decisions are based on analysis of data and information",
+        "confidence": 0.73,
+        "justification": "Signal SG464 explicitly identifies an 'evidence-based decision making principle' requiring data and information analysis for QMS decisions, clearly representing a design principle governing decision-making logic."
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW5-C-What-001",
+      "payload": {
+        "ci_id": "CCI-ROW5-C-What-001",
+        "cell_id": "ZC-R5-C-What",
+        "classification_type": "Attribute",
+        "signal_refs": [
+          "SG546"
+        ],
+        "description": "Signature block data structure containing director identity and approval metadata",
+        "confidence": 0.75,
+        "justification": "Signal describes a signature block as a structured data element containing specific attributes (director identity, temporal validity). At Row 5, this is a detailed data format specification. Confidence matches Signal confidence of 0.75."
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW5-C-Who-001",
+      "payload": {
+        "ci_id": "CCI-ROW5-C-Who-001",
+        "cell_id": "ZC-R5-C-Who",
+        "classification_type": "Role",
+        "signal_refs": [
+          "SG546"
+        ],
+        "description": "Director role with signature authority for policy document approval",
+        "confidence": 0.8,
+        "justification": "Signal identifies Director as a specific organizational role with formal signature authority. At Row 5 (Implementer), this represents a detailed role specification with concrete authorization capability. Confidence 0.80 reflects clear role identification, slightly reduced from 0.9+ due to indirect expression of the role's scope."
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW5-C-Why-001",
+      "payload": {
+        "ci_id": "CCI-ROW5-C-Why-001",
+        "cell_id": "ZC-R5-C-Why",
+        "classification_type": "Constraint",
+        "signal_refs": [
+          "SG546"
+        ],
+        "description": "Organizational authority constraint requiring director-level approval for policy document validity",
+        "confidence": 0.78,
+        "justification": "Signal indicates that director signature establishes organizational authority, which represents a validation constraint—the policy requires this specific level of approval to be valid. At Row 5, this is a detailed rule criterion. Confidence 0.78 reflects clear constraint meaning with slight interpretation."
+      }
+    },
+    {
+      "element_type": "Domain",
+      "element_id": "D001",
+      "payload": {
+        "domain_id": "D001",
+        "name": "Quality Governance",
+        "description": "Enterprise-level commitment to establishing, maintaining, and governing quality standards through strategic policy frameworks that guide organizational direction, objective-setting, and compliance obligations.",
+        "row_target": "1",
+        "cell_content_item_refs": [
+          "CCI-ROW1-C-How-001",
+          "CCI-ROW1-C-What-001",
+          "CCI-ROW1-C-What-005",
+          "CCI-ROW1-C-Who-001",
+          "CCI-ROW1-C-Why-001",
+          "CCI-ROW1-C-Why-006",
+          "CCI-ROW1-C-Why-011"
+        ],
+        "classification_type": "Governance Framework"
+      }
+    },
+    {
+      "element_type": "Domain",
+      "element_id": "D002",
+      "payload": {
+        "domain_id": "D002",
+        "name": "Customer Accountability",
+        "description": "Enterprise responsibility for understanding, meeting, and exceeding stakeholder needs and expectations, treating customer intelligence as a strategic asset that drives organizational direction and value creation.",
+        "row_target": "1",
+        "cell_content_item_refs": [
+          "CCI-ROW1-C-How-002",
+          "CCI-ROW1-C-What-002",
+          "CCI-ROW1-C-Who-002",
+          "CCI-ROW1-C-Why-002",
+          "CCI-ROW1-C-Why-007"
+        ],
+        "classification_type": "Stakeholder Accountability"
+      }
+    },
+    {
+      "element_type": "Domain",
+      "element_id": "D003",
+      "payload": {
+        "domain_id": "D003",
+        "name": "Workforce Stewardship",
+        "description": "Enterprise commitment to creating and sustaining an enabling work environment where leadership cultivates conditions for success and engaged people contribute meaningfully to organizational achievement.",
+        "row_target": "1",
+        "cell_content_item_refs": [
+          "CCI-ROW1-C-How-003",
+          "CCI-ROW1-C-How-004",
+          "CCI-ROW1-C-What-003",
+          "CCI-ROW1-C-Who-004",
+          "CCI-ROW1-C-Who-005",
+          "CCI-ROW1-C-Why-003",
+          "CCI-ROW1-C-Why-008",
+          "CCI-ROW1-C-Why-009"
+        ],
+        "classification_type": "Organizational Stewardship"
+      }
+    },
+    {
+      "element_type": "Domain",
+      "element_id": "D004",
+      "payload": {
+        "domain_id": "D004",
+        "name": "Strategic Partnership Governance",
+        "description": "Enterprise approach to establishing, maintaining, and deriving value from external provider relationships as strategic assets requiring mutual benefit and collaborative governance.",
+        "row_target": "1",
+        "cell_content_item_refs": [
+          "CCI-ROW1-C-What-004",
+          "CCI-ROW1-C-Who-003",
+          "CCI-ROW1-C-Why-004",
+          "CCI-ROW1-C-Why-012"
+        ],
+        "classification_type": "Partnership Governance"
+      }
+    },
+    {
+      "element_type": "Domain",
+      "element_id": "D005",
+      "payload": {
+        "domain_id": "D005",
+        "name": "Regulatory Obligation",
+        "description": "Enterprise accountability for meeting legislative, social, environmental, and charitable obligations that constrain organizational behavior and impose compliance requirements across all operations.",
+        "row_target": "1",
+        "cell_content_item_refs": [
+          "CCI-ROW1-C-How-005",
+          "CCI-ROW1-C-Why-013",
+          "CCI-ROW1-C-Why-014",
+          "CCI-ROW1-C-Why-015",
+          "CCI-ROW1-C-Why-016",
+          "CCI-ROW1-C-Why-017"
+        ],
+        "classification_type": "Compliance Obligation"
+      }
+    },
+    {
+      "element_type": "Domain",
+      "element_id": "D006",
+      "payload": {
+        "domain_id": "D006",
+        "name": "Continual Improvement Commitment",
+        "description": "Enterprise dedication to systematic, evidence-based enhancement of quality management and organizational performance through recurring cycles of assessment and advancement.",
+        "row_target": "1",
+        "cell_content_item_refs": [
+          "CCI-ROW1-C-How-006",
+          "CCI-ROW1-C-When-001",
+          "CCI-ROW1-C-Why-005",
+          "CCI-ROW1-C-Why-010"
+        ],
+        "classification_type": "Performance Commitment"
+      }
+    },
+    {
+      "element_type": "Domain",
+      "element_id": "D007",
+      "payload": {
+        "domain_id": "D007",
+        "name": "Quality Governance",
+        "description": "Business responsibility for establishing, maintaining, and enforcing the organizational quality framework, including policy definition, objective-setting, regulatory compliance obligations, and system-wide governance constraints that guide quality behavior across the enterprise.",
+        "row_target": "2",
+        "cell_content_item_refs": [
+          "CCI-ROW2-C-How-001",
+          "CCI-ROW2-C-What-001",
+          "CCI-ROW2-C-What-003",
+          "CCI-ROW2-C-What-004",
+          "CCI-ROW2-C-What-007",
+          "CCI-ROW2-C-What-008",
+          "CCI-ROW2-C-Who-002",
+          "CCI-ROW2-C-Why-001",
+          "CCI-ROW2-C-Why-007",
+          "CCI-ROW2-C-Why-011",
+          "CCI-ROW2-C-Why-012"
+        ],
+        "classification_type": "Governance Domain"
+      }
+    },
+    {
+      "element_type": "Domain",
+      "element_id": "D008",
+      "payload": {
+        "domain_id": "D008",
+        "name": "Customer Commitment Stewardship",
+        "description": "Business responsibility for understanding, capturing, and ensuring fulfillment of customer requirements and expectations, governing how the organization relates to customers and defines value from their perspective.",
+        "row_target": "2",
+        "cell_content_item_refs": [
+          "CCI-ROW2-C-How-002",
+          "CCI-ROW2-C-What-002",
+          "CCI-ROW2-C-What-009",
+          "CCI-ROW2-C-Who-001",
+          "CCI-ROW2-C-Why-002",
+          "CCI-ROW2-C-Why-006"
+        ],
+        "classification_type": "Stewardship Domain"
+      }
+    },
+    {
+      "element_type": "Domain",
+      "element_id": "D009",
+      "payload": {
+        "domain_id": "D009",
+        "name": "Process Accountability",
+        "description": "Business responsibility for defining, managing, and interconnecting activities as coherent processes that deliver organizational outcomes, ensuring activities and resources function as an integrated system rather than isolated operations.",
+        "row_target": "2",
+        "cell_content_item_refs": [
+          "CCI-ROW2-C-How-004",
+          "CCI-ROW2-C-How-009",
+          "CCI-ROW2-C-What-005",
+          "CCI-ROW2-C-Why-009"
+        ],
+        "classification_type": "Accountability Domain"
+      }
+    },
+    {
+      "element_type": "Domain",
+      "element_id": "D010",
+      "payload": {
+        "domain_id": "D010",
+        "name": "People Capability Stewardship",
+        "description": "Business responsibility for engaging, developing, and deploying organizational human capabilities, treating people as essential assets whose involvement enables achievement of business objectives.",
+        "row_target": "2",
+        "cell_content_item_refs": [
+          "CCI-ROW2-C-How-003",
+          "CCI-ROW2-C-Who-003",
+          "CCI-ROW2-C-Why-003",
+          "CCI-ROW2-C-Why-008"
+        ],
+        "classification_type": "Stewardship Domain"
+      }
+    },
+    {
+      "element_type": "Domain",
+      "element_id": "D011",
+      "payload": {
+        "domain_id": "D011",
+        "name": "Improvement Accountability",
+        "description": "Business responsibility for driving continual enhancement across all quality management system aspects, ensuring the organization systematically evolves its performance and capabilities over time.",
+        "row_target": "2",
+        "cell_content_item_refs": [
+          "CCI-ROW2-C-How-005",
+          "CCI-ROW2-C-Why-004"
+        ],
+        "classification_type": "Accountability Domain"
+      }
+    },
+    {
+      "element_type": "Domain",
+      "element_id": "D012",
+      "payload": {
+        "domain_id": "D012",
+        "name": "Decision Evidence Governance",
+        "description": "Business responsibility for ensuring decisions affecting the quality management system are grounded in data analysis and evidence, establishing the obligation to substantiate choices through analytical rigor.",
+        "row_target": "2",
+        "cell_content_item_refs": [
+          "CCI-ROW2-C-How-006",
+          "CCI-ROW2-C-How-008",
+          "CCI-ROW2-C-Why-010"
+        ],
+        "classification_type": "Governance Domain"
+      }
+    },
+    {
+      "element_type": "Domain",
+      "element_id": "D013",
+      "payload": {
+        "domain_id": "D013",
+        "name": "External Partnership Stewardship",
+        "description": "Business responsibility for establishing, maintaining, and governing relationships with external providers to create mutual value, managing how the organization extends its capabilities through third-party collaboration.",
+        "row_target": "2",
+        "cell_content_item_refs": [
+          "CCI-ROW2-C-How-007",
+          "CCI-ROW2-C-What-006",
+          "CCI-ROW2-C-What-010",
+          "CCI-ROW2-C-Who-004",
+          "CCI-ROW2-C-Why-005"
+        ],
+        "classification_type": "Stewardship Domain"
+      }
+    },
+    {
+      "element_type": "Domain",
+      "element_id": "D014",
+      "payload": {
+        "domain_id": "D014",
+        "name": "Process Orchestration Model",
+        "description": "Defines the logical structure by which activities and resources are interconnected as processes to achieve systemic results, including the decision-making flows within the quality management system that govern state transitions and control logic.",
+        "row_target": "3",
+        "cell_content_item_refs": [
+          "CCI-ROW3-C-How-001",
+          "CCI-ROW3-C-Why-001"
+        ],
+        "classification_type": "Logical Behavior and Constraint"
+      }
+    },
+    {
+      "element_type": "Domain",
+      "element_id": "D015",
+      "payload": {
+        "domain_id": "D015",
+        "name": "Decision Logic Model",
+        "description": "Establishes the logical framework for deriving decisions from data and information analysis, defining the invariants and rules that ensure decision integrity across the system without specifying algorithms or computation methods.",
+        "row_target": "3",
+        "cell_content_item_refs": [
+          "CCI-ROW3-C-How-001",
+          "CCI-ROW3-C-Why-002"
+        ],
+        "classification_type": "Logical Constraint and Behavior"
+      }
+    },
+    {
+      "element_type": "Domain",
+      "element_id": "D016",
+      "payload": {
+        "domain_id": "D016",
+        "name": "Policy Approval Signature Implementation",
+        "description": "Detailed specification of the signature approval mechanism for policy documents, encompassing the precise data structure for capturing director signatures, the interface definition for the director approval role, and the implementable validation constraint that enforces director-level authorization as a mandatory condition for document validity.",
+        "row_target": "5",
+        "cell_content_item_refs": [
+          "CCI-ROW5-C-What-001",
+          "CCI-ROW5-C-Who-001",
+          "CCI-ROW5-C-Why-001"
+        ],
+        "classification_type": "Authorization Implementation Specification"
+      }
+    },
+    {
+      "element_type": "DomainRegister",
+      "element_id": "DOMAIN_REG001",
+      "payload": {
+        "register_id": "DOMAIN_REG001",
+        "register_type": "Domain",
+        "member_ids": [
+          "D001",
+          "D002",
+          "D003",
+          "D004",
+          "D005",
+          "D006",
+          "D007",
+          "D008",
+          "D009",
+          "D010",
+          "D011",
+          "D012",
+          "D013",
+          "D014",
+          "D015",
+          "D016"
+        ],
+        "completeness_rule": "This register SHALL contain the identifiers of ALL Domain elements present in the ledger.",
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_type": "Requirement",
+      "element_id": "R001",
+      "payload": {
+        "requirement_id": "R001",
+        "statement": "The enterprise shall establish and maintain a quality policy that is aligned with the business purpose and context of the organization.",
+        "requirement_type": "Constraint",
+        "row_target": "1",
+        "confidence": 0.95,
+        "cci_refs": [
+          "CCI-ROW1-C-What-001",
+          "CCI-ROW1-C-What-005",
+          "CCI-ROW1-C-Why-001"
+        ],
+        "domain_refs": [
+          "D001"
+        ],
+        "answer_refs": [],
+        "rationale": "Why-column CCIs expressing the foundational governance constraint that quality policy must serve and reflect the enterprise's business purpose; What-column CCIs identifying the policy as a strategic governance framework and its essential characteristic of alignment.",
+        "verification_method": "Inspection",
+        "priority": "High"
+      }
+    },
+    {
+      "element_type": "Requirement",
+      "element_id": "R002",
+      "payload": {
+        "requirement_id": "R002",
+        "statement": "The enterprise shall ensure that the quality policy provides a framework for setting quality objectives and maintaining compliance obligations.",
+        "requirement_type": "Constraint",
+        "row_target": "1",
+        "confidence": 0.92,
+        "cci_refs": [
+          "CCI-ROW1-C-Why-006"
+        ],
+        "domain_refs": [
+          "D001"
+        ],
+        "answer_refs": [],
+        "rationale": "Why-column principle expressing the policy's dual governance role as both an objectives-setting framework and a compliance maintenance mechanism.",
+        "verification_method": "Inspection",
+        "priority": "High"
+      }
+    },
+    {
+      "element_type": "Requirement",
+      "element_id": "R003",
+      "payload": {
+        "requirement_id": "R003",
+        "statement": "The enterprise shall establish quality objectives across the organization.",
+        "requirement_type": "Functional",
+        "row_target": "1",
+        "confidence": 0.9,
+        "cci_refs": [
+          "CCI-ROW1-C-How-001"
+        ],
+        "domain_refs": [
+          "D001"
+        ],
+        "answer_refs": [],
+        "rationale": "How-column function expressing the enterprise capability to set organization-wide quality objectives.",
+        "verification_method": "Demonstration",
+        "priority": "High"
+      }
+    },
+    {
+      "element_type": "Requirement",
+      "element_id": "R004",
+      "payload": {
+        "requirement_id": "R004",
+        "statement": "The enterprise shall designate organizational director authority for quality policy governance.",
+        "requirement_type": "Constraint",
+        "row_target": "1",
+        "confidence": 0.88,
+        "cci_refs": [
+          "CCI-ROW1-C-Who-001"
+        ],
+        "domain_refs": [
+          "D001"
+        ],
+        "answer_refs": [],
+        "rationale": "Who-column actor CCI establishing governance constraint that director-level authority is accountable for policy governance; expresses organizational commitment to appropriate governance level.",
+        "verification_method": "Inspection",
+        "priority": "High"
+      }
+    },
+    {
+      "element_type": "Requirement",
+      "element_id": "R005",
+      "payload": {
+        "requirement_id": "R005",
+        "statement": "The enterprise shall ensure that quality management decisions are guided by evidence-based principles.",
+        "requirement_type": "Constraint",
+        "row_target": "1",
+        "confidence": 0.87,
+        "cci_refs": [
+          "CCI-ROW1-C-Why-011"
+        ],
+        "domain_refs": [
+          "D001"
+        ],
+        "answer_refs": [],
+        "rationale": "Why-column principle establishing the governing constraint that decision-making in quality management must be evidence-based.",
+        "verification_method": "Inspection",
+        "priority": "Medium"
+      }
+    },
+    {
+      "element_type": "Requirement",
+      "element_id": "R006",
+      "payload": {
+        "requirement_id": "R006",
+        "statement": "The enterprise shall establish and maintain understanding of customer needs and expectations as organizational intelligence.",
+        "requirement_type": "Constraint",
+        "row_target": "1",
+        "confidence": 0.92,
+        "cci_refs": [
+          "CCI-ROW1-C-What-002",
+          "CCI-ROW1-C-Why-007"
+        ],
+        "domain_refs": [
+          "D002"
+        ],
+        "answer_refs": [],
+        "rationale": "Combines the recognition of customer needs as an organizational intelligence asset (What-002) with the principle that this understanding drives organizational direction (Why-007). Both express an enterprise-level governance commitment to treat customer intelligence strategically.",
+        "verification_method": "Inspection",
+        "priority": "High"
+      }
+    },
+    {
+      "element_type": "Requirement",
+      "element_id": "R007",
+      "payload": {
+        "requirement_id": "R007",
+        "statement": "The enterprise shall be accountable for exceeding customer expectations.",
+        "requirement_type": "Constraint",
+        "row_target": "1",
+        "confidence": 0.88,
+        "cci_refs": [
+          "CCI-ROW1-C-How-002",
+          "CCI-ROW1-C-Why-002"
+        ],
+        "domain_refs": [
+          "D002"
+        ],
+        "answer_refs": [],
+        "rationale": "Derives from the goal to exceed customer expectations (Why-002) and the function of understanding and exceeding expectations (How-002). At Row 1, this is an enterprise commitment rather than a system capability.",
+        "verification_method": "Demonstration",
+        "priority": "High"
+      }
+    },
+    {
+      "element_type": "Requirement",
+      "element_id": "R008",
+      "payload": {
+        "requirement_id": "R008",
+        "statement": "The enterprise shall recognize customers as stakeholders with needs and expectations.",
+        "requirement_type": "Constraint",
+        "row_target": "1",
+        "confidence": 0.85,
+        "cci_refs": [
+          "CCI-ROW1-C-Who-002"
+        ],
+        "domain_refs": [
+          "D002"
+        ],
+        "answer_refs": [],
+        "rationale": "Establishes the enterprise's formal recognition of the customer actor role and their standing as stakeholders. This is a foundational governance constraint that frames all other customer-related obligations.",
+        "verification_method": "Inspection",
+        "priority": "Medium"
+      }
+    },
+    {
+      "element_type": "Requirement",
+      "element_id": "R009",
+      "payload": {
+        "requirement_id": "R009",
+        "statement": "The enterprise shall establish and maintain a work environment that enables achievement of organizational objectives.",
+        "requirement_type": "Constraint",
+        "row_target": "1",
+        "confidence": 0.92,
+        "cci_refs": [
+          "CCI-ROW1-C-What-003",
+          "CCI-ROW1-C-Why-003",
+          "CCI-ROW1-C-Why-008"
+        ],
+        "domain_refs": [
+          "D003"
+        ],
+        "answer_refs": [],
+        "rationale": "Why-column CCIs expressing the enterprise commitment to environment creation as a foundational enabler; CCI-ROW1-C-What-003 identifies work environment as organizational resource requiring governance.",
+        "verification_method": "Inspection",
+        "priority": "High"
+      }
+    },
+    {
+      "element_type": "Requirement",
+      "element_id": "R010",
+      "payload": {
+        "requirement_id": "R010",
+        "statement": "The enterprise shall ensure leadership creates conditions for workforce success.",
+        "requirement_type": "Constraint",
+        "row_target": "1",
+        "confidence": 0.88,
+        "cci_refs": [
+          "CCI-ROW1-C-Who-004",
+          "CCI-ROW1-C-Why-008"
+        ],
+        "domain_refs": [
+          "D003"
+        ],
+        "answer_refs": [],
+        "rationale": "Leadership role (Who-column) and principle (Why-column) converge on the enterprise accountability for leadership behavior as an enabling constraint.",
+        "verification_method": "Inspection",
+        "priority": "High"
+      }
+    },
+    {
+      "element_type": "Requirement",
+      "element_id": "R011",
+      "payload": {
+        "requirement_id": "R011",
+        "statement": "The enterprise shall engage people to contribute meaningfully to organizational achievement.",
+        "requirement_type": "Functional",
+        "row_target": "1",
+        "confidence": 0.9,
+        "cci_refs": [
+          "CCI-ROW1-C-How-003",
+          "CCI-ROW1-C-Who-005",
+          "CCI-ROW1-C-Why-009"
+        ],
+        "domain_refs": [
+          "D003"
+        ],
+        "answer_refs": [],
+        "rationale": "How-column function, Who-column role definition, and Why-column principle combine to express the enterprise capability obligation to engage workforce for business benefit.",
+        "verification_method": "Demonstration",
+        "priority": "High"
+      }
+    },
+    {
+      "element_type": "Requirement",
+      "element_id": "R012",
+      "payload": {
+        "requirement_id": "R012",
+        "statement": "The enterprise shall adopt evidence-based decision making for quality management.",
+        "requirement_type": "Constraint",
+        "row_target": "1",
+        "confidence": 0.85,
+        "cci_refs": [
+          "CCI-ROW1-C-How-004"
+        ],
+        "domain_refs": [
+          "D003"
+        ],
+        "answer_refs": [],
+        "rationale": "How-column function expressing a governance principle that constrains decision-making methodology at enterprise scope; the obligation is to the decision-making approach rather than a specific capability.",
+        "verification_method": "Inspection",
+        "priority": "Medium"
+      }
+    },
+    {
+      "element_type": "Requirement",
+      "element_id": "R013",
+      "payload": {
+        "requirement_id": "R013",
+        "statement": "The enterprise shall establish strategic relationships with external providers.",
+        "requirement_type": "Constraint",
+        "row_target": "1",
+        "confidence": 0.92,
+        "cci_refs": [
+          "CCI-ROW1-C-What-004",
+          "CCI-ROW1-C-Who-003"
+        ],
+        "domain_refs": [
+          "D004"
+        ],
+        "answer_refs": [],
+        "rationale": "External providers are recognized as strategic relationship partners requiring formalized enterprise-level relationships, not transactional vendor arrangements.",
+        "verification_method": "Inspection",
+        "priority": "High"
+      }
+    },
+    {
+      "element_type": "Requirement",
+      "element_id": "R014",
+      "payload": {
+        "requirement_id": "R014",
+        "statement": "The enterprise shall ensure external provider relationships are mutually beneficial.",
+        "requirement_type": "Constraint",
+        "row_target": "1",
+        "confidence": 0.95,
+        "cci_refs": [
+          "CCI-ROW1-C-Why-012"
+        ],
+        "domain_refs": [
+          "D004"
+        ],
+        "answer_refs": [],
+        "rationale": "Enterprise principle requiring symmetric value and collaborative governance rather than one-sided service extraction.",
+        "verification_method": "Analysis",
+        "priority": "High"
+      }
+    },
+    {
+      "element_type": "Requirement",
+      "element_id": "R015",
+      "payload": {
+        "requirement_id": "R015",
+        "statement": "The enterprise shall derive value through external provider relationships.",
+        "requirement_type": "Constraint",
+        "row_target": "1",
+        "confidence": 0.93,
+        "cci_refs": [
+          "CCI-ROW1-C-Why-004"
+        ],
+        "domain_refs": [
+          "D004"
+        ],
+        "answer_refs": [],
+        "rationale": "Enterprise goal expressing the commitment to value creation as the purpose of establishing and maintaining strategic partnerships.",
+        "verification_method": "Analysis",
+        "priority": "High"
+      }
+    },
+    {
+      "element_type": "Requirement",
+      "element_id": "R016",
+      "payload": {
+        "requirement_id": "R016",
+        "statement": "The enterprise shall comply with applicable legislative obligations.",
+        "requirement_type": "Constraint",
+        "row_target": "1",
+        "confidence": 0.95,
+        "cci_refs": [
+          "CCI-ROW1-C-Why-017"
+        ],
+        "domain_refs": [
+          "D005"
+        ],
+        "answer_refs": [],
+        "rationale": "Establishes enterprise accountability for meeting all legislative requirements that constrain organizational behavior.",
+        "verification_method": "Inspection",
+        "priority": "High"
+      }
+    },
+    {
+      "element_type": "Requirement",
+      "element_id": "R017",
+      "payload": {
+        "requirement_id": "R017",
+        "statement": "The enterprise shall comply with applicable regulatory obligations.",
+        "requirement_type": "Constraint",
+        "row_target": "1",
+        "confidence": 0.95,
+        "cci_refs": [
+          "CCI-ROW1-C-How-005",
+          "CCI-ROW1-C-Why-013"
+        ],
+        "domain_refs": [
+          "D005"
+        ],
+        "answer_refs": [],
+        "rationale": "Consolidates enterprise commitment to regulatory compliance across all operations, derived from both process and constraint CCIs expressing the same core obligation.",
+        "verification_method": "Inspection",
+        "priority": "High"
+      }
+    },
+    {
+      "element_type": "Requirement",
+      "element_id": "R018",
+      "payload": {
+        "requirement_id": "R018",
+        "statement": "The enterprise shall fulfill its social responsibility obligations.",
+        "requirement_type": "Constraint",
+        "row_target": "1",
+        "confidence": 0.9,
+        "cci_refs": [
+          "CCI-ROW1-C-Why-014"
+        ],
+        "domain_refs": [
+          "D005"
+        ],
+        "answer_refs": [],
+        "rationale": "Establishes enterprise commitment to meeting social obligations that constrain organizational behavior.",
+        "verification_method": "Inspection",
+        "priority": "Medium"
+      }
+    },
+    {
+      "element_type": "Requirement",
+      "element_id": "R019",
+      "payload": {
+        "requirement_id": "R019",
+        "statement": "The enterprise shall fulfill its environmental responsibility obligations.",
+        "requirement_type": "Constraint",
+        "row_target": "1",
+        "confidence": 0.9,
+        "cci_refs": [
+          "CCI-ROW1-C-Why-015"
+        ],
+        "domain_refs": [
+          "D005"
+        ],
+        "answer_refs": [],
+        "rationale": "Establishes enterprise commitment to meeting environmental obligations that constrain organizational behavior.",
+        "verification_method": "Inspection",
+        "priority": "Medium"
+      }
+    },
+    {
+      "element_type": "Requirement",
+      "element_id": "R020",
+      "payload": {
+        "requirement_id": "R020",
+        "statement": "The enterprise shall fulfill its charitable responsibility obligations.",
+        "requirement_type": "Constraint",
+        "row_target": "1",
+        "confidence": 0.85,
+        "cci_refs": [
+          "CCI-ROW1-C-Why-016"
+        ],
+        "domain_refs": [
+          "D005"
+        ],
+        "answer_refs": [],
+        "rationale": "Establishes enterprise commitment to meeting charitable obligations."
+      }
+    },
+    {
+      "element_type": "Requirement",
+      "element_id": "R021",
+      "payload": {
+        "requirement_id": "R021",
+        "statement": "The enterprise shall commit to continual improvement of its quality management system.",
+        "requirement_type": "Constraint",
+        "row_target": "1",
+        "confidence": 0.95,
+        "cci_refs": [
+          "CCI-ROW1-C-How-006",
+          "CCI-ROW1-C-Why-005"
+        ],
+        "domain_refs": [
+          "D006"
+        ],
+        "answer_refs": [],
+        "rationale": "Establishes the enterprise's fundamental commitment to systematic enhancement of quality management, derived from the process approach (How) and the goal of achieving continual improvement (Why).",
+        "verification_method": "Inspection",
+        "priority": "High"
+      }
+    },
+    {
+      "element_type": "Requirement",
+      "element_id": "R022",
+      "payload": {
+        "requirement_id": "R022",
+        "statement": "The enterprise shall establish an annual cycle for continual improvement activities.",
+        "requirement_type": "Functional",
+        "row_target": "1",
+        "confidence": 0.92,
+        "cci_refs": [
+          "CCI-ROW1-C-When-001"
+        ],
+        "domain_refs": [
+          "D006"
+        ],
+        "answer_refs": [],
+        "rationale": "Defines the temporal commitment for executing improvement cycles at enterprise scope, providing the recurring cadence for assessment and advancement.",
+        "fit_criteria": "Evidence of at least one complete improvement cycle executed within each 12-month period.",
+        "verification_method": "Inspection",
+        "priority": "High"
+      }
+    },
+    {
+      "element_type": "Requirement",
+      "element_id": "R023",
+      "payload": {
+        "requirement_id": "R023",
+        "statement": "The enterprise shall adopt a process approach to drive organizational efficiency.",
+        "requirement_type": "Constraint",
+        "row_target": "1",
+        "confidence": 0.88,
+        "cci_refs": [
+          "CCI-ROW1-C-Why-010"
+        ],
+        "domain_refs": [
+          "D006"
+        ],
+        "answer_refs": [],
+        "rationale": "Establishes the enterprise's commitment to a principle-based methodology that uses process thinking as the foundation for achieving efficiency gains.",
+        "verification_method": "Inspection",
+        "priority": "Medium"
+      }
+    },
+    {
+      "element_type": "RequirementRegister",
+      "element_id": "REQUIREMENT_REG001",
+      "payload": {
+        "register_id": "REQUIREMENT_REG001",
+        "register_type": "Requirement",
+        "member_ids": [
+          "R001",
+          "R002",
+          "R003",
+          "R004",
+          "R005",
+          "R006",
+          "R007",
+          "R008",
+          "R009",
+          "R010",
+          "R011",
+          "R012",
+          "R013",
+          "R014",
+          "R015",
+          "R016",
+          "R017",
+          "R018",
+          "R019",
+          "R020",
+          "R021",
+          "R022",
+          "R023"
+        ],
+        "completeness_rule": "This register SHALL contain the identifiers of ALL Requirement elements present in the ledger.",
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_type": "Signal",
+      "element_id": "SG278",
+      "payload": {
+        "signal_id": "SG278",
+        "signal_type": "Intent",
+        "row_target": "1",
+        "description": "Establishes organizational quality policy aligned with business purpose and context as foundational governance framework.",
+        "source_refs": [
+          "S2753"
+        ],
+        "confidence": 0.85
+      }
+    },
+    {
+      "element_type": "Signal",
+      "element_id": "SG279",
+      "payload": {
+        "signal_id": "SG279",
+        "signal_type": "Intent",
+        "row_target": "1",
+        "description": "Defines quality policy framework purpose for objective-setting and commitment to regulatory compliance and continuous improvement.",
+        "source_refs": [
+          "S2754"
+        ],
+        "confidence": 0.8
+      }
+    },
+    {
+      "element_type": "Signal",
+      "element_id": "SG280",
+      "payload": {
+        "signal_id": "SG280",
+        "signal_type": "Intent",
+        "row_target": "1",
+        "description": "Articulates strategic commitment to understanding customer needs and exceeding expectations as organizational driver.",
+        "source_refs": [
+          "S2755"
+        ],
+        "confidence": 0.9
+      }
+    },
+    {
+      "element_type": "Signal",
+      "element_id": "SG281",
+      "payload": {
+        "signal_id": "SG281",
+        "signal_type": "Intent",
+        "row_target": "1",
+        "description": "Expresses leadership commitment to creating enabling work environment for achieving organizational objectives.",
+        "source_refs": [
+          "S2756"
+        ],
+        "confidence": 0.75
+      }
+    },
+    {
+      "element_type": "Signal",
+      "element_id": "SG282",
+      "payload": {
+        "signal_id": "SG282",
+        "signal_type": "Intent",
+        "row_target": "1",
+        "description": "Recognizes people engagement as essential organizational value and strategic enabler for business benefit.",
+        "source_refs": [
+          "S2757"
+        ],
+        "confidence": 0.85
+      }
+    },
+    {
+      "element_type": "Signal",
+      "element_id": "SG283",
+      "payload": {
+        "signal_id": "SG283",
+        "signal_type": "Intent",
+        "row_target": "1",
+        "description": "Declares process approach as organizational efficiency principle for achieving desired results.",
+        "source_refs": [
+          "S2758"
+        ],
+        "confidence": 0.7
+      }
+    },
+    {
+      "element_type": "Signal",
+      "element_id": "SG284",
+      "payload": {
+        "signal_id": "SG284",
+        "signal_type": "Intent",
+        "row_target": "1",
+        "description": "Establishes continual improvement across quality management as core annual organizational objective.",
+        "source_refs": [
+          "S2759"
+        ],
+        "confidence": 0.88
+      }
+    },
+    {
+      "element_type": "Signal",
+      "element_id": "SG285",
+      "payload": {
+        "signal_id": "SG285",
+        "signal_type": "Intent",
+        "row_target": "1",
+        "description": "Commits organization to evidence-based decision making principle for quality management governance.",
+        "source_refs": [
+          "S2760"
+        ],
+        "confidence": 0.82
+      }
+    },
+    {
+      "element_type": "Signal",
+      "element_id": "SG286",
+      "payload": {
+        "signal_id": "SG286",
+        "signal_type": "Intent",
+        "row_target": "1",
+        "description": "Recognizes mutually beneficial external provider relationships as strategic driver for value creation.",
+        "source_refs": [
+          "S2761"
+        ],
+        "confidence": 0.78
+      }
+    },
+    {
+      "element_type": "Signal",
+      "element_id": "SG287",
+      "payload": {
+        "signal_id": "SG287",
+        "signal_type": "Intent",
+        "row_target": "1",
+        "description": "Declares policy commitment to social, environmental, charitable, and legislative responsibilities as organizational obligations.",
+        "source_refs": [
+          "S2762"
+        ],
+        "confidence": 0.87
+      }
+    },
+    {
+      "element_type": "Signal",
+      "element_id": "SG288",
+      "payload": {
+        "signal_id": "SG288",
+        "signal_type": "Normative",
+        "row_target": "1",
+        "description": "Provides formal policy authorization by organizational director establishing governance authority and accountability.",
+        "source_refs": [
+          "S2763"
+        ],
+        "confidence": 0.95
+      }
+    },
+    {
+      "element_type": "Signal",
+      "element_id": "SG447",
+      "payload": {
+        "signal_id": "SG447",
+        "signal_type": "Intent",
+        "row_target": "2",
+        "description": "Establishes the conceptual foundation for a quality policy aligned with organizational purpose and context.",
+        "source_refs": [
+          "S2753"
+        ],
+        "confidence": 0.75
+      }
+    },
+    {
+      "element_type": "Signal",
+      "element_id": "SG448",
+      "payload": {
+        "signal_id": "SG448",
+        "signal_type": "Intent",
+        "row_target": "2",
+        "description": "Defines the policy framework as encompassing objective-setting, customer requirements, regulatory compliance, and continual improvement commitments.",
+        "source_refs": [
+          "S2754"
+        ],
+        "confidence": 0.8
+      }
+    },
+    {
+      "element_type": "Signal",
+      "element_id": "SG449",
+      "payload": {
+        "signal_id": "SG449",
+        "signal_type": "Normative",
+        "row_target": "2",
+        "description": "Articulates customer focus as a business concept requiring understanding of needs, meeting requirements, and exceeding expectations.",
+        "source_refs": [
+          "S2755"
+        ],
+        "confidence": 0.85
+      }
+    },
+    {
+      "element_type": "Signal",
+      "element_id": "SG450",
+      "payload": {
+        "signal_id": "SG450",
+        "signal_type": "Normative",
+        "row_target": "2",
+        "description": "Defines leadership as the conceptual responsibility for creating environments that enable objective achievement through people involvement.",
+        "source_refs": [
+          "S2756"
+        ],
+        "confidence": 0.8
+      }
+    },
+    {
+      "element_type": "Signal",
+      "element_id": "SG451",
+      "payload": {
+        "signal_id": "SG451",
+        "signal_type": "Normative",
+        "row_target": "2",
+        "description": "Identifies people engagement as a core business concept recognizing human capabilities as essential organizational assets.",
+        "source_refs": [
+          "S2757"
+        ],
+        "confidence": 0.85
+      }
+    },
+    {
+      "element_type": "Signal",
+      "element_id": "SG452",
+      "payload": {
+        "signal_id": "SG452",
+        "signal_type": "Normative",
+        "row_target": "2",
+        "description": "Establishes process approach as a conceptual model where activities and resources are managed as interconnected processes for efficiency.",
+        "source_refs": [
+          "S2758"
+        ],
+        "confidence": 0.85
+      }
+    },
+    {
+      "element_type": "Signal",
+      "element_id": "SG453",
+      "payload": {
+        "signal_id": "SG453",
+        "signal_type": "Intent",
+        "row_target": "2",
+        "description": "Defines continual improvement as a central business objective across all quality management system aspects.",
+        "source_refs": [
+          "S2759"
+        ],
+        "confidence": 0.8
+      }
+    },
+    {
+      "element_type": "Signal",
+      "element_id": "SG454",
+      "payload": {
+        "signal_id": "SG454",
+        "signal_type": "Normative",
+        "row_target": "2",
+        "description": "Establishes evidence-based decision making as a business rule requiring data analysis before quality management system decisions.",
+        "source_refs": [
+          "S2760"
+        ],
+        "confidence": 0.85
+      }
+    },
+    {
+      "element_type": "Signal",
+      "element_id": "SG455",
+      "payload": {
+        "signal_id": "SG455",
+        "signal_type": "Normative",
+        "row_target": "2",
+        "description": "Defines relationship management as a conceptual model of interdependent external provider relationships that mutually create value.",
+        "source_refs": [
+          "S2761"
+        ],
+        "confidence": 0.85
+      }
+    },
+    {
+      "element_type": "Signal",
+      "element_id": "SG456",
+      "payload": {
+        "signal_id": "SG456",
+        "signal_type": "Normative",
+        "row_target": "2",
+        "description": "Extends policy scope to encompass social, environmental, charitable, and legislative responsibility requirements.",
+        "source_refs": [
+          "S2762"
+        ],
+        "confidence": 0.8
+      }
+    },
+    {
+      "element_type": "Signal",
+      "element_id": "SG463",
+      "payload": {
+        "signal_id": "SG463",
+        "signal_type": "Intent",
+        "row_target": "3",
+        "description": "Process approach principle articulating logical management philosophy that activities and resources achieve results through process or interconnected process series.",
+        "source_refs": [
+          "S2758"
+        ],
+        "confidence": 0.7
+      }
+    },
+    {
+      "element_type": "Signal",
+      "element_id": "SG464",
+      "payload": {
+        "signal_id": "SG464",
+        "signal_type": "Intent",
+        "row_target": "3",
+        "description": "Evidence-based decision making principle establishing logical requirement that QMS decisions follow data and information analysis.",
+        "source_refs": [
+          "S2760"
+        ],
+        "confidence": 0.68
+      }
+    },
+    {
+      "element_type": "Signal",
+      "element_id": "SG546",
+      "payload": {
+        "signal_id": "SG546",
+        "signal_type": "Actor",
+        "row_target": "5",
+        "description": "Director signature block identifying specific organizational authority and temporal validity of policy document.",
+        "source_refs": [
+          "S2763"
+        ],
+        "confidence": 0.75
+      }
+    },
+    {
+      "element_type": "SignalRegister",
+      "element_id": "SIGNAL_REG001",
+      "payload": {
+        "register_id": "SIGNAL_REG001",
+        "register_type": "Signal",
+        "member_ids": [
+          "SG278",
+          "SG279",
+          "SG280",
+          "SG281",
+          "SG282",
+          "SG283",
+          "SG284",
+          "SG285",
+          "SG286",
+          "SG287",
+          "SG288",
+          "SG447",
+          "SG448",
+          "SG449",
+          "SG450",
+          "SG451",
+          "SG452",
+          "SG453",
+          "SG454",
+          "SG455",
+          "SG456",
+          "SG463",
+          "SG464",
+          "SG546"
+        ],
+        "completeness_rule": "This register SHALL contain the identifiers of ALL Signal elements present in the ledger.",
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_type": "Stakeholder",
+      "element_id": "SH001",
+      "payload": {
+        "stakeholder_id": "SH001",
+        "name": "Practitioner SH001",
+        "role": "practitioner",
+        "stakeholder_kind": "Automated"
+      }
+    },
+    {
+      "element_type": "Stakeholder",
+      "element_id": "SH_NQPS",
+      "payload": {
+        "stakeholder_id": "SH_NQPS",
+        "name": "Practitioner SH_NQPS",
+        "role": "practitioner"
+      }
+    },
+    {
+      "element_type": "StakeholderRegister",
+      "element_id": "STAKEHOLDER_REG001",
+      "payload": {
+        "register_id": "STAKEHOLDER_REG001",
+        "register_type": "Stakeholder",
+        "member_ids": [
+          "SH001",
+          "SH_NQPS"
+        ],
+        "completeness_rule": "This register SHALL contain the identifiers of ALL Stakeholder elements present in the ledger.",
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_type": "CellContentItemRegister",
+      "element_id": "CELLCONTENTITEM_REG001",
+      "payload": {
+        "register_id": "CELLCONTENTITEM_REG001",
+        "register_type": "CellContentItem",
+        "member_ids": [
+          "CCI-ROW1-C-How-001",
+          "CCI-ROW1-C-How-002",
+          "CCI-ROW1-C-How-003",
+          "CCI-ROW1-C-How-004",
+          "CCI-ROW1-C-How-005",
+          "CCI-ROW1-C-How-006",
+          "CCI-ROW1-C-What-001",
+          "CCI-ROW1-C-What-002",
+          "CCI-ROW1-C-What-003",
+          "CCI-ROW1-C-What-004",
+          "CCI-ROW1-C-What-005",
+          "CCI-ROW1-C-When-001",
+          "CCI-ROW1-C-Who-001",
+          "CCI-ROW1-C-Who-002",
+          "CCI-ROW1-C-Who-003",
+          "CCI-ROW1-C-Who-004",
+          "CCI-ROW1-C-Who-005",
+          "CCI-ROW1-C-Why-001",
+          "CCI-ROW1-C-Why-002",
+          "CCI-ROW1-C-Why-003",
+          "CCI-ROW1-C-Why-004",
+          "CCI-ROW1-C-Why-005",
+          "CCI-ROW1-C-Why-006",
+          "CCI-ROW1-C-Why-007",
+          "CCI-ROW1-C-Why-008",
+          "CCI-ROW1-C-Why-009",
+          "CCI-ROW1-C-Why-010",
+          "CCI-ROW1-C-Why-011",
+          "CCI-ROW1-C-Why-012",
+          "CCI-ROW1-C-Why-013",
+          "CCI-ROW1-C-Why-014",
+          "CCI-ROW1-C-Why-015",
+          "CCI-ROW1-C-Why-016",
+          "CCI-ROW1-C-Why-017",
+          "CCI-ROW2-C-How-001",
+          "CCI-ROW2-C-How-002",
+          "CCI-ROW2-C-How-003",
+          "CCI-ROW2-C-How-004",
+          "CCI-ROW2-C-How-005",
+          "CCI-ROW2-C-How-006",
+          "CCI-ROW2-C-How-007",
+          "CCI-ROW2-C-How-008",
+          "CCI-ROW2-C-How-009",
+          "CCI-ROW2-C-What-001",
+          "CCI-ROW2-C-What-002",
+          "CCI-ROW2-C-What-003",
+          "CCI-ROW2-C-What-004",
+          "CCI-ROW2-C-What-005",
+          "CCI-ROW2-C-What-006",
+          "CCI-ROW2-C-What-007",
+          "CCI-ROW2-C-What-008",
+          "CCI-ROW2-C-What-009",
+          "CCI-ROW2-C-What-010",
+          "CCI-ROW2-C-Who-001",
+          "CCI-ROW2-C-Who-002",
+          "CCI-ROW2-C-Who-003",
+          "CCI-ROW2-C-Who-004",
+          "CCI-ROW2-C-Why-001",
+          "CCI-ROW2-C-Why-002",
+          "CCI-ROW2-C-Why-003",
+          "CCI-ROW2-C-Why-004",
+          "CCI-ROW2-C-Why-005",
+          "CCI-ROW2-C-Why-006",
+          "CCI-ROW2-C-Why-007",
+          "CCI-ROW2-C-Why-008",
+          "CCI-ROW2-C-Why-009",
+          "CCI-ROW2-C-Why-010",
+          "CCI-ROW2-C-Why-011",
+          "CCI-ROW2-C-Why-012",
+          "CCI-ROW3-C-How-001",
+          "CCI-ROW3-C-Why-001",
+          "CCI-ROW3-C-Why-002",
+          "CCI-ROW5-C-What-001",
+          "CCI-ROW5-C-Who-001",
+          "CCI-ROW5-C-Why-001"
+        ],
+        "completeness_rule": "This register SHALL contain the identifiers of ALL CellContentItem elements present in the ledger.",
+        "confidence": 1.0
+      }
+    }
+  ],
+  "register_index": [
+    {
+      "register_type": "CellContentItemRegister",
+      "register_id": "CELLCONTENTITEM_REG001"
+    },
+    {
+      "register_type": "DomainRegister",
+      "register_id": "DOMAIN_REG001"
+    },
+    {
+      "register_type": "RequirementRegister",
+      "register_id": "REQUIREMENT_REG001"
+    },
+    {
+      "register_type": "SignalRegister",
+      "register_id": "SIGNAL_REG001"
+    },
+    {
+      "register_type": "SourceRegister",
+      "register_id": "SOURCE_REG001"
+    },
+    {
+      "register_type": "StakeholderRegister",
+      "register_id": "STAKEHOLDER_REG001"
+    },
+    {
+      "register_type": "ZachmanCellRegister",
+      "register_id": "ZACHMANCELL_REG001"
+    }
+  ],
+  "content_hash": {
+    "hash_alg": "sha256",
+    "hash": "0137a6b37f750dd38360fb2efe4cac58643d527eb75d9efdd4c62ce62cb6ec76"
+  }
+}
