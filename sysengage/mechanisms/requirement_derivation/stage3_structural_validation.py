@@ -1,7 +1,7 @@
 """
 Stage 3 — Structural Validation (DM, with conditional IM repair).
 
-Per Requirement Derivation Mechanism Spec v0.1 §4.3:
+Per Requirement Derivation Mechanism Spec v0.2 §4.3:
   All checks run in sequence on the accumulated proposal set. Pure in-memory
   operations except the Non-Loss repair prompt (IM conditional sub-act).
 
@@ -14,6 +14,11 @@ Per Requirement Derivation Mechanism Spec v0.1 §4.3:
              if orphans. Persistent orphan → CompletedWithWarnings + Concern raised.
   CHK-3d-06  Failure if all proposals rejected and repair produced nothing.
   CHK-3d-07  Exact-duplicate collapse (same statement + cci_refs set).
+  CHK-3d-08  Row-appropriate statement subject (decidable; soft severity). Tests the
+             statement's grammatical subject against the row's required subject from
+             REQUIREMENT_ROW_GUIDANCE §5.4(a). Mismatch logs subject_vocabulary_mismatch
+             in execution_warnings and records the flag in subject_vocabulary_flags.
+             Does NOT reject the Requirement or block production.
   ADVC-3d-01 Requirement-per-Domain soft bounds advisory.
 """
 
@@ -52,6 +57,7 @@ class Stage3Result:
     orphaned_ccis: list[str] = field(default_factory=list)
     validation_failures: list[dict[str, Any]] = field(default_factory=list)
     duplicate_requirements_collapsed: list[dict[str, Any]] = field(default_factory=list)
+    subject_vocabulary_flags: list[dict[str, Any]] = field(default_factory=list)
     ai_model_fingerprints: list[dict[str, Any]] = field(default_factory=list)
     execution_warnings: list[dict[str, Any]] = field(default_factory=list)
     concern_entities: list[dict[str, Any]] = field(default_factory=list)
@@ -251,7 +257,9 @@ def run_stage3(
                 }
             )
 
-        repair_prompt = build_requirement_repair_prompt(orphaned_ccis=orphaned_cci_dicts)
+        repair_prompt = build_requirement_repair_prompt(
+            row_ref=row_ref, orphaned_ccis=orphaned_cci_dicts
+        )
 
         parsed_repair: list[RepairRequirementProposal] | None = None
         try:
@@ -339,6 +347,60 @@ def run_stage3(
             seen_keys[key] = len(deduped)
             deduped.append(p)
     proposals = deduped
+
+    # -------------------------------------------------------------------------
+    # CHK-3d-08 — Row-appropriate statement subject (decidable; soft severity)
+    # Realises Mechanism Spec v0.2 §4.3 / closes F81 detection.
+    #
+    # For each surviving Requirement, test the grammatical subject of the
+    # statement against the row's required subject per REQUIREMENT_ROW_GUIDANCE
+    # §5.4(a). Row 1 requires "The enterprise shall…"; a "The system shall…"
+    # (or other system/component subject) at Row 1 is a mismatch.
+    #
+    # Severity: soft at v0.2 — mismatch records a flag in subject_vocabulary_flags
+    # and logs subject_vocabulary_mismatch in execution_warnings; it does NOT
+    # reject the Requirement or change execution_status.
+    # -------------------------------------------------------------------------
+    _SYSTEM_SUBJECT_PATTERN = re.compile(
+        r"^the\s+(?:system|software|application|component|platform|tool|service|"
+        r"database|module|interface|api|app)\b",
+        re.IGNORECASE,
+    )
+    _ENTERPRISE_SUBJECT_PATTERN = re.compile(
+        r"^the\s+enterprise\b",
+        re.IGNORECASE,
+    )
+
+    _ROW1_REQUIRES_ENTERPRISE = "1"
+
+    for idx, p in enumerate(proposals):
+        stmt_stripped = p.statement.strip()
+        if str(row_ref) == _ROW1_REQUIRES_ENTERPRISE:
+            # At Row 1: subject must be enterprise; system-subject is a mismatch.
+            if _SYSTEM_SUBJECT_PATTERN.match(stmt_stripped):
+                # Extract first two words as the detected subject
+                words = stmt_stripped.split()
+                detected_subject = " ".join(words[:2]) if len(words) >= 2 else stmt_stripped[:30]
+                placeholder = f"proposal_{idx + 1}:{stmt_stripped[:40].rstrip()}"
+                result.subject_vocabulary_flags.append(
+                    {
+                        "requirement_id_placeholder": placeholder,
+                        "row": row_ref,
+                        "detected_subject": detected_subject,
+                    }
+                )
+                result.execution_warnings.append(
+                    {
+                        "type": "subject_vocabulary_mismatch",
+                        "row": row_ref,
+                        "detected_subject": detected_subject,
+                        "statement_preview": stmt_stripped[:80],
+                    }
+                )
+                _log.info(
+                    "CHK-3d-08: Row %s subject mismatch — detected %r in %r",
+                    row_ref, detected_subject, stmt_stripped[:60],
+                )
 
     # -------------------------------------------------------------------------
     # ADVC-3d-01 — Requirement-per-Domain soft bounds

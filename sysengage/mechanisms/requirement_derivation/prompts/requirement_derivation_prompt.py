@@ -1,20 +1,20 @@
 """
 Requirement Derivation prompt template — FirstRun / FullRerun (per-Domain).
 
-Per Requirement Derivation Mechanism Spec v0.1 §4.2 and §5.4.
+Per Requirement Derivation Mechanism Spec v0.2 §4.2 and §5.4.
 
 One call per active Domain in Stage 2. Injects:
   row_ref, domain (domain_id, name, description), domain_cci_set,
-  abstraction_level_phrase (from ROW_GUIDANCE), requirement_type_guidance.
+  REQUIREMENT_ROW_GUIDANCE[row] (§5.4 — DISTINCT from the domain ROW_GUIDANCE),
+  statement formulation discipline, requirement_type reasoning signals.
 
 §5.4 guidance blocks:
-  (a) Statement formulation discipline — atomic, single intent, normative phrasing,
-      no inferred content; "and" compound test same as Pass 3c domain naming.
-  (b) requirement_type reasoning signals — Why→Constraint, How/What/When→Functional,
+  (a) REQUIREMENT_ROW_GUIDANCE[row] — row-specific subject, vocabulary, type-reasoning
+      signals, and optional-field policy (Row 1 fully authored; Rows 2–6 stubs).
+  (b) Statement formulation discipline — atomic, single intent, normative phrasing,
+      no inferred content; "and" compound test.
+  (c) requirement_type reasoning signals — Why→Constraint, How/What/When→Functional,
       measurable threshold→Performance, quality attribute→Suitability/Non-Functional.
-
-ROW_GUIDANCE imported from Pass 3c domain_grouping_prompt — same abstraction-level
-vocabulary governs Requirement statement language as it governs Domain naming.
 
 LPM constraint: AI instructed not to reproduce CCI description text verbatim.
 Expected response format: JSON array of RequirementProposal objects.
@@ -22,7 +22,9 @@ Expected response format: JSON array of RequirementProposal objects.
 
 from __future__ import annotations
 
-from mechanisms.domain_derivation.prompts.domain_grouping_prompt import ROW_GUIDANCE
+from mechanisms.requirement_derivation.prompts.requirement_row_guidance import (
+    REQUIREMENT_ROW_GUIDANCE,
+)
 
 _STATEMENT_FORMULATION_GUIDANCE = """\
 ## Requirement Statement Formulation Discipline (§5.4a)
@@ -77,7 +79,7 @@ def build_requirement_derivation_prompt(
     domain_cci_set: list of dicts with keys ci_id, column, classification_type, description.
     """
     row_key = str(row_ref)
-    guidance = ROW_GUIDANCE.get(row_key, f"Row {row_ref} abstraction level")
+    guidance = REQUIREMENT_ROW_GUIDANCE.get(row_key, f"Row {row_ref} abstraction level")
     if "\n" in guidance:
         abstraction_block = guidance
     else:

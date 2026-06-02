@@ -375,35 +375,38 @@ def run_requirement_derivation(
                     outputs={
                         "mechanism_data": {
                             "row_ref": row_ref,
-                            "scenario": stage2.effective_scenario,
-                            "cci_count_input": len(stage1.eligible_ccis),
-                            "domain_count": len(stage1.active_domains),
-                            "requirement_count_produced": stage4.requirement_count_produced,
-                            "requirement_count_retired": stage4.requirement_count_retired,
-                            "requirement_type_distribution": stage4.requirement_type_distribution,
-                            "requirements_produced": stage4.requirements_produced,
-                            "retirement_mapping": stage4.retirement_mapping,
-                            "orphaned_ccis": stage3.orphaned_ccis,
+                            "run_scenario": stage2.effective_scenario,
                             "requirement_input_hash": stage1.current_hash,
                             "domain_id_set": sorted(
                                 d.domain_id for d in stage1.active_domains
                             ),
-                            "downstream_rerun_required": stage4.downstream_rerun_required,
+                            "cci_count_input": len(stage1.eligible_ccis),
+                            "domain_count_input": len(stage1.active_domains),
                             "large_cci_set_advisory": stage1.large_cci_set_advisory,
+                            "idempotent": stage2.effective_scenario == "IdempotentRerun",
+                            "repair_prompt_issued": stage3.repair_prompt_issued,
+                            "orphaned_ccis": stage3.orphaned_ccis,
+                            "validation_failures": (
+                                stage2.validation_failures + stage3.validation_failures
+                            ),
+                            "duplicate_requirements_collapsed": (
+                                stage3.duplicate_requirements_collapsed
+                            ),
+                            "subject_vocabulary_flags": stage3.subject_vocabulary_flags,
+                            "requirement_count_produced": stage4.requirement_count_produced,
+                            "requirement_count_retired": stage4.requirement_count_retired,
+                            "requirement_type_distribution": stage4.requirement_type_distribution,
+                            "requirements_produced": stage4.requirements_produced,
+                            "downstream_rerun_required": stage4.downstream_rerun_required,
+                            "retirement_mapping": stage4.retirement_mapping,
+                            "mode_violations": [],
                         },
                         "execution_warnings": all_warnings,
-                        "validation_failures": (
-                            stage2.validation_failures + stage3.validation_failures
-                        ),
                         "ai_model_fingerprints": (
                             stage2.ai_model_fingerprints
                             + stage3.ai_model_fingerprints
                         ),
                         "concern_entities": concern_entities_out,
-                        "duplicate_requirements_collapsed": (
-                            stage3.duplicate_requirements_collapsed
-                        ),
-                        "repair_prompt_issued": stage3.repair_prompt_issued,
                     },
                 )
             )

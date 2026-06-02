@@ -1,13 +1,14 @@
 """
 Requirement Derivation prompt template — IncrementalRerun (per-Domain).
 
-Per Requirement Derivation Mechanism Spec v0.1 §4.2.
+Per Requirement Derivation Mechanism Spec v0.2 §4.2.
 
 Used when the Domain-id set is unchanged and the new-CCI fraction is below
 requirement_rerun_threshold (MD-3). One call per Domain owning ≥1 new CCI.
 
 Injects: row_ref, domain, existing_requirements (id+statement+type summaries),
-new_domain_ccis (CCIs not yet covered by any active Requirement).
+new_domain_ccis (CCIs not yet covered by any active Requirement),
+REQUIREMENT_ROW_GUIDANCE[row] (§5.4 — DISTINCT from the domain ROW_GUIDANCE).
 
 The AI proposes new Requirements covering the new CCIs only. It should NOT
 modify or restate existing Requirements. cci_refs should reference only the
@@ -17,10 +18,12 @@ advisory incremental_ref_outside_new_set.
 
 from __future__ import annotations
 
-from mechanisms.domain_derivation.prompts.domain_grouping_prompt import ROW_GUIDANCE
 from mechanisms.requirement_derivation.prompts.requirement_derivation_prompt import (
     _REQUIREMENT_TYPE_GUIDANCE,
     _STATEMENT_FORMULATION_GUIDANCE,
+)
+from mechanisms.requirement_derivation.prompts.requirement_row_guidance import (
+    REQUIREMENT_ROW_GUIDANCE,
 )
 
 
@@ -39,7 +42,7 @@ def build_requirement_incremental_prompt(
     new_domain_ccis: list of {ci_id, column, classification_type, description}.
     """
     row_key = str(row_ref)
-    guidance = ROW_GUIDANCE.get(row_key, f"Row {row_ref} abstraction level")
+    guidance = REQUIREMENT_ROW_GUIDANCE.get(row_key, f"Row {row_ref} abstraction level")
     if "\n" in guidance:
         abstraction_block = guidance
     else:
