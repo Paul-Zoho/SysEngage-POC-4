@@ -29,7 +29,7 @@ outputType = "console"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "python -u sysengage/run_nqps_rd_ph3d_r1_branch.py"
+args = "python -u sysengage/run_nqps_rd_ph3d_r2_branch.py"
 
 [agent]
 stack = "PNPM_WORKSPACE"
