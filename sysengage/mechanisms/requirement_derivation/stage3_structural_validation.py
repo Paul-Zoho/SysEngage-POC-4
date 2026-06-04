@@ -1,15 +1,15 @@
 """
 Stage 3 — Structural Validation (DM, with conditional IM repair).
 
-Per Requirement Derivation Mechanism Spec v0.2 §4.3:
+Per Requirement Derivation Mechanism Spec v0.6 §4.3:
   All checks run in sequence on the accumulated proposal set. Pure in-memory
   operations except the Non-Loss repair prompt (IM conditional sub-act).
 
   CHK-3d-01  No empty statement.
   CHK-3d-02  No empty cci_refs.
   CHK-3d-03  cci_refs resolve to source Domain's eligible membership (strip out-of-Domain).
-  CHK-3d-04  fit_criteria integrity (strip present-but-empty; advisory for Performance
-             without fit_criteria).
+  CHK-3d-04  fit_criteria integrity (strip present-but-empty; advisory for Measurement
+             without fit_criteria). v2.13: Performance replaced by Measurement (F89).
   CHK-3d-05  Non-Loss: every eligible CCI covered by ≥1 Requirement; repair prompt
              if orphans. Persistent orphan → CompletedWithWarnings + Concern raised.
   CHK-3d-06  Failure if all proposals rejected and repair produced nothing.
@@ -19,7 +19,17 @@ Per Requirement Derivation Mechanism Spec v0.2 §4.3:
              REQUIREMENT_ROW_GUIDANCE §5.4(a). Mismatch logs subject_vocabulary_mismatch
              in execution_warnings and records the flag in subject_vocabulary_flags.
              Does NOT reject the Requirement or block production.
+  CHK-3d-09  Typed-slot atomicity check (decidable, HARD; realises F88).
+             Calls core.slots.check_atomicity per proposal. Hard violations reject
+             the proposal; its CCIs return to orphan pool and are re-covered via a
+             second CHK-3d-05 repair attempt (repair prompt instructs atomic
+             single-obligation statements). Soft violations log advisory.
   ADVC-3d-01 Requirement-per-Domain soft bounds advisory.
+  ADVC-3d-02 Interrogative slot-completeness advisory (v0.6). Warns when a surviving
+             proposal may be missing a type-required slot (Functional: Subject/Action/
+             Object; Constraint: Subject/Rule; Structural: Entity/structural-assertion).
+             Logs interrogative_completeness_advisory in execution_warnings only.
+             Does NOT reject the Requirement.
 """
 
 from __future__ import annotations
@@ -31,6 +41,7 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from core.ai_client import MODEL, get_ai_client
+from core.slots import check_atomicity, violation_summary
 from mechanisms.requirement_derivation.prompts.requirement_repair_prompt import (
     build_requirement_repair_prompt,
 )
@@ -94,6 +105,86 @@ def _parse_repair_response(text_: str) -> list[RepairRequirementProposal] | None
         return [RepairRequirementProposal.model_validate(item) for item in data]
     except Exception:
         return None
+
+
+def _run_repair(
+    *,
+    orphan_ci_ids: set[str],
+    cci_by_id: dict[str, EligibleCCI],
+    active_domains: list[ActiveDomain],
+    row_ref: int,
+    result: Stage3Result,
+    warning_type: str,
+) -> list[TaggedProposal]:
+    """
+    Run one CHK-3d-05-style repair AI call for the given orphaned CCI set.
+    Returns TaggedProposal list (may be empty on AI failure).
+    Mutates result.ai_model_fingerprints and result.execution_warnings.
+    """
+    cci_dicts: list[dict[str, Any]] = []
+    for ci_id in sorted(orphan_ci_ids):
+        cci = cci_by_id.get(ci_id)
+        if cci is None:
+            continue
+        owning_domain: ActiveDomain | None = next(
+            (d for d in active_domains if ci_id in set(d.cell_content_item_refs)),
+            active_domains[0] if active_domains else None,
+        )
+        if owning_domain is None:
+            continue
+        cci_dicts.append(
+            {
+                "ci_id": ci_id,
+                "column": cci.column,
+                "classification_type": cci.classification_type,
+                "description": cci.description,
+                "owning_domain_id": owning_domain.domain_id,
+                "owning_domain_name": owning_domain.name,
+            }
+        )
+
+    if not cci_dicts:
+        return []
+
+    repair_prompt = build_requirement_repair_prompt(
+        row_ref=row_ref, orphaned_ccis=cci_dicts
+    )
+    parsed_repair: list[RepairRequirementProposal] | None = None
+    try:
+        msg, fp = _call_repair_ai(repair_prompt)
+        result.ai_model_fingerprints.append(fp)
+        parsed_repair = _parse_repair_response(msg.content[0].text)
+    except Exception as exc:
+        _log.warning("%s repair AI call failed: %s", warning_type, exc)
+        result.execution_warnings.append(
+            {"type": f"{warning_type}_repair_failed", "detail": str(exc)}
+        )
+
+    if not parsed_repair:
+        result.execution_warnings.append({"type": f"{warning_type}_repair_failed"})
+        return []
+
+    repair_proposals: list[TaggedProposal] = []
+    for rp in parsed_repair:
+        owning_did = cci_dicts[0]["owning_domain_id"]
+        for cci_dict in cci_dicts:
+            if cci_dict["ci_id"] in rp.cci_refs:
+                owning_did = cci_dict["owning_domain_id"]
+                break
+        repair_proposals.append(
+            TaggedProposal(
+                source_domain_id=owning_did,
+                statement=rp.statement,
+                requirement_type=rp.requirement_type,
+                cci_refs=list(rp.cci_refs),
+                rationale=rp.rationale,
+                fit_criteria=rp.fit_criteria,
+                verification_method=rp.verification_method,
+                priority=rp.priority,
+                confidence=rp.confidence,
+            )
+        )
+    return repair_proposals
 
 
 def run_stage3(
@@ -161,7 +252,6 @@ def run_stage3(
     for p in proposals:
         domain = domain_by_id.get(p.source_domain_id)
         if domain is None:
-            # Source domain no longer present — reject proposal
             result.validation_failures.append(
                 {
                     "check_id": "CHK-3d-03",
@@ -184,7 +274,6 @@ def run_stage3(
             )
 
         if not valid_refs:
-            # All refs stripped → reject (CHK-3d-02 effect)
             result.validation_failures.append(
                 {
                     "check_id": "CHK-3d-02",
@@ -199,6 +288,7 @@ def run_stage3(
 
     # -------------------------------------------------------------------------
     # CHK-3d-04 — fit_criteria integrity
+    # v2.13: advisory for Measurement (verification_method) without fit_criteria
     # -------------------------------------------------------------------------
     for p in proposals:
         if p.fit_criteria is not None and not p.fit_criteria.strip():
@@ -209,10 +299,10 @@ def run_stage3(
                     "source_domain_id": p.source_domain_id,
                 }
             )
-        if p.requirement_type == "Performance" and p.fit_criteria is None:
+        if p.verification_method == "Measurement" and p.fit_criteria is None:
             result.execution_warnings.append(
                 {
-                    "type": "performance_missing_fit_criteria",
+                    "type": "measurement_missing_fit_criteria",
                     "source_domain_id": p.source_domain_id,
                     "statement_preview": p.statement[:80],
                 }
@@ -230,71 +320,15 @@ def run_stage3(
             {"type": "chk3d05_repair_performed", "orphan_count": len(orphaned)}
         )
 
-        # Build orphaned CCI dicts with owning Domain
-        orphaned_cci_dicts: list[dict[str, Any]] = []
-        for ci_id in sorted(orphaned):
-            cci = cci_by_id.get(ci_id)
-            if cci is None:
-                continue
-            # Find owning domain(s) — guaranteed non-empty by Pass 3c Non-Loss
-            owning_domain: ActiveDomain | None = None
-            for domain in stage1.active_domains:
-                if ci_id in set(domain.cell_content_item_refs):
-                    owning_domain = domain
-                    break
-            if owning_domain is None:
-                # Fallback: assign to first domain (should not happen given Pass 3c VER-3c-05)
-                owning_domain = stage1.active_domains[0]
-
-            orphaned_cci_dicts.append(
-                {
-                    "ci_id": ci_id,
-                    "column": cci.column,
-                    "classification_type": cci.classification_type,
-                    "description": cci.description,
-                    "owning_domain_id": owning_domain.domain_id,
-                    "owning_domain_name": owning_domain.name,
-                }
-            )
-
-        repair_prompt = build_requirement_repair_prompt(
-            row_ref=row_ref, orphaned_ccis=orphaned_cci_dicts
+        repair_proposals = _run_repair(
+            orphan_ci_ids=orphaned,
+            cci_by_id=cci_by_id,
+            active_domains=stage1.active_domains,
+            row_ref=row_ref,
+            result=result,
+            warning_type="chk3d05",
         )
-
-        parsed_repair: list[RepairRequirementProposal] | None = None
-        try:
-            msg, fp = _call_repair_ai(repair_prompt)
-            result.ai_model_fingerprints.append(fp)
-            parsed_repair = _parse_repair_response(msg.content[0].text)
-        except Exception as exc:
-            _log.warning("CHK-3d-05 repair AI call failed: %s", exc)
-            result.execution_warnings.append(
-                {"type": "chk3d05_repair_failed", "detail": str(exc)}
-            )
-
-        if parsed_repair is not None:
-            for repair_proposal in parsed_repair:
-                # Tag with owning domain of first cci_ref that is in orphaned set
-                owning_did = orphaned_cci_dicts[0]["owning_domain_id"]
-                for cci_dict in orphaned_cci_dicts:
-                    if cci_dict["ci_id"] in repair_proposal.cci_refs:
-                        owning_did = cci_dict["owning_domain_id"]
-                        break
-                proposals.append(
-                    TaggedProposal(
-                        source_domain_id=owning_did,
-                        statement=repair_proposal.statement,
-                        requirement_type=repair_proposal.requirement_type,
-                        cci_refs=list(repair_proposal.cci_refs),
-                        rationale=repair_proposal.rationale,
-                        fit_criteria=repair_proposal.fit_criteria,
-                        verification_method=repair_proposal.verification_method,
-                        priority=repair_proposal.priority,
-                        confidence=repair_proposal.confidence,
-                    )
-                )
-        else:
-            result.execution_warnings.append({"type": "chk3d05_repair_failed"})
+        proposals.extend(repair_proposals)
 
         # Re-compute orphaned after repair
         covered = {ref for p in proposals for ref in p.cci_refs}
@@ -333,7 +367,6 @@ def run_stage3(
     for p in proposals:
         key = (p.statement.lower().strip(), frozenset(p.cci_refs))
         if key in seen_keys:
-            # Collapse — record advisory; keep first
             result.execution_warnings.append(
                 {"type": "duplicate_requirement_collapsed"}
             )
@@ -350,14 +383,14 @@ def run_stage3(
 
     # -------------------------------------------------------------------------
     # CHK-3d-08 — Row-appropriate statement subject (decidable; soft severity)
-    # Realises Mechanism Spec v0.2 §4.3 / closes F81 detection.
+    # Realises Mechanism Spec v0.6 §4.3 / closes F81 detection.
     #
     # For each surviving Requirement, test the grammatical subject of the
     # statement against the row's required subject per REQUIREMENT_ROW_GUIDANCE
     # §5.4(a). Row 1 requires "The enterprise shall…"; a "The system shall…"
     # (or other system/component subject) at Row 1 is a mismatch.
     #
-    # Severity: soft at v0.2 — mismatch records a flag in subject_vocabulary_flags
+    # Severity: soft — mismatch records a flag in subject_vocabulary_flags
     # and logs subject_vocabulary_mismatch in execution_warnings; it does NOT
     # reject the Requirement or change execution_status.
     # -------------------------------------------------------------------------
@@ -366,19 +399,13 @@ def run_stage3(
         r"database|module|interface|api|app)\b",
         re.IGNORECASE,
     )
-    _ENTERPRISE_SUBJECT_PATTERN = re.compile(
-        r"^the\s+enterprise\b",
-        re.IGNORECASE,
-    )
 
     _ROW1_REQUIRES_ENTERPRISE = "1"
 
     for idx, p in enumerate(proposals):
         stmt_stripped = p.statement.strip()
         if str(row_ref) == _ROW1_REQUIRES_ENTERPRISE:
-            # At Row 1: subject must be enterprise; system-subject is a mismatch.
             if _SYSTEM_SUBJECT_PATTERN.match(stmt_stripped):
-                # Extract first two words as the detected subject
                 words = stmt_stripped.split()
                 detected_subject = " ".join(words[:2]) if len(words) >= 2 else stmt_stripped[:30]
                 placeholder = f"proposal_{idx + 1}:{stmt_stripped[:40].rstrip()}"
@@ -403,6 +430,80 @@ def run_stage3(
                 )
 
     # -------------------------------------------------------------------------
+    # CHK-3d-09 — Typed-slot atomicity (decidable, HARD; realises F88)
+    # -------------------------------------------------------------------------
+    pre_09_count = len(proposals)
+    surviving_09: list[TaggedProposal] = []
+    for p in proposals:
+        violations = check_atomicity(p.statement, p.requirement_type)
+        hard_viols = [v for v in violations if v.is_hard]
+        soft_viols = [v for v in violations if not v.is_hard]
+        if hard_viols:
+            result.validation_failures.append(
+                {
+                    "check_id": "CHK-3d-09",
+                    "source_domain_id": p.source_domain_id,
+                    "violation": violation_summary(hard_viols),
+                    "statement_preview": p.statement[:80],
+                }
+            )
+        else:
+            for sv in soft_viols:
+                result.execution_warnings.append(
+                    {
+                        "type": "atomicity_possible_exception",
+                        "rule": sv.rule,
+                        "detail": sv.detail,
+                        "statement_preview": p.statement[:80],
+                    }
+                )
+            surviving_09.append(p)
+    proposals = surviving_09
+
+    # If CHK-3d-09 rejections created new orphans, attempt one repair
+    if len(proposals) < pre_09_count:
+        covered_after_09 = {ref for p in proposals for ref in p.cci_refs}
+        existing_orphan_ids = set(result.orphaned_ccis)
+        new_orphans_09 = eligible_ci_ids - covered_after_09 - existing_orphan_ids
+        if new_orphans_09:
+            result.execution_warnings.append(
+                {
+                    "type": "chk3d09_new_orphans",
+                    "orphan_count": len(new_orphans_09),
+                    "orphan_ids": sorted(new_orphans_09),
+                }
+            )
+            repair_proposals_09 = _run_repair(
+                orphan_ci_ids=new_orphans_09,
+                cci_by_id=cci_by_id,
+                active_domains=stage1.active_domains,
+                row_ref=row_ref,
+                result=result,
+                warning_type="chk3d09",
+            )
+            # Repair proposals added WITHOUT re-applying CHK-3d-09 (one-level repair)
+            proposals.extend(repair_proposals_09)
+            covered_after_repair = {ref for p in proposals for ref in p.cci_refs}
+            persistent_09_orphans = new_orphans_09 - covered_after_repair
+            if persistent_09_orphans:
+                result.orphaned_ccis.extend(sorted(persistent_09_orphans))
+                if result.status != "failed":
+                    result.status = "ok_with_warnings"
+                result.concern_entities.append(
+                    {
+                        "description": (
+                            f"Pass 3d CHK-3d-09 atomicity: {len(persistent_09_orphans)} CCI(s) "
+                            f"orphaned after atomicity rejection and one repair attempt. "
+                            f"Orphaned ci_ids: {sorted(persistent_09_orphans)}"
+                        ),
+                        "source_refs": sorted(persistent_09_orphans),
+                        "practitioner_id": practitioner_id,
+                        "project_id": project_id,
+                        "produced_in_row": str(row_ref),
+                    }
+                )
+
+    # -------------------------------------------------------------------------
     # ADVC-3d-01 — Requirement-per-Domain soft bounds
     # -------------------------------------------------------------------------
     for domain in stage1.active_domains:
@@ -423,6 +524,60 @@ def run_stage3(
                 "possible over-decomposition",
                 domain.domain_id, req_count, cci_count,
             )
+
+    # -------------------------------------------------------------------------
+    # ADVC-3d-02 — Interrogative slot-completeness (soft advisory, v0.6)
+    # Warns when a surviving proposal may be missing a type-required slot.
+    # Does NOT reject or change execution_status.
+    # -------------------------------------------------------------------------
+    _STRUCTURAL_MARKERS = (
+        "comprise", "consist", "contain", "include",
+        "belong", "associate", "relate to", "have a",
+        "component", "member", "part of", "made of",
+        "composed", "structured",
+    )
+
+    for p in proposals:
+        stmt_lower = p.statement.lower().strip()
+        rtype = p.requirement_type
+
+        if rtype == "Functional":
+            if " shall " not in stmt_lower:
+                result.execution_warnings.append(
+                    {
+                        "type": "interrogative_completeness_advisory",
+                        "advisory_id": "ADVC-3d-02",
+                        "requirement_type": "Functional",
+                        "detail": "Functional proposal missing normative 'shall' — possible incomplete Action slot",
+                        "statement_preview": p.statement[:80],
+                    }
+                )
+
+        elif rtype == "Constraint":
+            # A Constraint should have a rule — 'shall' is present but should constrain
+            if "shall" not in stmt_lower:
+                result.execution_warnings.append(
+                    {
+                        "type": "interrogative_completeness_advisory",
+                        "advisory_id": "ADVC-3d-02",
+                        "requirement_type": "Constraint",
+                        "detail": "Constraint proposal missing 'shall' — Rule slot may be incomplete",
+                        "statement_preview": p.statement[:80],
+                    }
+                )
+
+        elif rtype == "Structural":
+            if not any(marker in stmt_lower for marker in _STRUCTURAL_MARKERS):
+                if "shall " not in stmt_lower:
+                    result.execution_warnings.append(
+                        {
+                            "type": "interrogative_completeness_advisory",
+                            "advisory_id": "ADVC-3d-02",
+                            "requirement_type": "Structural",
+                            "detail": "Structural proposal may lack explicit structural-assertion slot",
+                            "statement_preview": p.statement[:80],
+                        }
+                    )
 
     result.proposals = proposals
     return result

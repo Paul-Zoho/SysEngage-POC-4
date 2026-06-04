@@ -38,15 +38,24 @@ Date: 03 June 2026
 ## 3. Architectural Approach
 
 ### 3.1 Module structure
+
+The typed-slot detector is a **shared, mechanism-neutral module** — it realises the F88 slot canon, which neither Requirement Derivation nor Requirement Quality Analysis owns. It lives in a shared location and is imported by both:
+
+```
+core/
+  slots.py              # SHARED typed-slot detector (F88 slot canon). Built as foundational work
+                        # (before RD's CHK-3d-09); imported by RD (creation, hard reject) AND
+                        # RQA (scoring, graded penalty). Single implementation — see D-q-2.
+```
+
 ```
 requirement_quality/
   service.py            # score_requirement, score_set, aggregate
   classify.py           # type confirmation (§4.1) — IM, against the triad classification table
   rules/
-    functional.py       # §5.2 — decidable slot checks + IM judgements
+    functional.py       # §5.2 — decidable slot checks (via core/slots.py) + IM judgements
     constraint.py       # §5.3 — merged DC/Env/Perf rules; verification_method selects which bite
     structural.py       # §5.4 — candidate rules (F88/F90)
-  slots.py              # shared typed-slot detector (reused from derivation CHK-3d-09)
   judge.py              # IM-judged checks (ambiguous verb, implied design, subjective terms)
   scoring.py            # arithmetic: 100 − Σ penalties, floor 0; bands
   result.py             # quality-result carrier (§5.2)
@@ -54,8 +63,8 @@ requirement_quality/
 ```
 
 ### 3.2 Major design decisions (Row 4 resolutions)
-- **D-q-1 — decidable vs IM split.** Decidable (regex/parse/lookup, reproducible): compound condition/object (conjunction detection), missing required slot (the shared `slots.py` detector reused from CHK-3d-09), multiple lifecycle phases, missing-criteria-when-Measurement, Object-resolves-to-DD (lookup via `resolve_object`). IM-judged (model call): ambiguous verb, implied design, subjective/unquantified terms, behaviour-present-misclassification, and type confirmation. Each requirement gets at most one IM call (batch its IM-judged checks) to bound cost.
-- **D-q-2 — slot detector reuse.** The typed-slot detector built for CHK-3d-09 (derivation) is the same code Phase 4 uses for missing-slot and compound checks — one implementation of the F88 slot canon, used at creation (hard reject) and at scoring (graded penalty). Guarantees the two mechanisms judge slots identically.
+- **D-q-1 — decidable vs IM split.** Decidable (regex/parse/lookup, reproducible): compound condition/object (conjunction detection), missing required slot (the shared `core/slots.py` detector — same code as RD CHK-3d-09), multiple lifecycle phases, missing-criteria-when-Measurement, Object-resolves-to-DD (lookup via `resolve_object`). IM-judged (model call): ambiguous verb, implied design, subjective/unquantified terms, behaviour-present-misclassification, and type confirmation. Each requirement gets at most one IM call (batch its IM-judged checks) to bound cost.
+- **D-q-2 — shared slot detector (single implementation, neutral home).** The typed-slot detector is ONE implementation of the F88 slot canon, used at creation (RD CHK-3d-09, hard reject) and at scoring (RQA, graded penalty). It is NOT owned by either mechanism — both consumers are known by design (that is why VER-q-06 exists), so it is built once as foundational `core/slots.py` and imported by RD and RQA alike, rather than built inside one mechanism and reused by the other. Build order: `core/slots.py` lands as foundational work before RD's CHK-3d-09 (RD's first milestone) so both can import it from the outset; no mid-stream extraction. Guarantees the two mechanisms judge slots identically by construction.
 - **D-q-3 — read-and-score, no write-back.** Phase 4 writes only the quality result; a reclassification (§4.1) is recorded as a finding in the result, NOT written back to the requirement (that requires Practitioner action / re-derivation). Enforced.
 - **D-q-4 — result carrier.** A `requirement_quality_result` side table keyed by requirement_id (not a field on the requirement, and not a canonical ledger element at this version — quality results are analysis output, re-derivable, and would bloat the requirement row). Promotable to a canonical CoverageItem/quality element later if cross-phase coverage needs it.
 - **D-q-5 — scoring constants.** Severity penalties (30/15/5), 100 start, 0 floor are framework constants in `scoring.py`, not ProjectProfile.
@@ -72,7 +81,7 @@ Confirm the carried `requirement_type` against the §5.1 triad classification ta
 4. Build `QualityResult {requirement_id, effective_type, score, violations:[{rule, severity, penalty}], reclassification?}`.
 
 ### 4.3 Decidable check implementations (DM)
-- **Missing slot / compound condition / compound object:** `slots.py` (shared with CHK-3d-09) parses the statement to the type's slot pattern; absence of a required slot or a conjunction in condition/object fires the rule.
+- **Missing slot / compound condition / compound object:** `core/slots.py` (the shared detector, same code as RD CHK-3d-09) parses the statement to the type's slot pattern; absence of a required slot or a conjunction in condition/object fires the rule.
 - **Multiple lifecycle phases (Constraint):** detect operate/store/transport co-occurrence.
 - **Missing measurable Criteria when `verification_method == 'Measurement'`:** if Measurement and `fit_criteria` empty/absent → High (§5.3). NOT fired for Inspection-verified Constraints.
 - **Object/entity resolves to DD:** `resolve_object(object_term)`; no resolution and no clear concrete noun → Medium.
@@ -113,7 +122,7 @@ Keyed by `requirement_id`; latest result per requirement supersedes on re-score.
 | VER-q-03 | decidable rules reproducible on same input | `test_decidable_reproducible` |
 | VER-q-04 | Criteria rule fires only when verification_method == 'Measurement' | `test_criteria_only_measurement` |
 | VER-q-05 | no requirement statement/type/field modified by Phase 4 | `test_read_only` |
-| VER-q-06 | slot detector shared with CHK-3d-09 yields identical slot judgements | `test_slot_detector_parity` |
+| VER-q-06 | RD and RQA import the same `core/slots.py`; slot judgements are identical by construction. Regression guard: fails if the detector is ever forked back into a mechanism package. | `test_slot_detector_parity` |
 | VER-q-07 | IM-judge failure → not_assessed + manual-review flag, never silent pass | `test_im_failsafe` |
 
 ## 7. Test Fixtures
@@ -131,15 +140,15 @@ Realises Row 3 §7 using the framework's worked examples + real PMT:
 Per Row 3 §8: not-a-requirement → flagged, not type-scored; abstract Row 1 requirement with no natural verification method → no penalty for missing verification_method (consistent with derivation optional-field policy); Structural rules candidate/provisional; reclassified requirement scored against corrected type, reclassification recorded not written back.
 
 ## 9. Cross-Mechanism Interactions
-- **Requirement Derivation (upstream):** shares `slots.py` (D-q-2) — identical slot canon at creation and scoring; CHK-3d-09 pre-prevents High structural defects so derived requirements should score higher than raw input.
+- **Requirement Derivation (upstream):** both import the shared `core/slots.py` (D-q-2) — identical slot canon at creation and scoring; CHK-3d-09 pre-prevents High structural defects so derived requirements should score higher than raw input.
 - **Requirement Matching (upstream):** Phase 4 runs on the matched set; MAY use `refines_refs` as a traceability signal (noted, not a scored rule).
 - **Data Dictionary (read):** `resolve_object` for §4.3.
 - **Iteration (downstream):** low scores surface requirements for revision → re-derive/re-match → Phase 4 re-scores. Phase 4 is the iteration-loop quality gate.
 
 ## 10. Build Notes
-- Row 4 decisions: D-q-1 (decidable vs IM split; one batched IM call/requirement), D-q-2 (reuse the CHK-3d-09 slot detector — single F88 slot implementation), D-q-3 (read-and-score, reclassification recorded not written back), D-q-4 (side-table result carrier, not a ledger element; promotable), D-q-5 (framework constants).
+- Row 4 decisions: D-q-1 (decidable vs IM split; one batched IM call/requirement), D-q-2 (shared `core/slots.py` — single F88 slot implementation, neutral home, built foundational before RD; imported by RD and RQA), D-q-3 (read-and-score, reclassification recorded not written back), D-q-4 (side-table result carrier, not a ledger element; promotable), D-q-5 (framework constants).
 - The IM-judged checks (§4.4) are the main validation target; the decidable checks are reproducible by construction. Structural rules (§5.4) are candidate — validate once Structural requirements exist.
-- The slot-detector parity test (VER-q-06) is important: it guarantees derivation and Phase 4 cannot drift apart on what a "missing Object" or "compound object" is.
+- The slot-detector parity test (VER-q-06): with a single shared `core/slots.py`, parity holds by construction rather than by coincidence, so VER-q-06 is a regression guard — it fails loudly if anyone ever forks the detector back into a mechanism package, which would reintroduce drift risk between RD's "missing Object" / "compound object" and RQA's.
 
 ## Document End
 

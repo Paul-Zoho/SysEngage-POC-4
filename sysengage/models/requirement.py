@@ -1,11 +1,15 @@
 """
 Requirement ORM model — full Pass 3d implementation.
 
-Per Requirement Derivation Mechanism Spec v0.1 §5.1 and canonical ledger v2.12:
+Per Requirement Derivation Mechanism Spec v0.6 §5.1 and canonical ledger v2.13:
   requirement_id format: R### (R001–R999); composite PK (requirement_id, project_id).
   retired_at IS NULL = active; non-null = retired (FullRerun soft-delete).
-  cci_refs / domain_refs / answer_refs are JSONB arrays stored directly on the row.
+  cci_refs / domain_refs / answer_refs / refines_refs are JSONB arrays.
   domain_refs is DM-derived in Stage 4 — never AI-proposed (MD-2).
+  refines_refs is populated by the Requirement Matching service (F82/F85);
+  Pass 3d always writes [] (§4.4.3).
+  requirement_type: three-value triad Functional/Constraint/Structural (F89/v2.13).
+  verification_method: gains Measurement (v2.13).
   No direct domain_id FK column: Domain membership is via domain_refs JSONB.
 """
 
@@ -30,7 +34,7 @@ class RequirementModel(Base):
             name="ck_requirement_statement_nonempty",
         ),
         CheckConstraint(
-            "requirement_type IN ('Functional','Constraint','Performance','Suitability','Non-Functional')",
+            "requirement_type IN ('Functional','Constraint','Structural')",
             name="ck_requirement_type",
         ),
         CheckConstraint(
@@ -50,7 +54,8 @@ class RequirementModel(Base):
             name="ck_requirement_fit_criteria",
         ),
         CheckConstraint(
-            "verification_method IS NULL OR verification_method IN ('Test','Analysis','Inspection','Demonstration')",
+            "verification_method IS NULL OR verification_method IN "
+            "('Test','Analysis','Inspection','Demonstration','Measurement')",
             name="ck_requirement_verification_method",
         ),
         CheckConstraint(
@@ -80,6 +85,9 @@ class RequirementModel(Base):
     verification_method: Mapped[str | None] = mapped_column(String(16), nullable=True)
     priority: Mapped[str | None] = mapped_column(String(8), nullable=True)
     answer_refs: Mapped[list] = mapped_column(
+        JSONB, nullable=False, server_default="'[]'::jsonb"
+    )
+    refines_refs: Mapped[list] = mapped_column(
         JSONB, nullable=False, server_default="'[]'::jsonb"
     )
     confidence: Mapped[float] = mapped_column(Float, nullable=False)

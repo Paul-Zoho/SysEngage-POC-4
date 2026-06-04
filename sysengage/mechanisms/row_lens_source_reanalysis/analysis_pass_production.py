@@ -1,8 +1,12 @@
 """
 AnalysisPass record production for Row-Lens Source Re-Analysis.
 
-Per spec §4.5 and §7.2: builds the row_lens_data sub-structure and finalises
-the pass_data dict with the mechanism-specific execution status.
+Per spec §4.5 and §7.2 (v0.2): builds the row_lens_data sub-structure and
+finalises the pass_data dict with the mechanism-specific execution status.
+
+v0.2 changes vs v0.1:
+- build_row_lens_data: removed stream2_* fields and chunk_* fields.
+  Added source_count. assembly param removed — caller passes scalars directly.
 
 execution_status values per spec §8.1 AP-2:
   "Completed"              — all stages succeeded, invariant holds, no warnings
@@ -22,34 +26,29 @@ from typing import Any
 def build_row_lens_data(
     *,
     row_ref: int,
-    assembly,
+    source_count: int,
     signal_count: int,
     concern_count: int,
     out_of_scope_refs: list[str],
-    chunk_assignment: dict[str, list[str]],
     ai_model_fingerprints: list[str],
     concern_threshold_used: float,
-    chunk_match_threshold_used: float,
     failure_detail: list[dict] | None = None,
 ) -> dict[str, Any]:
     """
-    Build the outputs.row_lens_data sub-structure per spec §7.2.
+    Build the outputs.row_lens_data sub-structure per spec §7.2 (v0.2).
 
+    Single-stream fields only — no stream2_* or chunk_* fields.
     Stored in AnalysisPass.outputs JSONB field.
     """
     data: dict[str, Any] = {
         "row_ref": row_ref,
-        "stream1_source_count": assembly.stream1_source_count,
-        "stream2_requirement_count": assembly.stream2_requirement_count,
-        "stream2_domain_count": assembly.stream2_domain_count,
+        "source_count": source_count,
         "signal_count_produced": signal_count,
         "concern_count_produced": concern_count,
         "out_of_scope_count": len(out_of_scope_refs),
         "out_of_scope_refs": out_of_scope_refs,
-        "chunk_assignment": chunk_assignment,
         "ai_model_fingerprints": ai_model_fingerprints,
         "concern_threshold_used": concern_threshold_used,
-        "chunk_match_threshold_used": chunk_match_threshold_used,
     }
     if failure_detail:
         data["failure_detail"] = failure_detail

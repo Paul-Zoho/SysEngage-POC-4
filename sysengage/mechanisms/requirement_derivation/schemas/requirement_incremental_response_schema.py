@@ -1,12 +1,15 @@
 """
 Pydantic response schema — IncrementalRerun Requirement Derivation.
 
-Per Requirement Derivation Mechanism Spec v0.1 §5.2.
+Per Requirement Derivation Mechanism Spec v0.6 §5.2 / ledger v2.13.
 
 IMPORTANT: IncrementalRequirementProposal is a DISTINCT class from
 RequirementProposal and RepairRequirementProposal. Do NOT import or alias
 from either of those modules. Incremental proposals cover only new_domain_ccis
 for a Domain whose Domain-id set is unchanged (MD-3).
+
+requirement_type enforced to v2.13 three-value triad (F89).
+verification_method gains Measurement (v2.13).
 """
 
 from __future__ import annotations
@@ -26,14 +29,12 @@ class IncrementalRequirementProposal(BaseModel):
     """
 
     statement: str
-    requirement_type: Literal[
-        "Functional", "Constraint", "Performance", "Suitability", "Non-Functional"
-    ]
+    requirement_type: Literal["Functional", "Constraint", "Structural"]
     cci_refs: list[str]
     rationale: Optional[str] = None
     fit_criteria: Optional[str] = None
     verification_method: Optional[
-        Literal["Test", "Analysis", "Inspection", "Demonstration"]
+        Literal["Test", "Analysis", "Inspection", "Demonstration", "Measurement"]
     ] = None
     priority: Optional[Literal["High", "Medium", "Low"]] = None
     confidence: float

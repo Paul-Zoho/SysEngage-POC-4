@@ -1,13 +1,21 @@
 """
 Requirement Row Guidance — REQUIREMENT_ROW_GUIDANCE prompt constants.
 
-Per Requirement Derivation Mechanism Spec v0.4 §5.4.
+Per Requirement Derivation Mechanism Spec v0.6 §5.4.
 
 DISTINCT from the domain ROW_GUIDANCE (which governs domain naming and grouping;
 imported from domain_derivation/prompts/domain_grouping_prompt.py). This dict
 governs requirement STATEMENT FORMULATION at the row-appropriate abstraction
 level — subject vocabulary, verb choice, type-reasoning signals, and optional-
 field policy.
+
+v0.6 adds a shared interrogative slot-completeness preamble to all five row
+blocks (§12.9 / §5.4). The preamble instructs the AI to derive requirements by
+filling type-required slots through source-content interrogation (Functional:
+Subject/Action/Object with Object-recursion to surface Structural requirements;
+Constraint: Subject/Rule/Condition/Criteria; Structural: Entity/structural
+assertion). It explicitly prohibits cross-row parent invention (Matching/GQA
+responsibility, not Pass 3d's).
 
 Rows 1–5 are fully authored. Rows 1–2 are validated (Row 1: PMT Run 5 / NQPS
 Run 2; Row 2: PMT Row 2 Run 1 / NQPS Row 2 Run 1). Rows 3–5 are CANDIDATE
@@ -16,6 +24,34 @@ test until run evidence confirms each. Row 6 is a short-phrase stub.
 """
 
 from __future__ import annotations
+
+_SHARED_INTERROGATIVE_PREAMBLE = """\
+### Interrogative slot-completeness (shared guidance — all rows)
+Derive each requirement by interrogating the source CCIs slot-by-slot. For every proposal,
+verify that the type-required slots are filled before finalising the statement:
+
+**Functional** — Subject + Action (normative "shall" verb) + Object required.
+  Interrogate: Who or what is the Subject of the obligation? What Action does it perform?
+  What is the Object of that action? For every named Object entity, recurse: does it carry
+  a structural obligation of its own (composition, membership, attribute, relationship)?
+  If so, derive a dedicated Structural requirement for that Object. Object-recursion is
+  the primary mechanism by which Structural requirements surface from Functional derivation.
+
+**Constraint** — Subject + Rule required; Condition + Criteria when present in the source.
+  Interrogate: Who or what is constrained? What is the normative restriction or governance
+  rule (the Rule slot — "shall not …", "shall comply with …", "shall adhere to …")? Under
+  what Condition does the constraint apply? Is there a measurable acceptance criterion
+  (Criteria slot)? If so, populate fit_criteria and set verification_method = "Measurement".
+
+**Structural** — Entity + structural assertion (composition / relationship / attribute) required.
+  Interrogate: What entity is being structurally described? What does it contain, consist of,
+  belong to, or how is it associated with another entity? Name the entity and the assertion
+  explicitly in the statement.
+
+Stay within this row's abstraction level. Do NOT invent parent-level requirements that would
+belong at Row N-1. Cross-row elaboration (parent-child requirement linkage) is the
+responsibility of the Requirement Matching service — not Pass 3d.
+"""
 
 REQUIREMENT_ROW_GUIDANCE: dict[str, str] = {
     "1": """\
@@ -61,24 +97,23 @@ Row 1 statements use enterprise-commitment verbs:
 Weigh the source CCIs' Zachman columns and content against the row's abstraction level:
 - Why-column / motivation / rule / policy / commitment content → lean Constraint.
 - How / What / When / capability / function content → lean Functional.
-- Content expressing a measurable threshold, rate, latency, or capacity → Performance
-  (and the statement SHOULD carry fit_criteria).
-- Content expressing a quality attribute (usability, maintainability, portability) →
-  Suitability or Non-Functional per the attribute.
+- Content expressing a composition, membership, or structural relationship at enterprise
+  scope (e.g. enterprise comprises divisions; enterprise participates in a legal structure)
+  → Structural.
 These are reasoning signals, not a lookup table. A genuinely ambiguous obligation may
 read as either Constraint or Functional — choose the dominant force; do not force a
 distribution.
 
 ### Optional fields — populate when warranted, omit otherwise
 - fit_criteria: include only when the content gives a measurable acceptance basis.
-- verification_method (Test/Analysis/Inspection/Demonstration): include only when a
-  natural method exists. An abstract enterprise constraint (e.g. "support charitable
-  responsibility obligations") may have NO natural verification method at Row 1 — OMIT
-  the field rather than guessing. Omission is correct, not a defect.
+- verification_method (Test/Analysis/Inspection/Demonstration/Measurement): include only
+  when a natural method exists. An abstract enterprise constraint may have NO natural
+  verification method at Row 1 — OMIT rather than guessing. Omission is correct.
 - priority (High/Medium/Low): include only when the source content supports a relative
   priority judgement. Do NOT default every requirement to High. If the content gives no
   basis, omit.
 
+""" + _SHARED_INTERROGATIVE_PREAMBLE + """
 ### What NOT to do
 - Do NOT introduce actors, behaviours, or constraints not present in the source CCIs.
 - Do NOT reproduce CCI description text verbatim as the statement — derive a normative
@@ -141,9 +176,8 @@ Weigh the source CCIs' Zachman columns and content against the business-owner le
 - HOW-column business capability declarations / WHAT-column business artefacts the
   business must maintain / WHEN-column business triggers → lean Functional ("The
   business shall maintain a record of ...").
-- Content expressing a measurable business threshold, rate, or service level →
-  Performance (and the statement SHOULD carry fit_criteria).
-- Content expressing a business quality attribute → Suitability or Non-Functional.
+- WHAT-column business entity composition or relationship (e.g. business role membership,
+  organisational structure, artefact composition) → Structural.
 Reasoning signals, not a lookup table. Note: at Row 2 the Functional/Constraint balance
 is typically more even than at Row 1 — business capability declarations (HOW-column) are
 genuinely Functional, while business rules (WHY-column) are genuinely Constraint. Do not
@@ -152,11 +186,13 @@ carry a Row-1 lean into Row 2; judge each statement on its source columns.
 ### Optional fields — populate when warranted, omit otherwise
 - fit_criteria: include only when the content gives a measurable acceptance basis (more
   common at Row 2 than Row 1 — business service levels and thresholds appear here).
-- verification_method (Test/Analysis/Inspection/Demonstration): include when a natural
-  method exists for the business responsibility; omit when the content gives no basis.
+- verification_method (Test/Analysis/Inspection/Demonstration/Measurement): include when
+  a natural method exists for the business responsibility; omit when the content gives no
+  basis.
 - priority (High/Medium/Low): include only when the source supports a relative judgement.
   Do NOT default every requirement to High; omit if there is no basis.
 
+""" + _SHARED_INTERROGATIVE_PREAMBLE + """
 ### What NOT to do
 - Do NOT introduce business roles, capabilities, or rules not present in the source CCIs.
 - Do NOT reproduce CCI description text verbatim — derive a normative statement.
@@ -213,9 +249,8 @@ Row 3 statements use logical-design vocabulary:
   system shall enforce that …").
 - HOW-column logical processes / WHAT-column logical structures / WHEN-column logical
   state triggers → lean Functional ("The system shall maintain / validate / derive …").
-- Logical performance characteristics (a logical throughput or latency invariant) →
-  Performance (with fit_criteria).
-- Logical quality attributes → Suitability or Non-Functional.
+- WHAT-column logical entity composition or structural relationship (e.g. a logical model
+  entity that comprises or associates other entities) → Structural.
 Reasoning signals, not a lookup. Judge each statement on its source columns; do not
 carry a lean from another row.
 
@@ -227,6 +262,7 @@ carry a lean from another row.
 - priority: include only when the source supports a relative judgement; do not default
   to High.
 
+""" + _SHARED_INTERROGATIVE_PREAMBLE + """
 ### What NOT to do
 - Do NOT name technologies, platforms, or code constructs (Row 4+).
 - Do NOT frame as a business responsibility (Row 2) or describe a step-by-step algorithm (Row 5).
@@ -269,9 +305,7 @@ Row 4 statements use physical-construction vocabulary:
   build-level compliance mandates) → lean Constraint.
 - HOW/WHAT/WHERE/WHO physical construction obligations (components, schemas, deployment
   targets, interfaces) → lean Functional.
-- Physical performance requirements (concrete throughput, latency, capacity) →
-  Performance (with fit_criteria — common and expected at Row 4).
-- Physical quality attributes → Suitability or Non-Functional.
+- WHAT-column physical component composition or schema structure → Structural.
 Judge each statement on its source columns.
 
 ### Optional fields — populate when warranted, omit otherwise
@@ -281,6 +315,7 @@ Judge each statement on its source columns.
   are testable); include when a natural method exists.
 - priority: include when the source supports it; do not default to High.
 
+""" + _SHARED_INTERROGATIVE_PREAMBLE + """
 ### What NOT to do
 - Do NOT frame as business (Row 2) or purely logical (Row 3) — name the physical realisation.
 - Do NOT drop to code-level/configuration detail (Row 5).
@@ -329,16 +364,20 @@ Row 5 statements use detailed-implementation vocabulary:
   requirements expressed as implementable constraints) → lean Constraint.
 - HOW-column detailed algorithms / WHAT-column detailed data specifications / WHEN-column
   detailed timing → lean Functional.
+- WHAT-column precise data structure definition or schema composition (field sets, type
+  hierarchies) → Structural.
 - Detailed performance specifications (exact latency/throughput targets with values) →
-  Performance (with fit_criteria — the fit_criteria IS the numeric target).
-- Detailed quality specifications → Suitability or Non-Functional.
+  include fit_criteria; verification_method = "Measurement" when a numeric threshold
+  is the acceptance criterion.
 
 ### Optional fields — populate when warranted, omit otherwise
 - fit_criteria: frequently warranted at Row 5 and often IS the specification (exact
   values, formats, thresholds).
-- verification_method: Test is common at Row 5 (detailed specs are directly testable).
+- verification_method: Test is common at Row 5 (detailed specs are directly testable);
+  Measurement when the criterion is a measurable numeric value.
 - priority: include when the source supports it; do not default to High.
 
+""" + _SHARED_INTERROGATIVE_PREAMBLE + """
 ### What NOT to do
 - Do NOT frame at business/logical/physical-choice level without the implementable detail.
 - Do NOT reproduce CCI description text verbatim — derive a normative specification.

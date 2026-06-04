@@ -1,7 +1,7 @@
 """
 Stage 4 — Entity Production and Ledger Commit (DM).
 
-Per Requirement Derivation Mechanism Spec v0.1 §4.4:
+Per Requirement Derivation Mechanism Spec v0.6 §4.4:
   4.4.1  requirement_id allocation (global per-project R###, includes retired).
   4.4.2  domain_refs DM-derivation (MD-2): intersect cci_refs with active Domain
          memberships; assert ≥1 domain_ref. Fail-closed if empty.
@@ -290,12 +290,13 @@ def run_stage4(
                     "INSERT INTO requirement "
                     "(requirement_id, project_id, statement, requirement_type, "
                     " row_target, rationale, cci_refs, domain_refs, fit_criteria, "
-                    " verification_method, priority, answer_refs, confidence, "
-                    " retired_at, created_at) "
+                    " verification_method, priority, answer_refs, refines_refs, "
+                    " confidence, retired_at, created_at) "
                     "VALUES (:rid, :pid, :stmt, :rtype, :row, :rationale, "
                     "        CAST(:cci_refs AS jsonb), CAST(:domain_refs AS jsonb), "
                     "        :fit_criteria, :verification_method, :priority, "
-                    "        CAST(:answer_refs AS jsonb), :confidence, NULL, :now)"
+                    "        CAST(:answer_refs AS jsonb), CAST(:refines_refs AS jsonb), "
+                    "        :confidence, NULL, :now)"
                 ),
                 {
                     "rid": req_id,
@@ -310,6 +311,7 @@ def run_stage4(
                     "verification_method": proposal.verification_method,
                     "priority": proposal.priority,
                     "answer_refs": json.dumps([]),
+                    "refines_refs": json.dumps([]),
                     "confidence": proposal.confidence,
                     "now": now,
                 },
@@ -364,13 +366,11 @@ def run_stage4(
         result.failure_reason = f"Ledger transaction rolled back: {exc}"
         return result
 
-    # Build result summary
+    # Build result summary — v2.13 three-value triad (F89)
     type_dist: dict[str, int] = {
         "Functional": 0,
         "Constraint": 0,
-        "Performance": 0,
-        "Suitability": 0,
-        "Non-Functional": 0,
+        "Structural": 0,
     }
     reqs_produced = []
     for proposal, req_id in zip(proposals, new_ids):

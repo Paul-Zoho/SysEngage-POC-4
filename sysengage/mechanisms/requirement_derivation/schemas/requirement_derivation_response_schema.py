@@ -1,15 +1,16 @@
 """
 Pydantic response schema — primary Requirement Derivation (FirstRun / FullRerun).
 
-Per Requirement Derivation Mechanism Spec v0.1 §5.2.
+Per Requirement Derivation Mechanism Spec v0.6 §5.2 / ledger v2.13.
 
 IMPORTANT: This is a DISTINCT class from IncrementalRequirementProposal and
 RepairRequirementProposal. Do NOT import or alias from either of those modules.
 Sharing schema classes risks silent field-mismatch bugs.
 
-The AI does NOT return requirement_id, row_target, domain_refs, or answer_refs.
-Those are produced deterministically in Stage 4 (MD-2).
-The requirement_type enum is enforced at the parse boundary (MD-5).
+The AI does NOT return requirement_id, row_target, domain_refs, answer_refs,
+or refines_refs. Those are produced deterministically in Stage 4 (MD-2; F82).
+requirement_type enforced to the v2.13 three-value triad (F89).
+verification_method gains Measurement (v2.13).
 """
 
 from __future__ import annotations
@@ -23,14 +24,12 @@ class RequirementProposal(BaseModel):
     """Single Requirement proposal returned by the primary derivation AI call."""
 
     statement: str
-    requirement_type: Literal[
-        "Functional", "Constraint", "Performance", "Suitability", "Non-Functional"
-    ]
+    requirement_type: Literal["Functional", "Constraint", "Structural"]
     cci_refs: list[str]
     rationale: Optional[str] = None
     fit_criteria: Optional[str] = None
     verification_method: Optional[
-        Literal["Test", "Analysis", "Inspection", "Demonstration"]
+        Literal["Test", "Analysis", "Inspection", "Demonstration", "Measurement"]
     ] = None
     priority: Optional[Literal["High", "Medium", "Low"]] = None
     confidence: float
