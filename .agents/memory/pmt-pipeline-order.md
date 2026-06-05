@@ -19,12 +19,12 @@ SourceCapture  →  RLSRA (3a)  →  CCI (3b)  →  DD (3c)  →  RD (3d)
 
 **Why RLSRA is critical:** `CCI step1_signal_assembly.py` reads from the `signal` table filtered by `row_target`. If RLSRA hasn't run, `signal` is empty and CCI produces 0 CCIs (no error, no warning — silent zero output).
 
-**Observed PMT Row 1 results (20260605, main branch):**
+**Observed PMT Row 1 results (20260605, main branch — clean run):**
 - Input doc: `The Pocket Money Tracker System v1.docx`
-- Sources: 10 (3 duplicate SC runs → 30 total in DB at snapshot time)
-- Signals (Row 1): 12 eligible (RLSRA produced some, 8 out-of-scope)
-- CCIs: 17 created, 0 merged (dedup ON)
-- Domains: 5 (D001–D005)
-- Requirements: 12 (4 Functional, 5 Constraint, 3 Structural)
-- Snapshot: `snap_PMT_ph03_3d_R1_20260605` (br-gentle-recipe-abqm801y)
-- Ledger: `PMT_Ph03_3d_RequirementDerivation_R1_Run7.json`
+- Sources: 10
+- Signals (Row 1): 5 eligible (RLSRA, 4 out-of-scope)
+- CCIs: 15 created, 0 merged (dedup ON)
+- Domains: 3 (D001 Child Participation, D002 Parental Governance, D003 Earnings Accountability)
+- Requirements: 13 (9 Functional, 2 Constraint, 2 Structural)
+- Snapshot: `snap_PMT_ph03_3d_R1_20260605` (br-holy-hill-ab7v6bmb)
+- Ledger: `PMT_Ph03_3d_RequirementDerivation_R1_Run8.json` (69 elements, 9 registers, hash 79b0438eaed6b4de)

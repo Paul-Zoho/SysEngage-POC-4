@@ -3,16 +3,18 @@ name: Source Capture execution_status quirk
 description: SourceCapture writes "Success" to analysis_pass; all other mechanisms write "Completed"/"CompletedWithWarnings". Idempotency guards must include "Success".
 ---
 
-## Rule
-`SourceCapture` writes `execution_status = "Success"` to `analysis_pass`.
-Every other mechanism (RLSRA, CCI, DD, RD) writes `"Completed"` or `"CompletedWithWarnings"`.
+## Rule (FIXED — no longer applies)
+`audit_trail.finalise_pass_success` previously wrote `execution_status = "Success"` and
+`finalise_pass_partial_success` wrote `"PartialSuccess"`.
 
-**Why:** Source Capture predates the standardised terminal-status vocabulary introduced for the Phase 3 mechanisms. Its status string was not normalised.
+These were normalised to `"Completed"` and `"CompletedWithWarnings"` respectively to match
+all other mechanisms. The SC internal idempotency check was updated at the same time to use
+the new values.
 
-**How to apply:** Any idempotency guard that queries `analysis_pass.execution_status` to decide whether to skip a pass must include `"Success"` in the IN clause:
+**Why:** Source Capture predated the standardised status vocabulary; its strings were
+inconsistent with Phase 3 mechanisms, causing idempotency guards that checked only
+`"Completed"/"CompletedWithWarnings"` to miss SC passes and re-run SC on every invocation.
 
-```python
-"execution_status IN ('Completed','CompletedWithWarnings','Success')"
-```
-
-Omitting `"Success"` means Source Capture re-runs on every invocation, duplicating `source` rows in the DB. This was observed during the PMT Row 1 regression run (30 sources accumulated instead of 10 across three re-runs).
+**How to apply:** All mechanisms now use only `"Completed"`, `"CompletedWithWarnings"`,
+or `"Failed"`. Any idempotency guard checking `analysis_pass.execution_status` need only
+include those three values.

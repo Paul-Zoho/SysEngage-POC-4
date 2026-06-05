@@ -240,7 +240,7 @@ print(SEP, flush=True)
 print("[E2E] Step 4 — Domain Derivation 3c  Row 1", flush=True)
 print(SEP, flush=True)
 
-_dd_done = _pass_already_done("DomainDerivation", f"All Row {ROW} CCIs")
+_dd_done = _pass_already_done("DomainDerivation", f"Row {ROW} CCIs for project {PROJECT_ID}")
 if _dd_done:
     print(f"[E2E]   SKIP — pass {_dd_done} already Completed.", flush=True)
 else:
@@ -283,7 +283,7 @@ print(SEP, flush=True)
 print("[E2E] Step 5 — Requirement Derivation 3d  Row 1", flush=True)
 print(SEP, flush=True)
 
-_rd_done = _pass_already_done("RequirementDerivation", f"All Row {ROW} Domains")
+_rd_done = _pass_already_done("RequirementDerivation", f"Row {ROW} for {PROJECT_ID}")
 if _rd_done:
     print(f"[E2E]   SKIP — pass {_rd_done} already Completed.", flush=True)
 else:

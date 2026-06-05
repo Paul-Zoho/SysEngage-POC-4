@@ -488,7 +488,7 @@ def _find_existing_hash(
         session.execute(
             select(AnalysisPassModel).where(
                 AnalysisPassModel.project_id == project_id,
-                AnalysisPassModel.execution_status.in_(["Success", "PartialSuccess"]),
+                AnalysisPassModel.execution_status.in_(["Completed", "CompletedWithWarnings"]),
             )
         )
         .scalars()
