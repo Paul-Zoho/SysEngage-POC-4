@@ -2,7 +2,7 @@
 Ledger Export mechanism — entry point.
 
 Reads all canonical ledger elements for a project from the DB and produces
-a canonical JSON ledger conforming to spec v2.12.
+a canonical JSON ledger conforming to spec v2.14.
 
 Usage:
     from mechanisms.ledger_export import run_ledger_export
