@@ -65,17 +65,17 @@ _ELEMENT_TYPE_ORDER: list[str] = [
 _TYPE_RANK: dict[str, int] = {t: i for i, t in enumerate(_ELEMENT_TYPE_ORDER)}
 
 _EXECUTION_STATUS_MAP: dict[str, str] = {
-    "Success": "Completed",
-    "Completed": "Completed",
-    "CompletedWithWarnings": "CompletedWithWarnings",
-    "PartialSuccess": "CompletedWithWarnings",
+    "Success": "Success",
+    "Completed": "Success",
+    "PartialSuccess": "PartialSuccess",
+    "CompletedWithWarnings": "PartialSuccess",
     "Failed": "Failed",
-    "Aborted": "Aborted",
+    "Aborted": "Failed",
 }
 
 
 def _map_execution_status(raw: str) -> str:
-    return _EXECUTION_STATUS_MAP.get(raw, "Failed")
+    return _EXECUTION_STATUS_MAP.get(raw, "Success")
 
 
 def _iso(dt: datetime | None) -> str | None:

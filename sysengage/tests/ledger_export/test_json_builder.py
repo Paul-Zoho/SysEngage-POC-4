@@ -79,11 +79,11 @@ class TestLedgerTopLevel:
 
     def test_spec_version(self, minimal_project_data):
         ledger = build_canonical_ledger(minimal_project_data)
-        assert ledger["sysengage_ledger_version"] == "2.12"
+        assert ledger["sysengage_ledger_version"] == "2.14"
 
     def test_schema_id(self, minimal_project_data):
         ledger = build_canonical_ledger(minimal_project_data)
-        assert ledger["schema_id"] == "sysengage.ledger.instance.v2_11"
+        assert ledger["schema_id"] == "sysengage.ledger.instance.v2_14"
 
     def test_generator_fields(self, minimal_project_data):
         ledger = build_canonical_ledger(minimal_project_data)
