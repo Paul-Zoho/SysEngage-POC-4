@@ -7,7 +7,7 @@ All fixtures use in-memory data — no database connection required.
 from __future__ import annotations
 
 from datetime import datetime, timezone
-from unittest.mock import MagicMock
+from types import SimpleNamespace
 
 import pytest
 
@@ -20,11 +20,11 @@ def _dt(s: str) -> datetime:
 
 # ── minimal model factories ──────────────────────────────────────────────────
 
-def make_project(project_id="PROJ001", name="Test Project") -> MagicMock:
-    p = MagicMock()
-    p.project_id = project_id
-    p.name = name
-    return p
+def make_project(project_id="PROJ001", name="Test Project") -> SimpleNamespace:
+    return SimpleNamespace(
+        project_id=project_id,
+        name=name,
+    )
 
 
 def make_source(
@@ -35,16 +35,16 @@ def make_source(
     confidence=1.0,
     parent_source_ref=None,
     project_id="PROJ001",
-) -> MagicMock:
-    s = MagicMock()
-    s.source_id = source_id
-    s.source_text = source_text
-    s.segmentation_context = segmentation_context
-    s.input_material_ref = input_material_ref
-    s.confidence = confidence
-    s.parent_source_ref = parent_source_ref
-    s.project_id = project_id
-    return s
+) -> SimpleNamespace:
+    return SimpleNamespace(
+        source_id=source_id,
+        source_text=source_text,
+        segmentation_context=segmentation_context,
+        input_material_ref=input_material_ref,
+        confidence=confidence,
+        parent_source_ref=parent_source_ref,
+        project_id=project_id,
+    )
 
 
 def make_segment(
@@ -55,16 +55,16 @@ def make_segment(
     parent_segment_ref=None,
     confidence=1.0,
     project_id="PROJ001",
-) -> MagicMock:
-    seg = MagicMock()
-    seg.segment_id = segment_id
-    seg.title = title
-    seg.description = description
-    seg.source_refs = source_refs or ["S001"]
-    seg.parent_segment_ref = parent_segment_ref
-    seg.confidence = confidence
-    seg.project_id = project_id
-    return seg
+) -> SimpleNamespace:
+    return SimpleNamespace(
+        segment_id=segment_id,
+        title=title,
+        description=description,
+        source_refs=source_refs or ["S001"],
+        parent_segment_ref=parent_segment_ref,
+        confidence=confidence,
+        project_id=project_id,
+    )
 
 
 def make_source_atom(
@@ -76,17 +76,17 @@ def make_source_atom(
     confidence=0.95,
     position=1,
     project_id="PROJ001",
-) -> MagicMock:
-    a = MagicMock()
-    a.atom_id = atom_id
-    a.atom_text = atom_text
-    a.source_ref = source_ref
-    a.segment_ref = segment_ref
-    a.parent_atom_ref = parent_atom_ref
-    a.confidence = confidence
-    a.position = position
-    a.project_id = project_id
-    return a
+) -> SimpleNamespace:
+    return SimpleNamespace(
+        atom_id=atom_id,
+        atom_text=atom_text,
+        source_ref=source_ref,
+        segment_ref=segment_ref,
+        parent_atom_ref=parent_atom_ref,
+        confidence=confidence,
+        position=position,
+        project_id=project_id,
+    )
 
 
 def make_signal(
@@ -99,18 +99,18 @@ def make_signal(
     confidence=0.9,
     derived_from_concern_id=None,
     project_id="PROJ001",
-) -> MagicMock:
-    sig = MagicMock()
-    sig.signal_id = signal_id
-    sig.signal_type = signal_type
-    sig.row_target = row_target
-    sig.description = description
-    sig.source_refs = source_refs or ["S001"]
-    sig.sourceatom_refs = sourceatom_refs or []
-    sig.confidence = confidence
-    sig.derived_from_concern_id = derived_from_concern_id
-    sig.project_id = project_id
-    return sig
+) -> SimpleNamespace:
+    return SimpleNamespace(
+        signal_id=signal_id,
+        signal_type=signal_type,
+        row_target=row_target,
+        description=description,
+        source_refs=source_refs or ["S001"],
+        sourceatom_refs=sourceatom_refs or [],
+        confidence=confidence,
+        derived_from_concern_id=derived_from_concern_id,
+        project_id=project_id,
+    )
 
 
 def make_concern(
@@ -124,19 +124,19 @@ def make_concern(
     disposition_rationale=None,
     confidence=0.75,
     project_id="PROJ001",
-) -> MagicMock:
-    cn = MagicMock()
-    cn.concern_id = concern_id
-    cn.source_refs = source_refs or ["S001"]
-    cn.description = description
-    cn.state = state
-    cn.produced_in_row = produced_in_row
-    cn.practitioner_id = practitioner_id
-    cn.dispositioned_with_outcome = dispositioned_with_outcome
-    cn.disposition_rationale = disposition_rationale
-    cn.confidence = confidence
-    cn.project_id = project_id
-    return cn
+) -> SimpleNamespace:
+    return SimpleNamespace(
+        concern_id=concern_id,
+        source_refs=source_refs or ["S001"],
+        description=description,
+        state=state,
+        produced_in_row=produced_in_row,
+        practitioner_id=practitioner_id,
+        dispositioned_with_outcome=dispositioned_with_outcome,
+        disposition_rationale=disposition_rationale,
+        confidence=confidence,
+        project_id=project_id,
+    )
 
 
 def make_analysis_pass(
@@ -154,75 +154,101 @@ def make_analysis_pass(
     confidence=1.0,
     practitioner_id="SH001",
     project_id="PROJ001",
-) -> MagicMock:
-    ap = MagicMock()
-    ap.pass_id = pass_id
-    ap.pass_type = pass_type
-    ap.mechanism = mechanism
-    ap.evaluated_scope = evaluated_scope
-    ap.execution_status = execution_status
-    ap.mode_active = mode_active
-    ap.declared_transformation_modes = declared_transformation_modes or ["LPM"]
-    ap.outputs = outputs or {
-        "read_witness": {
-            "input_hash": "abc123",
-            "byte_count": 1024,
-            "character_count": 512,
-            "read_mode": "LPM",
-            "read_completion_status": "Complete",
+) -> SimpleNamespace:
+    return SimpleNamespace(
+        pass_id=pass_id,
+        pass_type=pass_type,
+        mechanism=mechanism,
+        evaluated_scope=evaluated_scope,
+        execution_status=execution_status,
+        mode_active=mode_active,
+        declared_transformation_modes=declared_transformation_modes or ["LPM"],
+        outputs=outputs or {
+            "read_witness": {
+                "input_hash": "abc123",
+                "byte_count": 1024,
+                "character_count": 512,
+                "read_mode": "LPM",
+                "read_completion_status": "Complete",
+            },
+            "mechanism_data": {"source_count": 1},
+            "mode_violations": [],
         },
-        "mechanism_data": {"source_count": 1},
-        "mode_violations": [],
-    }
-    ap.pass_started_at = pass_started_at or _dt("2026-05-01T10:00:00")
-    ap.pass_completed_at = pass_completed_at or _dt("2026-05-01T10:00:01")
-    ap.elapsed_ms = elapsed_ms
-    ap.confidence = confidence
-    ap.practitioner_id = practitioner_id
-    ap.project_id = project_id
-    return ap
+        pass_started_at=pass_started_at or _dt("2026-05-01T10:00:00"),
+        pass_completed_at=pass_completed_at or _dt("2026-05-01T10:00:01"),
+        elapsed_ms=elapsed_ms,
+        confidence=confidence,
+        practitioner_id=practitioner_id,
+        project_id=project_id,
+    )
 
 
 def make_stakeholder(
     stakeholder_id="SH001",
     name="SysEngage",
     stakeholder_type="AutomatedAnalysisAgent",
-) -> MagicMock:
-    sh = MagicMock()
-    sh.stakeholder_id = stakeholder_id
-    sh.name = name
-    sh.stakeholder_type = stakeholder_type
-    return sh
+) -> SimpleNamespace:
+    return SimpleNamespace(
+        stakeholder_id=stakeholder_id,
+        name=name,
+        stakeholder_type=stakeholder_type,
+    )
 
 
 def make_domain(
     domain_id="D001",
     name="Expense Tracking",
     row_target="1",
+    description=None,
+    classification_type=None,
+    cell_content_item_refs=None,
     project_id="PROJ001",
-) -> MagicMock:
-    d = MagicMock()
-    d.domain_id = domain_id
-    d.name = name
-    d.row_target = row_target
-    d.project_id = project_id
-    return d
+) -> SimpleNamespace:
+    return SimpleNamespace(
+        domain_id=domain_id,
+        name=name,
+        row_target=row_target,
+        description=description,
+        classification_type=classification_type,
+        cell_content_item_refs=cell_content_item_refs or [],
+        project_id=project_id,
+    )
 
 
 def make_requirement(
     requirement_id="R001",
     statement="The system shall allow users to track household expenses.",
+    requirement_type="Functional",
     row_target="1",
     domain_id="D001",
+    confidence=1.0,
+    cci_refs=None,
+    domain_refs=None,
+    answer_refs=None,
+    rationale=None,
+    fit_criteria=None,
+    verification_method=None,
+    priority=None,
+    retired_at=None,
     project_id="PROJ001",
-) -> MagicMock:
-    r = MagicMock()
-    r.requirement_id = requirement_id
-    r.statement = statement
-    r.row_target = row_target
-    r.domain_id = domain_id
-    r.project_id = project_id
-    return r
+) -> SimpleNamespace:
+    return SimpleNamespace(
+        requirement_id=requirement_id,
+        statement=statement,
+        requirement_type=requirement_type,
+        row_target=row_target,
+        domain_id=domain_id,
+        confidence=confidence,
+        cci_refs=cci_refs or [],
+        domain_refs=domain_refs or [],
+        answer_refs=answer_refs or [],
+        rationale=rationale,
+        fit_criteria=fit_criteria,
+        verification_method=verification_method,
+        priority=priority,
+        retired_at=retired_at,
+        project_id=project_id,
+    )
 
 
 # ── assembled fixtures ────────────────────────────────────────────────────────
@@ -297,6 +323,6 @@ def full_project_data() -> ProjectData:
             make_domain("D001", "Expense Tracking", "1", project_id="FULL001"),
         ],
         requirements=[
-            make_requirement("R001", "The system shall track expenses.", "1", "D001", project_id="FULL001"),
+            make_requirement("R001", "The system shall track expenses.", row_target="1", domain_id="D001", project_id="FULL001"),
         ],
     )
