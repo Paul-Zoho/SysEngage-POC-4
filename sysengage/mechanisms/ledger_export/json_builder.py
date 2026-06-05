@@ -1,7 +1,7 @@
 """
 Ledger Export — Canonical JSON Builder.
 
-Builds a spec-v2.14-conformant canonical JSON ledger dict from ProjectData.
+Builds a spec-v2.15-conformant canonical JSON ledger dict from ProjectData.
 Applies:
   - Non-canonical attribute stripping (project_id, created_at, phase_id, etc.)
   - execution_status normalisation (DB values → canonical enum)
@@ -21,8 +21,8 @@ from typing import Any
 
 from mechanisms.ledger_export.db_reader import ProjectData
 
-SPEC_VERSION = "2.14"
-SCHEMA_ID = "sysengage.ledger.instance.v2_14"
+SPEC_VERSION = "2.15"
+SCHEMA_ID = "sysengage.ledger.instance.v2_15"
 GENERATOR_NAME = "sysengage-ledger-export"
 GENERATOR_VERSION = "1.0"
 
@@ -36,6 +36,7 @@ _ELEMENT_TYPE_ORDER: list[str] = [
     "ZachmanCell",
     "ZachmanCellRegister",
     "CellContentItem",
+    "CellContentItemRegister",
     "Domain",
     "DomainRegister",
     "Requirement",
@@ -362,7 +363,7 @@ def _compute_content_hash(ledger_without_hash: dict[str, Any]) -> str:
 
 def build_canonical_ledger(data: ProjectData) -> dict[str, Any]:
     """
-    Build the canonical v2.14 ledger dict from *data*.
+    Build the canonical v2.15 ledger dict from *data*.
 
     Returns a dict that can be serialised to JSON with json.dumps().
     Non-canonical DB columns (project_id, created_at, phase_id, etc.) are

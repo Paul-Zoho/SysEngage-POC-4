@@ -30,7 +30,7 @@ sys.path.insert(0, _SYSENGAGE_ROOT)
 
 def main() -> None:
     parser = argparse.ArgumentParser(
-        description="Export a SysEngage project ledger to JSON (spec v2.14)."
+        description="Export a SysEngage project ledger to JSON (spec v2.15)."
     )
     parser.add_argument("project_id", help="Project ID to export (e.g. PMT)")
     parser.add_argument(
