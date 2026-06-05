@@ -360,6 +360,8 @@ else:
     status = rd_result["execution_status"]
     print(f"[E2E]   pass_id                    = {rd_result.get('pass_id')}", flush=True)
     print(f"[E2E]   execution_status           = {status}", flush=True)
+    if rd_result.get("failure_reason"):
+        print(f"[E2E]   failure_reason             = {rd_result.get('failure_reason')}", flush=True)
     print(f"[E2E]   scenario                   = {rd_result.get('scenario')}", flush=True)
     print(f"[E2E]   cci_count_input            = {rd_result.get('cci_count_input')}", flush=True)
     print(f"[E2E]   domain_count               = {rd_result.get('domain_count')}", flush=True)
