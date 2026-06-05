@@ -19,12 +19,19 @@ SourceCapture  →  RLSRA (3a)  →  CCI (3b)  →  DD (3c)  →  RD (3d)
 
 **Why RLSRA is critical:** `CCI step1_signal_assembly.py` reads from the `signal` table filtered by `row_target`. If RLSRA hasn't run, `signal` is empty and CCI produces 0 CCIs (no error, no warning — silent zero output).
 
-**Observed PMT Row 1 results (20260605, main branch — clean run):**
+**Correct runner pattern — production stays empty:**
+The runner must clone a disposable test branch from production BEFORE importing
+any mechanism modules, then set `os.environ["NEON_DATABASE_URL"]` to the test
+branch URL. `core/db.py` builds the engine at import time, so all mechanism
+imports must happen AFTER the env var is set. After all passes complete, rename
+the test branch to the snapshot name (rename = promotion, no extra clone needed).
+
+**Observed PMT Row 1 results (20260605, test branch — clean run):**
 - Input doc: `The Pocket Money Tracker System v1.docx`
-- Sources: 10
-- Signals (Row 1): 5 eligible (RLSRA, 4 out-of-scope)
-- CCIs: 15 created, 0 merged (dedup ON)
-- Domains: 3 (D001 Child Participation, D002 Parental Governance, D003 Earnings Accountability)
-- Requirements: 13 (9 Functional, 2 Constraint, 2 Structural)
-- Snapshot: `snap_PMT_ph03_3d_R1_20260605` (br-holy-hill-ab7v6bmb)
-- Ledger: `PMT_Ph03_3d_RequirementDerivation_R1_Run8.json` (69 elements, 9 registers, hash 79b0438eaed6b4de)
+- Sources: 10, Signals (Row 1): 6 eligible
+- CCIs: 20 created, 0 merged (dedup ON)
+- Domains: 6 (D001–D006)
+- Requirements: 16 (8 Functional, 7 Constraint, 1 Structural)
+- Snapshot: `snap_PMT_ph03_3d_R1_20260605` (br-wispy-rain-abw21rf3)
+- Ledger: `PMT_Ph03_3d_RequirementDerivation_R1_Run9.json` (79 elements, 8 registers, hash 0d8ff25d790c0355)
+- Production (main) branch: 0 rows in all tables throughout

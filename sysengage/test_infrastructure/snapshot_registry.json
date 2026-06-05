@@ -45,11 +45,11 @@
       "phase": "ph03",
       "pass": "3d",
       "row": "R1",
-      "state_description": "Post-3d Row 1: PMT_E2E \u2014 SourceCapture+CCI+DD+RD for Row 1. Sources=10, CCIs=15, Domains=3, Requirements=13. Regression baseline.",
-      "created_at": "2026-06-05T15:58:30.101191+00:00",
+      "state_description": "PMT_E2E Row 1 full pipeline (SC+RLSRA+CCI+DD+RD). Sources=10, CCIs=20, Domains=6, Requirements=16. Production branch was untouched throughout.",
+      "created_at": "2026-06-05T18:55:28.847090+00:00",
       "status": "VERIFIED",
       "ver_criteria_passed": [],
-      "neon_branch_id": "br-holy-hill-ab7v6bmb",
+      "neon_branch_id": "br-wispy-rain-abw21rf3",
       "neon_project_id": "sparkling-tree-75414608"
     }
   ]
