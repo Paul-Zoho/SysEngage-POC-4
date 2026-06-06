@@ -13,3 +13,4 @@
 - [Source Capture execution_status is "Success" not "Completed"](sc-status-quirk.md) — SourceCapture writes "Success" to analysis_pass.execution_status; all other mechanisms use "Completed"/"CompletedWithWarnings". Idempotency guards must include "Success" in the IN clause or SC re-runs on every invocation.
 - [PMT Row 1 full pipeline — RLSRA is required before CCI](pmt-pipeline-order.md) — correct pass order: SourceCapture → RLSRA (3a) → CCI (3b) → DD (3c) → RD (3d). Skipping RLSRA leaves signal table empty and CCI produces 0 CCIs.
 - [RD transient failure after long DD run](rd-transient-failure.md) — RD can fail silently (pass_id=None, Failed) on first attempt after DD; just restart the runner to resume — do NOT delete the branch.
+- [Ledger element payload structure](ledger-element-payload-structure.md) — all element fields (row_target, refines_refs, etc.) are inside `payload`; top-level has only element_type/element_id/payload.

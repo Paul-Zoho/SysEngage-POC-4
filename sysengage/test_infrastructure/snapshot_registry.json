@@ -64,6 +64,19 @@
       "ver_criteria_passed": [],
       "neon_branch_id": "br-solitary-heart-abegqepe",
       "neon_project_id": "sparkling-tree-75414608"
+    },
+    {
+      "name": "snap_PMT_ph03_3e_R2_3x_20260606",
+      "project_id": "PMT_3x",
+      "phase": "ph03",
+      "pass": "3e",
+      "row": "R2",
+      "state_description": "PMT Row 2 triple-run with Requirement Matching (Runs 11-13, pass 3e). PMT_E2E_R11: Sources=10, CCIs=42, Domains=9, Requirements=32, Matching(refine=12,no_match=0,flagged=0) | PMT_E2E_R12: Sources=10, CCIs=44, Domains=10, Requirements=40, Matching(refine=15,no_match=0,flagged=0) | PMT_E2E_R13: Sources=10, CCIs=45, Domains=10, Requirements=39, Matching(refine=8,no_match=1,flagged=1). Cloned from snap_PMT_ph03_3d_R2_3x. refines_refs populated on Row 2 requirements. Production branch untouched.",
+      "created_at": "2026-06-06T08:50:55.271024+00:00",
+      "status": "VERIFIED",
+      "ver_criteria_passed": [],
+      "neon_branch_id": "br-ancient-grass-ab6zyv6i",
+      "neon_project_id": "sparkling-tree-75414608"
     }
   ]
 }

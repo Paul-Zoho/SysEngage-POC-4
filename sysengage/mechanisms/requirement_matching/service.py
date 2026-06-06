@@ -41,6 +41,7 @@ def _append_matching_log(
     session,
     *,
     requirement_id: str,
+    project_id: str,
     outcome: str,
     parent_ids: list[str] | None = None,
     duplicate_of: str | None = None,
@@ -50,11 +51,12 @@ def _append_matching_log(
     session.execute(
         text(
             "INSERT INTO requirement_matching_log "
-            "(requirement_id, outcome, parent_ids, duplicate_of, confidence, auto_recorded, created_at) "
-            "VALUES (:rid, :outcome, CAST(:pids AS jsonb), :dup, :conf, :auto, :now)"
+            "(requirement_id, project_id, outcome, parent_ids, duplicate_of, confidence, auto_recorded, created_at) "
+            "VALUES (:rid, :pid, :outcome, CAST(:pids AS jsonb), :dup, :conf, :auto, :now)"
         ),
         {
             "rid": requirement_id,
+            "pid": project_id,
             "outcome": outcome,
             "pids": json.dumps(parent_ids) if parent_ids else None,
             "dup": duplicate_of,
@@ -69,7 +71,7 @@ def _load_requirements(session, project_id: str) -> list[dict]:
     """Load all active requirements for a project."""
     rows = session.execute(
         text(
-            "SELECT requirement_id, statement, requirement_type, row_target, "
+            "SELECT requirement_id, project_id, statement, requirement_type, row_target, "
             "refines_refs, verification_method, fit_criteria "
             "FROM requirement WHERE project_id = :pid AND retired_at IS NULL"
         ),
@@ -118,6 +120,7 @@ def match_requirement(
             _append_matching_log(
                 session,
                 requirement_id=child_id,
+                project_id=child.get("project_id", ""),
                 outcome="deferred",
                 confidence=None,
                 auto_recorded=False,
@@ -131,11 +134,14 @@ def match_requirement(
         }
 
     # Step 2a: Check for duplicates among same-row candidates (D-rm-2)
+    _child_pid = child.get("project_id", "")
+
     dup_result = judge_duplicate(child=child, candidate_siblings=candidate_siblings)
     if dup_result.get("_judge_failed"):
         if session:
             _append_matching_log(
-                session, requirement_id=child_id, outcome="flagged",
+                session, requirement_id=child_id, project_id=_child_pid,
+                outcome="flagged",
                 confidence=dup_result.get("confidence", 0.0), auto_recorded=False,
             )
         return {"outcome": "flagged", "matched_parent_ids": [], "duplicate_of": None,
@@ -147,10 +153,12 @@ def match_requirement(
         if session and dup_of:
             merge_result = execute_merge(
                 session, survivor_id=dup_of, merged_id=child_id,
+                project_id=_child_pid,
                 rationale=dup_result.get("rationale", ""), auto_recorded=True,
             )
             _append_matching_log(
-                session, requirement_id=child_id, outcome="duplicate",
+                session, requirement_id=child_id, project_id=_child_pid,
+                outcome="duplicate",
                 duplicate_of=dup_of, confidence=dup_confidence, auto_recorded=True,
             )
         return {"outcome": "duplicate", "matched_parent_ids": [], "duplicate_of": dup_of,
@@ -161,7 +169,8 @@ def match_requirement(
     if refine_result.get("_judge_failed"):
         if session:
             _append_matching_log(
-                session, requirement_id=child_id, outcome="flagged",
+                session, requirement_id=child_id, project_id=_child_pid,
+                outcome="flagged",
                 confidence=refine_result.get("confidence", 0.0), auto_recorded=False,
             )
         return {"outcome": "flagged", "matched_parent_ids": [], "duplicate_of": None,
@@ -174,7 +183,8 @@ def match_requirement(
     if refine_confidence < MATCH_CONFIDENCE_BAND or is_multi_parent:
         if session:
             _append_matching_log(
-                session, requirement_id=child_id, outcome="flagged",
+                session, requirement_id=child_id, project_id=_child_pid,
+                outcome="flagged",
                 confidence=refine_confidence, auto_recorded=False,
             )
         return {"outcome": "flagged", "matched_parent_ids": [], "duplicate_of": None,
@@ -192,11 +202,13 @@ def match_requirement(
         if session and valid_parent_ids:
             session.execute(
                 text("UPDATE requirement SET refines_refs = CAST(:refs AS jsonb) "
-                     "WHERE requirement_id = :rid"),
-                {"refs": json.dumps(valid_parent_ids), "rid": child_id},
+                     "WHERE requirement_id = :rid AND project_id = :pid"),
+                {"refs": json.dumps(valid_parent_ids), "rid": child_id,
+                 "pid": _child_pid},
             )
             _append_matching_log(
-                session, requirement_id=child_id, outcome="refine",
+                session, requirement_id=child_id, project_id=_child_pid,
+                outcome="refine",
                 parent_ids=valid_parent_ids, confidence=refine_confidence, auto_recorded=True,
             )
         return {"outcome": "refine", "matched_parent_ids": valid_parent_ids, "duplicate_of": None,
@@ -206,7 +218,8 @@ def match_requirement(
     if session:
         write_upward_gap(session, requirement_id=child_id, row_target=child_row)
         _append_matching_log(
-            session, requirement_id=child_id, outcome="no_match",
+            session, requirement_id=child_id, project_id=_child_pid,
+            outcome="no_match",
             confidence=refine_confidence, auto_recorded=True,
         )
     return {"outcome": "no_match", "matched_parent_ids": [], "duplicate_of": None,

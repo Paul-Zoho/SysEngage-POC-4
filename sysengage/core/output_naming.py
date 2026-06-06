@@ -27,6 +27,7 @@ PASS_LABEL_MAP: dict[tuple[str, str], str] = {
     ("03", "3b"): "CellContentItemConstruction",
     ("03", "3c"): "DomainDerivation",
     ("03", "3d"): "RequirementDerivation",
+    ("03", "3e"): "RequirementMatching",
 }
 
 _PROJECT_ID_RE = re.compile(r"^[A-Z]{2,}$")

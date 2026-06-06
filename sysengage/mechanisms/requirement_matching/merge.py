@@ -28,33 +28,43 @@ def execute_merge(
     *,
     survivor_id: str,
     merged_id: str,
+    project_id: str,
     rationale: str,
     auto_recorded: bool,
 ) -> dict:
     """
-    Collapse merged_id into survivor_id.
+    Collapse merged_id into survivor_id within project_id.
 
     1. Merge cci_refs, domain_refs from merged_id into survivor_id.
     2. Repoint refines_refs in all requirements that reference merged_id.
     3. Mark merged_id as retired.
 
+    project_id is required because requirement_id values are project-scoped
+    (e.g. R001 exists in every project); without it, queries return multiple rows.
+
     Returns dict: {survivor_id, retired_id, repointed_count}
     """
     now = datetime.now(timezone.utc)
 
-    # Load both requirements
+    # Load both requirements (always filter by project_id — requirement_id is not globally unique)
     survivor = session.execute(
-        text("SELECT cci_refs, domain_refs FROM requirement WHERE requirement_id = :rid"),
-        {"rid": survivor_id},
+        text(
+            "SELECT cci_refs, domain_refs FROM requirement "
+            "WHERE requirement_id = :rid AND project_id = :pid"
+        ),
+        {"rid": survivor_id, "pid": project_id},
     ).mappings().one_or_none()
 
     merged = session.execute(
-        text("SELECT cci_refs, domain_refs FROM requirement WHERE requirement_id = :rid"),
-        {"rid": merged_id},
+        text(
+            "SELECT cci_refs, domain_refs FROM requirement "
+            "WHERE requirement_id = :rid AND project_id = :pid"
+        ),
+        {"rid": merged_id, "pid": project_id},
     ).mappings().one_or_none()
 
     if survivor is None or merged is None:
-        raise ValueError(f"Cannot find survivor={survivor_id!r} or merged={merged_id!r}")
+        raise ValueError(f"Cannot find survivor={survivor_id!r} or merged={merged_id!r} in project {project_id!r}")
 
     # Union cci_refs and domain_refs (de-duplicate)
     merged_cci_refs = list(set(
@@ -69,29 +79,34 @@ def execute_merge(
         text(
             "UPDATE requirement SET "
             "cci_refs = CAST(:cci_refs AS jsonb), domain_refs = CAST(:domain_refs AS jsonb) "
-            "WHERE requirement_id = :rid"
+            "WHERE requirement_id = :rid AND project_id = :pid"
         ),
         {
             "cci_refs": json.dumps(sorted(merged_cci_refs)),
             "domain_refs": json.dumps(sorted(merged_domain_refs)),
             "rid": survivor_id,
+            "pid": project_id,
         },
     )
 
     # Retire merged requirement
     session.execute(
-        text("UPDATE requirement SET retired_at = :now WHERE requirement_id = :rid"),
-        {"now": now, "rid": merged_id},
+        text(
+            "UPDATE requirement SET retired_at = :now "
+            "WHERE requirement_id = :rid AND project_id = :pid"
+        ),
+        {"now": now, "rid": merged_id, "pid": project_id},
     )
 
     # Repoint refines_refs: any requirement whose refines_refs contains merged_id
-    # should be repointed to survivor_id
+    # should be repointed to survivor_id (scoped to project_id)
     dependents = session.execute(
         text(
             "SELECT requirement_id, refines_refs FROM requirement "
-            "WHERE refines_refs @> CAST(:rid_array AS jsonb) AND retired_at IS NULL"
+            "WHERE refines_refs @> CAST(:rid_array AS jsonb) "
+            "  AND project_id = :pid AND retired_at IS NULL"
         ),
-        {"rid_array": json.dumps([merged_id])},
+        {"rid_array": json.dumps([merged_id]), "pid": project_id},
     ).mappings().all()
 
     repointed_count = 0

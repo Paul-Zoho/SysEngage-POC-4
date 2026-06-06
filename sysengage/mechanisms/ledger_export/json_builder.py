@@ -250,6 +250,7 @@ def _build_requirement_element(req) -> dict[str, Any]:
         "cci_refs": req.cci_refs,
         "domain_refs": req.domain_refs,
         "answer_refs": req.answer_refs if req.answer_refs else [],
+        "refines_refs": list(req.refines_refs) if req.refines_refs else [],
     }
     if req.rationale:
         payload["rationale"] = req.rationale
