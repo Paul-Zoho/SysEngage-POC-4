@@ -1,0 +1,325 @@
+{
+  "experiment": "PMT_Matching_Attribution_Analysis_R2",
+  "description": "Row 2 derivation held fixed at PMT_E2E_R11; Row 1 baseline varied across PMT_E2E_R11 / PMT_E2E_R12 / PMT_E2E_R13. Measures which Row 2 requirements find a parent under each baseline.",
+  "source_row2_derivation": "PMT_E2E_R11",
+  "source_snapshot": "snap_PMT_ph03_3e_R2_3x_20260606",
+  "baselines": [
+    "PMT_E2E_R11",
+    "PMT_E2E_R12",
+    "PMT_E2E_R13"
+  ],
+  "ran_at": "2026-06-06T09:42:29.857097+00:00",
+  "source_requirement_ids": [
+    "R018",
+    "R019",
+    "R020",
+    "R021",
+    "R022",
+    "R023",
+    "R024",
+    "R025",
+    "R027",
+    "R028",
+    "R029",
+    "R031"
+  ],
+  "per_requirement": {
+    "R018": {
+      "PMT_E2E_R11": {
+        "outcome": "refine",
+        "matched_parent_ids": [
+          "R004"
+        ]
+      },
+      "PMT_E2E_R12": {
+        "outcome": "refine",
+        "matched_parent_ids": [
+          "R007"
+        ]
+      },
+      "PMT_E2E_R13": {
+        "outcome": "refine",
+        "matched_parent_ids": [
+          "R007"
+        ]
+      }
+    },
+    "R019": {
+      "PMT_E2E_R11": {
+        "outcome": "refine",
+        "matched_parent_ids": [
+          "R004"
+        ]
+      },
+      "PMT_E2E_R12": {
+        "outcome": "refine",
+        "matched_parent_ids": [
+          "R009"
+        ]
+      },
+      "PMT_E2E_R13": {
+        "outcome": "refine",
+        "matched_parent_ids": [
+          "R013"
+        ]
+      }
+    },
+    "R020": {
+      "PMT_E2E_R11": {
+        "outcome": "refine",
+        "matched_parent_ids": [
+          "R008"
+        ]
+      },
+      "PMT_E2E_R12": {
+        "outcome": "refine",
+        "matched_parent_ids": [
+          "R005"
+        ]
+      },
+      "PMT_E2E_R13": {
+        "outcome": "refine",
+        "matched_parent_ids": [
+          "R003"
+        ]
+      }
+    },
+    "R021": {
+      "PMT_E2E_R11": {
+        "outcome": "refine",
+        "matched_parent_ids": [
+          "R009"
+        ]
+      },
+      "PMT_E2E_R12": {
+        "outcome": "refine",
+        "matched_parent_ids": [
+          "R016"
+        ]
+      },
+      "PMT_E2E_R13": {
+        "outcome": "refine",
+        "matched_parent_ids": [
+          "R010"
+        ]
+      }
+    },
+    "R022": {
+      "PMT_E2E_R11": {
+        "outcome": "refine",
+        "matched_parent_ids": [
+          "R005"
+        ]
+      },
+      "PMT_E2E_R12": {
+        "outcome": "refine",
+        "matched_parent_ids": [
+          "R013"
+        ]
+      },
+      "PMT_E2E_R13": {
+        "outcome": "refine",
+        "matched_parent_ids": [
+          "R015"
+        ]
+      }
+    },
+    "R023": {
+      "PMT_E2E_R11": {
+        "outcome": "refine",
+        "matched_parent_ids": [
+          "R015"
+        ]
+      },
+      "PMT_E2E_R12": {
+        "outcome": "refine",
+        "matched_parent_ids": [
+          "R018"
+        ]
+      },
+      "PMT_E2E_R13": {
+        "outcome": "refine",
+        "matched_parent_ids": [
+          "R017"
+        ]
+      }
+    },
+    "R024": {
+      "PMT_E2E_R11": {
+        "outcome": "refine",
+        "matched_parent_ids": [
+          "R013"
+        ]
+      },
+      "PMT_E2E_R12": {
+        "outcome": "refine",
+        "matched_parent_ids": [
+          "R006"
+        ]
+      },
+      "PMT_E2E_R13": {
+        "outcome": "refine",
+        "matched_parent_ids": [
+          "R008"
+        ]
+      }
+    },
+    "R025": {
+      "PMT_E2E_R11": {
+        "outcome": "refine",
+        "matched_parent_ids": [
+          "R013"
+        ]
+      },
+      "PMT_E2E_R12": {
+        "outcome": "refine",
+        "matched_parent_ids": [
+          "R010"
+        ]
+      },
+      "PMT_E2E_R13": {
+        "outcome": "refine",
+        "matched_parent_ids": [
+          "R008"
+        ]
+      }
+    },
+    "R027": {
+      "PMT_E2E_R11": {
+        "outcome": "refine",
+        "matched_parent_ids": [
+          "R015"
+        ]
+      },
+      "PMT_E2E_R12": {
+        "outcome": "refine",
+        "matched_parent_ids": [
+          "R018"
+        ]
+      },
+      "PMT_E2E_R13": {
+        "outcome": "refine",
+        "matched_parent_ids": [
+          "R017"
+        ]
+      }
+    },
+    "R028": {
+      "PMT_E2E_R11": {
+        "outcome": "duplicate",
+        "matched_parent_ids": []
+      },
+      "PMT_E2E_R12": {
+        "outcome": "refine",
+        "matched_parent_ids": [
+          "R013"
+        ]
+      },
+      "PMT_E2E_R13": {
+        "outcome": "refine",
+        "matched_parent_ids": [
+          "R015"
+        ]
+      }
+    },
+    "R029": {
+      "PMT_E2E_R11": {
+        "outcome": "refine",
+        "matched_parent_ids": [
+          "R010"
+        ]
+      },
+      "PMT_E2E_R12": {
+        "outcome": "refine",
+        "matched_parent_ids": [
+          "R012"
+        ]
+      },
+      "PMT_E2E_R13": {
+        "outcome": "flagged",
+        "matched_parent_ids": []
+      }
+    },
+    "R031": {
+      "PMT_E2E_R11": {
+        "outcome": "refine",
+        "matched_parent_ids": [
+          "R010"
+        ]
+      },
+      "PMT_E2E_R12": {
+        "outcome": "refine",
+        "matched_parent_ids": [
+          "R016"
+        ]
+      },
+      "PMT_E2E_R13": {
+        "outcome": "flagged",
+        "matched_parent_ids": []
+      }
+    }
+  },
+  "stability_summary": {
+    "match_all_3": {
+      "count": 9,
+      "requirements": [
+        "R018",
+        "R019",
+        "R020",
+        "R021",
+        "R022",
+        "R023",
+        "R024",
+        "R025",
+        "R027"
+      ]
+    },
+    "match_2_of_3": {
+      "count": 3,
+      "requirements": [
+        "R028",
+        "R029",
+        "R031"
+      ]
+    },
+    "match_1_of_3": {
+      "count": 0,
+      "requirements": []
+    },
+    "match_none": {
+      "count": 0,
+      "requirements": []
+    }
+  },
+  "baseline_summaries": {
+    "PMT_E2E_R11": {
+      "total": 12,
+      "refine": 11,
+      "no_match": 0,
+      "flagged": 0,
+      "duplicate": 1,
+      "downward_gaps": 10
+    },
+    "PMT_E2E_R12": {
+      "total": 12,
+      "refine": 12,
+      "no_match": 0,
+      "flagged": 0,
+      "duplicate": 0,
+      "downward_gaps": 10
+    },
+    "PMT_E2E_R13": {
+      "total": 12,
+      "refine": 10,
+      "no_match": 0,
+      "flagged": 2,
+      "duplicate": 0,
+      "downward_gaps": 14
+    }
+  },
+  "ledger_basenames": {
+    "PMT_E2E_R11": "PMT_Ph03_3e_RequirementMatching_R2_Run8.json",
+    "PMT_E2E_R12": "PMT_Ph03_3e_RequirementMatching_R2_Run9.json",
+    "PMT_E2E_R13": "PMT_Ph03_3e_RequirementMatching_R2_Run10.json"
+  }
+}

@@ -134,6 +134,7 @@ def judge_refine(
         msg = client.messages.create(
             model=MODEL,
             max_tokens=512,
+            temperature=0,
             system=_JUDGE_SYSTEM,
             messages=[{"role": "user", "content": prompt}],
         )
@@ -199,6 +200,7 @@ def judge_duplicate(
         msg = client.messages.create(
             model=MODEL,
             max_tokens=512,
+            temperature=0,
             system=_JUDGE_SYSTEM,
             messages=[{"role": "user", "content": prompt}],
         )

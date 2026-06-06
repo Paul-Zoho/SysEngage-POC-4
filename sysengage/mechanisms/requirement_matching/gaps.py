@@ -32,6 +32,7 @@ def write_upward_gap(
     *,
     requirement_id: str,
     row_target: str,
+    project_id: str | None = None,
 ) -> None:
     """
     Write an upward gap record (child-orphan, no refines_refs after matching).
@@ -42,12 +43,12 @@ def write_upward_gap(
         return
     session.execute(
         text(
-            "INSERT INTO requirement_gap_record (direction, requirement_id, row_target, created_at) "
-            "VALUES ('upward', :rid, :row, :now)"
+            "INSERT INTO requirement_gap_record (direction, requirement_id, project_id, row_target, created_at) "
+            "VALUES ('upward', :rid, :pid, :row, :now)"
         ),
-        {"rid": requirement_id, "row": str(row_target), "now": datetime.now(timezone.utc)},
+        {"rid": requirement_id, "pid": project_id, "row": str(row_target), "now": datetime.now(timezone.utc)},
     )
-    _log.info("Upward gap written for %s (row %s)", requirement_id, row_target)
+    _log.info("Upward gap written for %s/%s (row %s)", project_id, requirement_id, row_target)
 
 
 def write_downward_gap(
@@ -55,18 +56,19 @@ def write_downward_gap(
     *,
     requirement_id: str,
     row_target: str,
+    project_id: str | None = None,
 ) -> None:
     """
     Write a downward gap record (parent-orphan, nothing below refines this).
     """
     session.execute(
         text(
-            "INSERT INTO requirement_gap_record (direction, requirement_id, row_target, created_at) "
-            "VALUES ('downward', :rid, :row, :now)"
+            "INSERT INTO requirement_gap_record (direction, requirement_id, project_id, row_target, created_at) "
+            "VALUES ('downward', :rid, :pid, :row, :now)"
         ),
-        {"rid": requirement_id, "row": str(row_target), "now": datetime.now(timezone.utc)},
+        {"rid": requirement_id, "pid": project_id, "row": str(row_target), "now": datetime.now(timezone.utc)},
     )
-    _log.info("Downward gap written for %s (row %s)", requirement_id, row_target)
+    _log.info("Downward gap written for %s/%s (row %s)", project_id, requirement_id, row_target)
 
 
 def compute_downward_gaps(

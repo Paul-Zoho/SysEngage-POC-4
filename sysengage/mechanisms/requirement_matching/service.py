@@ -68,12 +68,13 @@ def _append_matching_log(
 
 
 def _load_requirements(session, project_id: str) -> list[dict]:
-    """Load all active requirements for a project."""
+    """Load all active requirements for a project, deterministic order."""
     rows = session.execute(
         text(
             "SELECT requirement_id, project_id, statement, requirement_type, row_target, "
             "refines_refs, verification_method, fit_criteria "
-            "FROM requirement WHERE project_id = :pid AND retired_at IS NULL"
+            "FROM requirement WHERE project_id = :pid AND retired_at IS NULL "
+            "ORDER BY requirement_id"
         ),
         {"pid": project_id},
     ).mappings().all()
@@ -216,7 +217,7 @@ def match_requirement(
 
     # No match
     if session:
-        write_upward_gap(session, requirement_id=child_id, row_target=child_row)
+        write_upward_gap(session, requirement_id=child_id, row_target=child_row, project_id=_child_pid)
         _append_matching_log(
             session, requirement_id=child_id, project_id=_child_pid,
             outcome="no_match",
@@ -258,7 +259,7 @@ def match_row(row_n: int, project_id: str) -> dict[str, Any]:
             orphan_row = next(
                 (r["row_target"] for r in parent_reqs if r["requirement_id"] == orphan_id), str(row_n - 1)
             )
-            write_downward_gap(session, requirement_id=orphan_id, row_target=str(orphan_row))
+            write_downward_gap(session, requirement_id=orphan_id, row_target=str(orphan_row), project_id=project_id)
 
         session.commit()
         return {
