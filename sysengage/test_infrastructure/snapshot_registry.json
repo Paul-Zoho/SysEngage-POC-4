@@ -40,32 +40,6 @@
       "neon_project_id": "sparkling-tree-75414608"
     },
     {
-      "name": "snap_PMT_ph03_3d_R1_20260605",
-      "project_id": "PMT",
-      "phase": "ph03",
-      "pass": "3d",
-      "row": "R1",
-      "state_description": "PMT_E2E Row 1 full pipeline (SC+RLSRA+CCI+DD+RD). Sources=10, CCIs=20, Domains=5, Requirements=14. Production branch was untouched throughout.",
-      "created_at": "2026-06-05T19:31:47.365469+00:00",
-      "status": "VERIFIED",
-      "ver_criteria_passed": [],
-      "neon_branch_id": "br-bitter-rice-abqedn0p",
-      "neon_project_id": "sparkling-tree-75414608"
-    },
-    {
-      "name": "snap_PMT_ph03_3d_R1_20260606",
-      "project_id": "PMT",
-      "phase": "ph03",
-      "pass": "3d",
-      "row": "R1",
-      "state_description": "PMT_E2E Row 1 full pipeline (SC+RLSRA+CCI+DD+RD). Sources=10, CCIs=13, Domains=4, Requirements=14. Production branch was untouched throughout.",
-      "created_at": "2026-06-06T07:23:16.245794+00:00",
-      "status": "VERIFIED",
-      "ver_criteria_passed": [],
-      "neon_branch_id": "br-mute-frog-abn19to4",
-      "neon_project_id": "sparkling-tree-75414608"
-    },
-    {
       "name": "snap_PMT_ph03_3d_R1_3x_20260606",
       "project_id": "PMT_3x",
       "phase": "ph03",
