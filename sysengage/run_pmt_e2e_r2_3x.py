@@ -7,11 +7,11 @@ Workflow
     (which already holds Row 1 complete pipelines for R11/R12/R13).
 2.  Set NEON_DATABASE_URL to the test branch connection string.
 3.  Apply schema migrations once (idempotent).
-4-8. For each of PMT_E2E_R11, PMT_E2E_R12, PMT_E2E_R13 in sequence:
+4-9. For each of PMT_E2E_R11, PMT_E2E_R12, PMT_E2E_R13 in sequence:
        SC (skip — already done) → RLSRA (3a, Row 2) → CCI (3b, Row 2, dedup=ON)
-       → DD (3c, Row 2) → RD (3d, Row 2)
-9.  Export one ledger JSON per project.
-10. Rename the test branch → snap_PMT_ph03_3d_R2_3x_YYYYMMDD and register.
+       → DD (3c, Row 2) → RD (3d, Row 2) → RM (3e, Row 2)
+10. Export one ledger JSON per project (pass 3e).
+11. Rename the test branch → snap_PMT_ph03_3e_R2_3x_YYYYMMDD and register.
 
 Design notes
 ------------
@@ -63,10 +63,10 @@ OUT_DIR = SYSENGAGE_DIR.parent / "verification_outputs"
 OUT_DIR.mkdir(parents=True, exist_ok=True)
 
 SOURCE_SNAP      = "snap_PMT_ph03_3d_R1_3x_20260606"   # branch to clone from
-TEST_BRANCH_NAME = "test_PMT_ph03_3d_R2_3x"
+TEST_BRANCH_NAME = "test_PMT_ph03_3e_R2_3x"
 
 SNAP_DATE = datetime.now(timezone.utc).strftime("%Y%m%d")
-SNAP_NAME = f"snap_PMT_ph03_3d_R2_3x_{SNAP_DATE}"
+SNAP_NAME = f"snap_PMT_ph03_3e_R2_3x_{SNAP_DATE}"
 
 SEP = "=" * 65
 
@@ -146,12 +146,31 @@ import mechanisms.requirement_derivation as rd
 from core.db import get_session
 from core.output_naming import generate_filename
 from mechanisms.ledger_export import run_ledger_export
+from mechanisms.requirement_matching.service import match_row
 from sqlalchemy import text
 
 
 # ---------------------------------------------------------------------------
-# Idempotency helper (project_id-parameterised)
+# Idempotency helpers (project_id-parameterised)
 # ---------------------------------------------------------------------------
+
+def _matching_already_done(project_id: str, row_n: int) -> bool:
+    """Return True if Matching has already run for row_n requirements in this project."""
+    s = get_session()
+    try:
+        count = s.execute(
+            text(
+                "SELECT count(*) FROM requirement_matching_log rml "
+                "JOIN requirement r ON rml.requirement_id = r.requirement_id "
+                "  AND rml.project_id = r.project_id "
+                "WHERE rml.project_id = :p AND r.row_target = :row"
+            ),
+            {"p": project_id, "row": str(row_n)},
+        ).scalar()
+        return (count or 0) > 0
+    finally:
+        s.close()
+
 
 def _pass_already_done(project_id: str, mechanism: str, scope: str) -> str | None:
     """Return pass_id if a terminal-success pass exists for this project on the active branch."""
@@ -343,11 +362,32 @@ def _run_one_pipeline(project_id: str, run_label: int) -> None:
             print(f"{_rd_tag} FAILED with status {status!r}", file=sys.stderr)
             sys.exit(1)
 
+    # ── Step 9: Requirement Matching Row 2 (no-op at Row 1 per VER-rm-02) ───
+    if ROW > 1:
+        _rm_tag = f"[{project_id}/RM]"
+        if _matching_already_done(project_id, ROW):
+            print(f"{_rm_tag}   SKIP — Matching already done for Row {ROW}.", flush=True)
+        else:
+            try:
+                rm_result = match_row(ROW, project_id)
+            except Exception as exc:
+                print(f"{_rm_tag} FAILED: {exc}", file=sys.stderr)
+                import traceback; traceback.print_exc()
+                sys.exit(1)
+            print(f"{_rm_tag}   row_matched        = {rm_result.get('row_matched')}", flush=True)
+            print(f"{_rm_tag}   total              = {rm_result.get('total')}", flush=True)
+            print(f"{_rm_tag}   refine_count       = {rm_result.get('refine_count')}", flush=True)
+            print(f"{_rm_tag}   no_match_count     = {rm_result.get('no_match_count')}", flush=True)
+            print(f"{_rm_tag}   flagged_count      = {rm_result.get('flagged_count')}", flush=True)
+            print(f"{_rm_tag}   duplicate_count    = {rm_result.get('duplicate_count')}", flush=True)
+            print(f"{_rm_tag}   deferred_count     = {rm_result.get('deferred_count')}", flush=True)
+            print(f"{_rm_tag}   downward_gap_count = {rm_result.get('downward_gap_count')}", flush=True)
+
     print(f"{tag}  Run {run_label} pipeline complete.", flush=True)
 
 
 # ---------------------------------------------------------------------------
-# Steps 4-8: Run all three project pipelines
+# Steps 4-9: Run all three project pipelines
 # ---------------------------------------------------------------------------
 
 for _project_id, _run_number in PROJECTS:
@@ -357,11 +397,11 @@ print(flush=True)
 
 
 # ---------------------------------------------------------------------------
-# Step 9 — Ledger export (one per project)
+# Step 10 — Ledger export (one per project, pass 3e)
 # ---------------------------------------------------------------------------
 
 print(SEP, flush=True)
-print("[3x] Step 9 — Ledger exports", flush=True)
+print("[3x] Step 10 — Ledger exports (pass 3e — with refines_refs)", flush=True)
 print(SEP, flush=True)
 
 ledger_results: list[dict[str, Any]] = []
@@ -370,7 +410,7 @@ for _project_id, _run_number in PROJECTS:
     _basename = generate_filename(
         project_id=PROJECT_CODE,
         phase=3,
-        pass_="3d",
+        pass_="3e",
         row=ROW,
         out_dir=str(OUT_DIR),
     )
@@ -404,7 +444,7 @@ print(flush=True)
 
 
 # ---------------------------------------------------------------------------
-# Step 10 — Count rows for snapshot metadata
+# Step 11 — Count rows for snapshot metadata
 # ---------------------------------------------------------------------------
 
 _session3 = get_session()
@@ -422,11 +462,11 @@ finally:
 
 
 # ---------------------------------------------------------------------------
-# Step 10 — Promote test branch → combined snapshot (rename in place)
+# Step 12 — Promote test branch → combined snapshot (rename in place)
 # ---------------------------------------------------------------------------
 
 print(SEP, flush=True)
-print(f"[3x] Step 10 — Promote test branch → {SNAP_NAME}", flush=True)
+print(f"[3x] Step 12 — Promote test branch → {SNAP_NAME}", flush=True)
 print(SEP, flush=True)
 
 old = bm._find_branch_by_name(neon_project, SNAP_NAME)
@@ -448,16 +488,16 @@ for _pid, _t in _totals.items():
         f"Domains={_t['domains']}, Requirements={_t['requirements']}"
     )
 _state_desc = (
-    f"PMT Row 2 triple-run (Runs 11-13). "
+    f"PMT Row 2 triple-run (Runs 11-13) including Requirement Matching (pass 3e). "
     + " | ".join(_parts)
-    + ". Cloned from snap_PMT_ph03_3d_R1_3x (Row 1 complete). Production branch untouched."
+    + ". Cloned from snap_PMT_ph03_3d_R1_3x (Row 1 complete). refines_refs populated on Row 2 requirements. Production branch untouched."
 )
 
 _entry = {
     "name": SNAP_NAME,
     "project_id": "PMT_3x",
     "phase": "ph03",
-    "pass": "3d",
+    "pass": "3e",
     "row": "R2",
     "state_description": _state_desc,
     "created_at": datetime.now(timezone.utc).isoformat(),
