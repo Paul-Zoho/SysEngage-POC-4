@@ -1,0 +1,464 @@
+{
+  "sysengage_ledger_version": "2.15",
+  "schema_id": "sysengage.ledger.instance.v2_15",
+  "row_target": "1",
+  "run_id": "4c4935ac-8dbc-466c-8272-69f11b31b0c7",
+  "created_utc": "2026-06-06T10:21:50.315847+00:00",
+  "generator": {
+    "name": "sysengage-ledger-export",
+    "version": "1.0"
+  },
+  "elements": [
+    {
+      "element_type": "Source",
+      "element_id": "S4678",
+      "payload": {
+        "source_id": "S4678",
+        "source_text": "\nQUALITY POLICY STATEMENT\nNovus Mechanical Services Limited has established a Quality Policy to be consistent with the purpose and context of our organisation.",
+        "segmentation_context": "multi-line block",
+        "input_material_ref": "/home/runner/workspace/verification_inputs/Novus Quality Policy Statement v1.docx",
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_type": "Source",
+      "element_id": "S4679",
+      "payload": {
+        "source_id": "S4679",
+        "source_text": " It provides a framework for the setting and review of objectives in addition to our commitment to satisfy applicable customers’, regulatory and legislative requirements as well as our commitment to continually improve our management system.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "/home/runner/workspace/verification_inputs/Novus Quality Policy Statement v1.docx",
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_type": "Source",
+      "element_id": "S4680",
+      "payload": {
+        "source_id": "S4680",
+        "source_text": " \n\nCustomer focus: As an organisation we have made a commitment to understand our current and future customers’ needs; meet their requirements and strive to exceed their expectations.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "/home/runner/workspace/verification_inputs/Novus Quality Policy Statement v1.docx",
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_type": "Source",
+      "element_id": "S4681",
+      "payload": {
+        "source_id": "S4681",
+        "source_text": " \nLeadership: Our Top Management have committed to creating and maintaining a working environment in which people become fully involved in achieving our objectives.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "/home/runner/workspace/verification_inputs/Novus Quality Policy Statement v1.docx",
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_type": "Source",
+      "element_id": "S4682",
+      "payload": {
+        "source_id": "S4682",
+        "source_text": " \nEngagement of people: As an organisation we recognise that people are the essence of any good business and that their full involvement enables their abilities to be used for our benefit.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "/home/runner/workspace/verification_inputs/Novus Quality Policy Statement v1.docx",
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_type": "Source",
+      "element_id": "S4683",
+      "payload": {
+        "source_id": "S4683",
+        "source_text": " \nProcess approach: As an organisation we understand that a desired result is achieved more efficiently when activities and related resources are managed as a process or series of interconnected processes.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "/home/runner/workspace/verification_inputs/Novus Quality Policy Statement v1.docx",
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_type": "Source",
+      "element_id": "S4684",
+      "payload": {
+        "source_id": "S4684",
+        "source_text": " \nImprovement: We have committed to achieving continual improvement across all aspects of our quality management system; it is one of our main annual objectives.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "/home/runner/workspace/verification_inputs/Novus Quality Policy Statement v1.docx",
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_type": "Source",
+      "element_id": "S4685",
+      "payload": {
+        "source_id": "S4685",
+        "source_text": " \nEvidence-based decision making: As an organisation we have committed to only make decisions relating to our QMS following an analysis of relevant data and information.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "/home/runner/workspace/verification_inputs/Novus Quality Policy Statement v1.docx",
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_type": "Source",
+      "element_id": "S4686",
+      "payload": {
+        "source_id": "S4686",
+        "source_text": " \nRelationship management: We recognises that an organisation and the relationship it has with its external providers are interdependent and a mutually beneficial relationship enhances the ability of both to create value.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "/home/runner/workspace/verification_inputs/Novus Quality Policy Statement v1.docx",
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_type": "Source",
+      "element_id": "S4687",
+      "payload": {
+        "source_id": "S4687",
+        "source_text": " \nOur policy is also to meet the requirements of our social, environmental, charitable and legislative responsibilities.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "/home/runner/workspace/verification_inputs/Novus Quality Policy Statement v1.docx",
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_type": "Source",
+      "element_id": "S4688",
+      "payload": {
+        "source_id": "S4688",
+        "source_text": "\n\nSigned : \t\t\t\t\t\t\tDate: 22/4/2025\n           \t\nDamian Shacklock\nDirector\nNOVUS MECHANICAL SERVICES LTD.\n",
+        "segmentation_context": "multi-line block",
+        "input_material_ref": "/home/runner/workspace/verification_inputs/Novus Quality Policy Statement v1.docx",
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_type": "SourceRegister",
+      "element_id": "SOURCE_REG001",
+      "payload": {
+        "register_id": "SOURCE_REG001",
+        "register_type": "Source",
+        "member_ids": [
+          "S4678",
+          "S4679",
+          "S4680",
+          "S4681",
+          "S4682",
+          "S4683",
+          "S4684",
+          "S4685",
+          "S4686",
+          "S4687",
+          "S4688"
+        ],
+        "completeness_rule": "This register SHALL contain the identifiers of ALL Source elements present in the ledger.",
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_type": "AnalysisPass",
+      "element_id": "P1684",
+      "payload": {
+        "pass_id": "P1684",
+        "pass_type": "Universal",
+        "mechanism": "SourceCapture",
+        "evaluated_scope": "All input material in this project",
+        "execution_status": "Success",
+        "mode_active": "LPM",
+        "declared_transformation_modes": [
+          "LPM"
+        ],
+        "outputs": {
+          "read_witness": {
+            "file_path": "/home/runner/workspace/verification_inputs/Novus Quality Policy Statement v1.docx",
+            "read_mode": "Full",
+            "byte_count": 1093980,
+            "input_hash": "236515dba508919355fff5da9a80b9b8f13ad8bbfe46707063ea2af68b8208ad",
+            "character_count": 1915,
+            "format_detected": "docx",
+            "partial_failure_detail": null,
+            "read_completion_status": true
+          },
+          "mechanism_data": {
+            "source_ids": [
+              "S4678",
+              "S4679",
+              "S4680",
+              "S4681",
+              "S4682",
+              "S4683",
+              "S4684",
+              "S4685",
+              "S4686",
+              "S4687",
+              "S4688"
+            ],
+            "source_count": 11,
+            "segment_count": 0,
+            "source_atom_count": 0,
+            "non_text_source_ids": [],
+            "cross_source_ordering": [],
+            "source_with_decoding_issues_ids": []
+          },
+          "mode_violations": []
+        },
+        "pass_started_at": "2026-06-06T10:21:28.467869+00:00",
+        "confidence": 1.0,
+        "pass_completed_at": "2026-06-06T10:21:31.661044+00:00",
+        "elapsed_ms": 3193
+      }
+    },
+    {
+      "element_type": "AnalysisPass",
+      "element_id": "P1685",
+      "payload": {
+        "pass_id": "P1685",
+        "pass_type": "Per-row",
+        "mechanism": "RowLensSourceReanalysis",
+        "evaluated_scope": "All Sources (Row 1)",
+        "execution_status": "Success",
+        "mode_active": "IM",
+        "declared_transformation_modes": [
+          "IM",
+          "DM",
+          "LPM"
+        ],
+        "outputs": {
+          "row_lens_data": {
+            "row_ref": 1,
+            "source_count": 11,
+            "out_of_scope_refs": [],
+            "out_of_scope_count": 0,
+            "ai_model_fingerprints": [
+              "claude-sonnet-4-5-20250929 (source batch 1)"
+            ],
+            "signal_count_produced": 11,
+            "concern_count_produced": 0,
+            "concern_threshold_used": 0.65
+          },
+          "mode_violations": []
+        },
+        "pass_started_at": "2026-06-06T10:21:33.639736+00:00",
+        "confidence": 0.8272727272727273,
+        "pass_completed_at": "2026-06-06T10:21:47.760533+00:00",
+        "elapsed_ms": 15169
+      }
+    },
+    {
+      "element_type": "Signal",
+      "element_id": "SG904",
+      "payload": {
+        "signal_id": "SG904",
+        "signal_type": "Intent",
+        "row_target": "1",
+        "description": "Establishes the foundational quality policy aligned with organizational purpose and context as a strategic framework.",
+        "source_refs": [
+          "S4678"
+        ],
+        "confidence": 0.85
+      }
+    },
+    {
+      "element_type": "Signal",
+      "element_id": "SG905",
+      "payload": {
+        "signal_id": "SG905",
+        "signal_type": "Intent",
+        "row_target": "1",
+        "description": "Articulates strategic commitment to satisfying stakeholder requirements and continuous improvement as core organizational objectives.",
+        "source_refs": [
+          "S4679"
+        ],
+        "confidence": 0.8
+      }
+    },
+    {
+      "element_type": "Signal",
+      "element_id": "SG906",
+      "payload": {
+        "signal_id": "SG906",
+        "signal_type": "Intent",
+        "row_target": "1",
+        "description": "Defines customer focus as a strategic motivation to understand needs and exceed expectations.",
+        "source_refs": [
+          "S4680"
+        ],
+        "confidence": 0.88
+      }
+    },
+    {
+      "element_type": "Signal",
+      "element_id": "SG907",
+      "payload": {
+        "signal_id": "SG907",
+        "signal_type": "Intent",
+        "row_target": "1",
+        "description": "Expresses leadership's strategic commitment to creating an environment that drives objective achievement through people engagement.",
+        "source_refs": [
+          "S4681"
+        ],
+        "confidence": 0.75
+      }
+    },
+    {
+      "element_type": "Signal",
+      "element_id": "SG908",
+      "payload": {
+        "signal_id": "SG908",
+        "signal_type": "Intent",
+        "row_target": "1",
+        "description": "Articulates organizational recognition that people enablement serves strategic business benefit and value creation.",
+        "source_refs": [
+          "S4682"
+        ],
+        "confidence": 0.82
+      }
+    },
+    {
+      "element_type": "Signal",
+      "element_id": "SG909",
+      "payload": {
+        "signal_id": "SG909",
+        "signal_type": "Intent",
+        "row_target": "1",
+        "description": "States strategic understanding that process-oriented management drives efficient achievement of desired results.",
+        "source_refs": [
+          "S4683"
+        ],
+        "confidence": 0.7
+      }
+    },
+    {
+      "element_type": "Signal",
+      "element_id": "SG910",
+      "payload": {
+        "signal_id": "SG910",
+        "signal_type": "Intent",
+        "row_target": "1",
+        "description": "Commits continual improvement as a primary strategic objective across the quality management system.",
+        "source_refs": [
+          "S4684"
+        ],
+        "confidence": 0.9
+      }
+    },
+    {
+      "element_type": "Signal",
+      "element_id": "SG911",
+      "payload": {
+        "signal_id": "SG911",
+        "signal_type": "Intent",
+        "row_target": "1",
+        "description": "Establishes evidence-based decision making as a strategic principle governing quality management system choices.",
+        "source_refs": [
+          "S4685"
+        ],
+        "confidence": 0.78
+      }
+    },
+    {
+      "element_type": "Signal",
+      "element_id": "SG912",
+      "payload": {
+        "signal_id": "SG912",
+        "signal_type": "Intent",
+        "row_target": "1",
+        "description": "Recognizes strategic value creation through mutually beneficial external provider relationships.",
+        "source_refs": [
+          "S4686"
+        ],
+        "confidence": 0.83
+      }
+    },
+    {
+      "element_type": "Signal",
+      "element_id": "SG913",
+      "payload": {
+        "signal_id": "SG913",
+        "signal_type": "Normative",
+        "row_target": "1",
+        "description": "Commits to meeting broader social, environmental, charitable, and legislative responsibilities as policy obligations.",
+        "source_refs": [
+          "S4687"
+        ],
+        "confidence": 0.87
+      }
+    },
+    {
+      "element_type": "Signal",
+      "element_id": "SG914",
+      "payload": {
+        "signal_id": "SG914",
+        "signal_type": "Actor",
+        "row_target": "1",
+        "description": "Identifies the authorizing director as the accountable executive stakeholder endorsing the quality policy framework.",
+        "source_refs": [
+          "S4688"
+        ],
+        "confidence": 0.92
+      }
+    },
+    {
+      "element_type": "SignalRegister",
+      "element_id": "SIGNAL_REG001",
+      "payload": {
+        "register_id": "SIGNAL_REG001",
+        "register_type": "Signal",
+        "member_ids": [
+          "SG904",
+          "SG905",
+          "SG906",
+          "SG907",
+          "SG908",
+          "SG909",
+          "SG910",
+          "SG911",
+          "SG912",
+          "SG913",
+          "SG914"
+        ],
+        "completeness_rule": "This register SHALL contain the identifiers of ALL Signal elements present in the ledger.",
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_type": "Stakeholder",
+      "element_id": "SH001",
+      "payload": {
+        "stakeholder_id": "SH001",
+        "name": "Practitioner SH001",
+        "role": "practitioner",
+        "stakeholder_kind": "Automated"
+      }
+    },
+    {
+      "element_type": "StakeholderRegister",
+      "element_id": "STAKEHOLDER_REG001",
+      "payload": {
+        "register_id": "STAKEHOLDER_REG001",
+        "register_type": "Stakeholder",
+        "member_ids": [
+          "SH001"
+        ],
+        "completeness_rule": "This register SHALL contain the identifiers of ALL Stakeholder elements present in the ledger.",
+        "confidence": 1.0
+      }
+    }
+  ],
+  "register_index": [
+    {
+      "register_type": "SignalRegister",
+      "register_id": "SIGNAL_REG001"
+    },
+    {
+      "register_type": "SourceRegister",
+      "register_id": "SOURCE_REG001"
+    },
+    {
+      "register_type": "StakeholderRegister",
+      "register_id": "STAKEHOLDER_REG001"
+    }
+  ],
+  "content_hash": {
+    "hash_alg": "sha256",
+    "hash": "e273d2615e489f95528bdf01876471b53a03fdbe7f39033270bd5ac7ebb0be9a"
+  }
+}

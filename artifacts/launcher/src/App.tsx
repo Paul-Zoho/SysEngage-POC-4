@@ -210,9 +210,9 @@ export default function App() {
 
       {/* Snapshot */}
       <label style={{ ...labelStyle, display: "block", marginBottom: 20 }}>
-        Source Snapshot <span style={{ color: "#9ca3af", fontWeight: 400 }}>(leave blank to run against current DB)</span>
+        Source Snapshot <span style={{ color: "#9ca3af", fontWeight: 400 }}>(leave blank to clone fresh from primary branch)</span>
         <select style={{ ...inputStyle, width: "100%" }} value={snapshot} onChange={e => setSnapshot(e.target.value)}>
-          <option value="">— current DB (no branch clone) —</option>
+          <option value="">— clone fresh branch from primary (safe default) —</option>
           {snapshots.map(s => (
             <option key={s.name} value={s.name} title={s.state_description}>
               {s.name} — {s.state_description.slice(0, 80)}{s.state_description.length > 80 ? "…" : ""}

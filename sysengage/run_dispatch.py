@@ -113,37 +113,41 @@ print(flush=True)
 
 import branch_manager as bm  # noqa: E402  (safe — does not import core.db)
 
-if SNAPSHOT:
-    neon_project = bm._get_project_id()
-    test_branch_name = f"test_dispatch_{PROJECT_CODE}_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}"
+neon_project = bm._get_project_id()
+test_branch_name = f"test_dispatch_{PROJECT_CODE}_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}"
 
+if SNAPSHOT:
     print(SEP, flush=True)
     print(f"[dispatch] Cloning snapshot {SNAPSHOT!r} → {test_branch_name}", flush=True)
     print(SEP, flush=True)
 
-    snap_branch = bm._find_branch_by_name(neon_project, SNAPSHOT)
-    if not snap_branch:
+    parent_branch = bm._find_branch_by_name(neon_project, SNAPSHOT)
+    if not parent_branch:
         print(f"[dispatch] ERROR: snapshot branch '{SNAPSHOT}' not found in Neon.", file=sys.stderr, flush=True)
         sys.exit(1)
 
-    test_branch_id, conn_str = bm._create_branch(neon_project, test_branch_name, snap_branch["id"])
-    print(f"[dispatch]   Created branch : {test_branch_id}", flush=True)
-    print(f"[dispatch]   Branch name    : {test_branch_name}", flush=True)
-
-    if not conn_str or not (conn_str.startswith("postgresql://") or conn_str.startswith("postgres://")):
-        print(f"[dispatch] ERROR: invalid connection string from Neon: {conn_str!r}", file=sys.stderr, flush=True)
-        bm._delete_branch(neon_project, test_branch_id)
-        sys.exit(1)
-
-    os.environ["NEON_DATABASE_URL"] = conn_str
-    print("[dispatch]   NEON_DATABASE_URL → test branch", flush=True)
-    print(flush=True)
+    parent_label = f"snapshot '{SNAPSHOT}'"
 else:
-    test_branch_id = None
-    test_branch_name = None
-    neon_project = None
-    print("[dispatch] No snapshot — running against current NEON_DATABASE_URL.", flush=True)
-    print(flush=True)
+    print(SEP, flush=True)
+    print(f"[dispatch] No snapshot selected — cloning from primary branch → {test_branch_name}", flush=True)
+    print(SEP, flush=True)
+
+    parent_branch = bm._get_primary_branch(neon_project)
+    parent_label = f"primary branch '{parent_branch['name']}'"
+
+test_branch_id, conn_str = bm._create_branch(neon_project, test_branch_name, parent_branch["id"])
+print(f"[dispatch]   Parent         : {parent_label}", flush=True)
+print(f"[dispatch]   Created branch : {test_branch_id}", flush=True)
+print(f"[dispatch]   Branch name    : {test_branch_name}", flush=True)
+
+if not conn_str or not (conn_str.startswith("postgresql://") or conn_str.startswith("postgres://")):
+    print(f"[dispatch] ERROR: invalid connection string from Neon: {conn_str!r}", file=sys.stderr, flush=True)
+    bm._delete_branch(neon_project, test_branch_id)
+    sys.exit(1)
+
+os.environ["NEON_DATABASE_URL"] = conn_str
+print("[dispatch]   NEON_DATABASE_URL → test branch", flush=True)
+print(flush=True)
 
 # ---------------------------------------------------------------------------
 # Step 2 — deferred mechanism imports (engine binds to URL set above)
