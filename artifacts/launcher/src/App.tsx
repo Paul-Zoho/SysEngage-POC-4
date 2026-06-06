@@ -207,7 +207,7 @@ function LaunchPage() {
           <option value="">— clone fresh branch from primary (safe default) —</option>
           {snapshots.map(s => (
             <option key={s.name} value={s.name} title={s.state_description}>
-              {s.name} — {s.state_description.slice(0, 80)}{s.state_description.length > 80 ? "…" : ""}
+              {s.name}{s.state_description ? ` — ${s.state_description.slice(0, 80)}${s.state_description.length > 80 ? "…" : ""}` : ""}
             </option>
           ))}
         </select>
