@@ -115,8 +115,8 @@ def execute_merge(
         new_refs = [survivor_id if r == merged_id else r for r in old_refs]
         session.execute(
             text("UPDATE requirement SET refines_refs = CAST(:refs AS jsonb) "
-                 "WHERE requirement_id = :rid"),
-            {"refs": json.dumps(new_refs), "rid": dep["requirement_id"]},
+                 "WHERE requirement_id = :rid AND project_id = :pid"),
+            {"refs": json.dumps(new_refs), "rid": dep["requirement_id"], "pid": project_id},
         )
         repointed_count += 1
 
