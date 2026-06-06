@@ -2,6 +2,15 @@ import { useEffect, useRef, useState, useCallback } from "react";
 
 const API = "/api";
 
+async function fetchWithRetry(url: string, retries = 5, delayMs = 800): Promise<Response> {
+  for (let i = 0; i < retries; i++) {
+    const resp = await fetch(url);
+    if (resp.ok) return resp;
+    if (i < retries - 1) await new Promise(r => setTimeout(r, delayMs * (i + 1)));
+  }
+  throw new Error(`Failed to fetch ${url} after ${retries} attempts`);
+}
+
 interface Snapshot {
   name: string;
   project_id: string;
@@ -46,14 +55,16 @@ export default function App() {
   const esRef = useRef<EventSource | null>(null);
 
   const fetchOutputs = useCallback(() => {
-    fetch(`${API}/outputs`).then(r => r.json()).then(setOutputs).catch(() => {});
+    fetchWithRetry(`${API}/outputs`).then(r => r.json()).then(setOutputs).catch(() => {});
   }, []);
 
-  useEffect(() => {
-    fetch(`${API}/snapshots`).then(r => r.json()).then(setSnapshots).catch(() => {});
-    fetch(`${API}/inputs`).then(r => r.json()).then(setInputs).catch(() => {});
+  const reloadConfig = useCallback(() => {
+    fetchWithRetry(`${API}/snapshots`).then(r => r.json()).then(setSnapshots).catch(() => {});
+    fetchWithRetry(`${API}/inputs`).then(r => r.json()).then(setInputs).catch(() => {});
     fetchOutputs();
   }, [fetchOutputs]);
+
+  useEffect(() => { reloadConfig(); }, [reloadConfig]);
 
   useEffect(() => {
     if (logRef.current) {
@@ -160,8 +171,16 @@ export default function App() {
 
   return (
     <div style={{ fontFamily: "system-ui, -apple-system, sans-serif", maxWidth: 900, margin: "0 auto", padding: "24px 16px", color: "#111" }}>
-      <h1 style={{ fontSize: 22, fontWeight: 700, marginBottom: 4 }}>SysEngage Run Launcher</h1>
-      <p style={{ color: "#6b7280", fontSize: 13, marginBottom: 24, marginTop: 0 }}>
+      <div style={{ display: "flex", alignItems: "baseline", gap: 12, marginBottom: 4 }}>
+        <h1 style={{ fontSize: 22, fontWeight: 700, margin: 0 }}>SysEngage Run Launcher</h1>
+        <button
+          onClick={reloadConfig}
+          style={{ fontSize: 12, color: "#2563eb", background: "none", border: "none", cursor: "pointer", padding: "2px 6px" }}
+        >
+          ↻ Reload dropdowns
+        </button>
+      </div>
+      <p style={{ color: "#6b7280", fontSize: 13, marginBottom: 24, marginTop: 4 }}>
         Select configuration, then click Run. Passes run in order; if upstream state is missing on the branch the pass produces nothing.
       </p>
 
