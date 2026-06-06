@@ -101,19 +101,15 @@ def _substitute_row2_reqs(
     Replace target project's Row 2 requirements with R11's Row 2 requirements.
 
     To avoid primary-key conflicts (R11's Row 2 IDs can overlap with the target
-    project's Row 1 IDs, e.g. R12 Row 1 spans R001–R019, conflicting with R11
-    Row 2 R018/R019), we always remap source IDs to a safe high range:
-      R901, R902, R903, … (one per source requirement in sorted order).
+    project's Row 1 IDs), source IDs are remapped to the next available IDs in
+    the global requirement table (irrespective of project).  E.g. if the highest
+    existing ID across all projects is R042, the substituted reqs become R043,
+    R044, …  Gaps within a project are intentional and inconsequential.
 
     Returns id_map: {db_id: original_r11_id} so callers can normalize results
     back to R11 IDs for cross-baseline comparison.
     """
-    # Build id_map BEFORE opening the DB session (pure Python, no DB needed)
     sorted_source = sorted(source_reqs, key=lambda r: r["requirement_id"])
-    id_map: dict[str, str] = {}  # db_id → original_r11_id
-    for i, req in enumerate(sorted_source, start=901):
-        new_id = f"R{i}"
-        id_map[new_id] = req["requirement_id"]
 
     s = get_session()
     try:
@@ -161,6 +157,23 @@ def _substitute_row2_reqs(
         )
         s.flush()
 
+        # Find the next available ID globally across the whole requirement table.
+        # Using global max means IDs are unique table-wide; gaps within a project are fine.
+        row = s.execute(
+            text(
+                "SELECT COALESCE(MAX(CAST(SUBSTRING(requirement_id FROM 2) AS INTEGER)), 0) "
+                "FROM requirement "
+                "WHERE requirement_id ~ '^R[0-9]+$'"
+            )
+        ).fetchone()
+        next_num = (row[0] if row else 0) + 1
+
+        # Build id_map now that we know the safe starting number
+        id_map: dict[str, str] = {}  # db_id → original_r11_id
+        for i, req in enumerate(sorted_source):
+            new_id = f"R{next_num + i:03d}"
+            id_map[new_id] = req["requirement_id"]
+
         # Insert R11's active Row 2 requirements under target project_id using remapped IDs
         inserted = 0
         reverse_map = {v: k for k, v in id_map.items()}  # original_r11_id → db_id
@@ -196,9 +209,10 @@ def _substitute_row2_reqs(
             inserted += 1
 
         s.commit()
+        last_id = f"R{next_num + inserted - 1:03d}"
         print(
             f"[attr-worker]   Substituted {inserted} R11 Row 2 requirements into "
-            f"{target_project_id} (IDs R901–R{900 + inserted}).",
+            f"{target_project_id} (IDs R{next_num:03d}–{last_id}).",
             flush=True,
         )
     except Exception:
