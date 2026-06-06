@@ -1,74 +1,67 @@
 """
 Gap record production for the Requirement Matching service.
 
-Per Requirement Matching Spec v0.1 §4.6 (F86, F84).
+Per Requirement Matching Service Spec v0.2 §4.6 (F86, F84).
+
+v0.2 change (D-rm-4 reversal): gap records are now entries in
+outputs.mechanism_data.gap_records inside the per-execution AnalysisPass,
+NOT rows in a requirement_gap_record DB table.  These functions return dicts;
+the caller (service.py) passes them to the ProvAccumulator.
 
 Upward gap (child-orphan):
-  A row n>1 requirement with empty refines_refs after matching → write an
+  A row n>1 requirement with empty refines_refs after matching → emit an
   upward gap record for GQA to consider. Row 1 exception: empty refines_refs
   at Row 1 is correct (top of the hierarchy) → no upward gap.
 
 Downward gap (parent-orphan):
-  After matching a row, any row n-1 requirement that no row n requirement refines
-  → write a downward gap record. This is the bidirectional half (Row 3 §4.2).
+  After matching a row, any row n-1 requirement that no row n requirement
+  refines → emit a downward gap record.
 
 Both are records for gap analysis; neither is auto-fixed here.
-Gap records may later promote to canonical Gap elements when GQA consumes them.
 """
 
 from __future__ import annotations
 
 import logging
-from datetime import datetime, timezone
-
-from sqlalchemy.orm import Session
-from sqlalchemy import text
 
 _log = logging.getLogger(__name__)
 
 
-def write_upward_gap(
-    session: Session,
+def make_upward_gap_record(
     *,
     requirement_id: str,
-    row_target: str,
+    row_target: str | int,
     project_id: str | None = None,
-) -> None:
+) -> dict | None:
     """
-    Write an upward gap record (child-orphan, no refines_refs after matching).
-
-    Skip if row_target == '1' (Row 1 top — empty is correct, per spec §4.6).
+    Return an upward gap record dict (child-orphan, no refines_refs after matching).
+    Returns None for row 1 — empty refines_refs is correct there (per spec §4.6).
     """
     if str(row_target) == "1":
-        return
-    session.execute(
-        text(
-            "INSERT INTO requirement_gap_record (direction, requirement_id, project_id, row_target, created_at) "
-            "VALUES ('upward', :rid, :pid, :row, :now)"
-        ),
-        {"rid": requirement_id, "pid": project_id, "row": str(row_target), "now": datetime.now(timezone.utc)},
-    )
-    _log.info("Upward gap written for %s/%s (row %s)", project_id, requirement_id, row_target)
+        return None
+    _log.info("Upward gap emitted for %s/%s (row %s)", project_id, requirement_id, row_target)
+    return {
+        "direction": "upward",
+        "requirement_id": requirement_id,
+        "row_target": str(row_target),
+    }
 
 
-def write_downward_gap(
-    session: Session,
+def make_downward_gap_record(
     *,
     requirement_id: str,
-    row_target: str,
+    row_target: str | int,
     project_id: str | None = None,
-) -> None:
+) -> dict:
     """
-    Write a downward gap record (parent-orphan, nothing below refines this).
+    Return a downward gap record dict (parent-orphan, nothing below refines this).
     """
-    session.execute(
-        text(
-            "INSERT INTO requirement_gap_record (direction, requirement_id, project_id, row_target, created_at) "
-            "VALUES ('downward', :rid, :pid, :row, :now)"
-        ),
-        {"rid": requirement_id, "pid": project_id, "row": str(row_target), "now": datetime.now(timezone.utc)},
-    )
-    _log.info("Downward gap written for %s/%s (row %s)", project_id, requirement_id, row_target)
+    _log.info("Downward gap emitted for %s/%s (row %s)", project_id, requirement_id, row_target)
+    return {
+        "direction": "downward",
+        "requirement_id": requirement_id,
+        "row_target": str(row_target),
+    }
 
 
 def compute_downward_gaps(

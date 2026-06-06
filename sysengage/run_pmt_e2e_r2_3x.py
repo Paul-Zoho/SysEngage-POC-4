@@ -155,19 +155,21 @@ from sqlalchemy import text
 # ---------------------------------------------------------------------------
 
 def _matching_already_done(project_id: str, row_n: int) -> bool:
-    """Return True if Matching has already run for row_n requirements in this project."""
+    """Return True if a completed RequirementMatching AnalysisPass exists for this row (v0.2)."""
     s = get_session()
     try:
-        count = s.execute(
+        scope = f"Row {row_n} requirements matched against Row {row_n - 1}"
+        row = s.execute(
             text(
-                "SELECT count(*) FROM requirement_matching_log rml "
-                "JOIN requirement r ON rml.requirement_id = r.requirement_id "
-                "  AND rml.project_id = r.project_id "
-                "WHERE rml.project_id = :p AND r.row_target = :row"
+                "SELECT pass_id FROM analysis_pass "
+                "WHERE project_id = :p AND mechanism = 'RequirementMatching' "
+                "AND evaluated_scope = :scope "
+                "AND execution_status IN ('Completed','CompletedWithWarnings') "
+                "LIMIT 1"
             ),
-            {"p": project_id, "row": str(row_n)},
-        ).scalar()
-        return (count or 0) > 0
+            {"p": project_id, "scope": scope},
+        ).fetchone()
+        return row is not None
     finally:
         s.close()
 

@@ -1,9 +1,9 @@
 """
 IM matching judgement for the Requirement Matching service.
 
-Per Requirement Matching Spec v0.1 §4.2 (D-rm-1, D-rm-2).
+Per Requirement Matching Service Spec v0.2 §4.2 (D-rm-1, D-rm-2).
 
-judge() decides for each child requirement:
+judge_refine / judge_duplicate decide for each child requirement:
   - Against cross-row candidate_parents (row n-1): refine vs none.
   - Against same-row candidate_siblings: duplicate vs none.
 
@@ -12,6 +12,9 @@ Judgement is abstraction-level reasoning anchored on the shared DD entity.
 
 One retry on malformed output; persistent failure → flagged (D-rm-3 fail-safe,
 never auto-link on error).
+
+v0.2: each call returns a _fingerprint dict (model, type, called_at) so the
+ProvAccumulator can record ai_model_fingerprints in the AnalysisPass.
 """
 
 from __future__ import annotations
@@ -19,6 +22,7 @@ from __future__ import annotations
 import json
 import logging
 import re
+from datetime import datetime, timezone
 from typing import Any
 
 from core.ai_client import MODEL, get_ai_client
@@ -92,6 +96,14 @@ def _format_req_list(reqs: list[dict]) -> str:
     ) or "  (none)"
 
 
+def _make_fingerprint(judge_type: str) -> dict[str, str]:
+    return {
+        "model": MODEL,
+        "type": judge_type,
+        "called_at": datetime.now(timezone.utc).isoformat(),
+    }
+
+
 def judge_refine(
     *,
     child: dict,
@@ -100,14 +112,8 @@ def judge_refine(
     """
     Judge whether child refines one or more of candidate_parents.
 
-    Parameters
-    ----------
-    child             : {requirement_id, statement, row_target}
-    candidate_parents : list of {requirement_id, statement, row_target}
-
-    Returns
-    -------
-    dict: outcome, matched_parent_ids, confidence, is_multi_parent, rationale
+    Returns dict with keys: outcome, matched_parent_ids, confidence,
+    is_multi_parent, rationale, _fingerprints (list[dict]).
     May include _judge_failed=True on persistent AI failure.
     """
     if not candidate_parents:
@@ -117,6 +123,7 @@ def judge_refine(
             "confidence": 1.0,
             "is_multi_parent": False,
             "rationale": "No candidate parents to compare against",
+            "_fingerprints": [],
         }
 
     client = get_ai_client()
@@ -130,7 +137,11 @@ def judge_refine(
         margin=MULTI_PARENT_MARGIN,
     )
 
+    fingerprints: list[dict] = []
+
     def _call() -> dict:
+        fp = _make_fingerprint("judge_refine")
+        fingerprints.append(fp)
         msg = client.messages.create(
             model=MODEL,
             max_tokens=512,
@@ -143,12 +154,14 @@ def judge_refine(
     try:
         result = _call()
         _validate_refine_output(result)
+        result["_fingerprints"] = fingerprints
         return result
     except Exception as exc1:
         _log.warning("judge_refine first attempt failed: %s", exc1)
         try:
             result = _call()
             _validate_refine_output(result)
+            result["_fingerprints"] = fingerprints
             return result
         except Exception as exc2:
             _log.error("judge_refine persistent failure: %s", exc2)
@@ -158,6 +171,7 @@ def judge_refine(
                 "confidence": 0.0,
                 "is_multi_parent": False,
                 "rationale": f"AI judge failed: {exc2}",
+                "_fingerprints": fingerprints,
                 "_judge_failed": True,
             }
 
@@ -170,14 +184,8 @@ def judge_duplicate(
     """
     Judge whether child duplicates one of candidate_siblings.
 
-    Parameters
-    ----------
-    child              : {requirement_id, statement, row_target}
-    candidate_siblings : list of {requirement_id, statement, row_target}
-
-    Returns
-    -------
-    dict: outcome, duplicate_of, confidence, rationale
+    Returns dict with keys: outcome, duplicate_of, confidence,
+    rationale, _fingerprints (list[dict]).
     May include _judge_failed=True on persistent AI failure.
     """
     if not candidate_siblings:
@@ -186,6 +194,7 @@ def judge_duplicate(
             "duplicate_of": None,
             "confidence": 1.0,
             "rationale": "No candidate siblings to compare against",
+            "_fingerprints": [],
         }
 
     client = get_ai_client()
@@ -196,7 +205,11 @@ def judge_duplicate(
         sibling_text=_format_req_list(candidate_siblings),
     )
 
+    fingerprints: list[dict] = []
+
     def _call() -> dict:
+        fp = _make_fingerprint("judge_duplicate")
+        fingerprints.append(fp)
         msg = client.messages.create(
             model=MODEL,
             max_tokens=512,
@@ -209,12 +222,14 @@ def judge_duplicate(
     try:
         result = _call()
         _validate_duplicate_output(result)
+        result["_fingerprints"] = fingerprints
         return result
     except Exception as exc1:
         _log.warning("judge_duplicate first attempt failed: %s", exc1)
         try:
             result = _call()
             _validate_duplicate_output(result)
+            result["_fingerprints"] = fingerprints
             return result
         except Exception as exc2:
             _log.error("judge_duplicate persistent failure: %s", exc2)
@@ -223,6 +238,7 @@ def judge_duplicate(
                 "duplicate_of": None,
                 "confidence": 0.0,
                 "rationale": f"AI judge failed: {exc2}",
+                "_fingerprints": fingerprints,
                 "_judge_failed": True,
             }
 

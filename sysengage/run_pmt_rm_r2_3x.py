@@ -16,9 +16,8 @@ Workflow
 
 Design notes
 ------------
-- Matching is a standalone service, not a numbered pass — idempotency is
-  checked against requirement_matching_log (any rows for Row 2 requirements
-  on this project means Matching already ran).
+- Matching is a standalone service — idempotency is checked against
+  analysis_pass (mechanism='RequirementMatching'; v0.2 AnalysisPass provenance).
 - candidates.py falls back to the full same-row / parent-row pool when
   object_term is absent (acceptable; DD pre-filter is an optimisation).
 - Row 1 is a no-op per VER-rm-02: match_row skips it automatically.
@@ -167,23 +166,23 @@ print(flush=True)
 
 def _matching_already_done(project_id: str, row_n: int) -> bool:
     """
-    Return True if Matching has already run for row_n requirements in this project.
-
-    Uses rml.project_id (added in migration 023) to avoid cross-project
-    collisions when multiple projects share requirement_id values (e.g. R018).
+    Return True if a completed RequirementMatching AnalysisPass exists for
+    this project / row (v0.2: provenance in analysis_pass, not service-log tables).
     """
     s = get_session()
     try:
-        count = s.execute(
+        scope = f"Row {row_n} requirements matched against Row {row_n - 1}"
+        row = s.execute(
             text(
-                "SELECT count(*) FROM requirement_matching_log rml "
-                "JOIN requirement r "
-                "  ON r.requirement_id = rml.requirement_id AND r.project_id = rml.project_id "
-                "WHERE rml.project_id = :pid AND r.row_target = :row"
+                "SELECT pass_id FROM analysis_pass "
+                "WHERE project_id = :pid AND mechanism = 'RequirementMatching' "
+                "AND evaluated_scope = :scope "
+                "AND execution_status IN ('Completed','CompletedWithWarnings') "
+                "LIMIT 1"
             ),
-            {"pid": project_id, "row": str(row_n)},
-        ).scalar()
-        return (count or 0) > 0
+            {"pid": project_id, "scope": scope},
+        ).fetchone()
+        return row is not None
     finally:
         s.close()
 
@@ -211,41 +210,46 @@ def _run_matching(project_id: str, run_label: int) -> dict[str, Any]:
 
     if _matching_already_done(project_id, ROW):
         print(
-            f"{rm_tag}   SKIP — Matching log entries already exist for Row {ROW}.",
+            f"{rm_tag}   SKIP — RequirementMatching AnalysisPass already exists for Row {ROW}.",
             flush=True,
         )
-        # Return a dummy summary so the export step can continue
+        # Read counts from the existing AnalysisPass mechanism_data (v0.2)
         s = get_session()
         try:
-            _join = (
-                "JOIN requirement r "
-                "  ON r.requirement_id = rml.requirement_id AND r.project_id = rml.project_id "
-            )
-            _where = "WHERE rml.project_id = :pid AND r.row_target = :row"
-            _params = {"pid": project_id, "row": str(ROW)}
-            total = s.execute(
-                text(f"SELECT count(*) FROM requirement_matching_log rml {_join} {_where}"),
-                _params,
-            ).scalar() or 0
-            refine_count = s.execute(
-                text(f"SELECT count(*) FROM requirement_matching_log rml {_join} {_where} AND rml.outcome = 'refine'"),
-                _params,
-            ).scalar() or 0
-            no_match_count = s.execute(
-                text(f"SELECT count(*) FROM requirement_matching_log rml {_join} {_where} AND rml.outcome = 'no_match'"),
-                _params,
-            ).scalar() or 0
+            scope = f"Row {ROW} requirements matched against Row {ROW - 1}"
+            row = s.execute(
+                text(
+                    "SELECT outputs->'mechanism_data'->'counts' AS counts "
+                    "FROM analysis_pass "
+                    "WHERE project_id = :pid AND mechanism = 'RequirementMatching' "
+                    "AND evaluated_scope = :scope "
+                    "AND execution_status IN ('Completed','CompletedWithWarnings') "
+                    "ORDER BY created_at DESC LIMIT 1"
+                ),
+                {"pid": project_id, "scope": scope},
+            ).fetchone()
         finally:
             s.close()
-        print(f"{rm_tag}   (existing)  total={total}  refine={refine_count}  no_match={no_match_count}", flush=True)
+        counts = dict(row[0]) if row and row[0] else {}
+        total       = counts.get("processed", 0)
+        refine_count    = counts.get("refine_link", 0)
+        no_match_count  = counts.get("no_match", 0)
+        flagged_count   = counts.get("flagged", 0)
+        duplicate_count = counts.get("duplicate_merge", 0)
+        deferred_count  = counts.get("deferred", 0)
+        print(
+            f"{rm_tag}   (existing)  total={total}  refine={refine_count}"
+            f"  no_match={no_match_count}  flagged={flagged_count}",
+            flush=True,
+        )
         return {
             "row_matched": ROW,
             "total": total,
             "refine_count": refine_count,
             "no_match_count": no_match_count,
-            "flagged_count": 0,
-            "duplicate_count": 0,
-            "deferred_count": 0,
+            "flagged_count": flagged_count,
+            "duplicate_count": duplicate_count,
+            "deferred_count": deferred_count,
             "downward_gap_count": 0,
             "_skipped": True,
         }

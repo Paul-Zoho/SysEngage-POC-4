@@ -158,8 +158,8 @@ def _reset_r11_row2(label: str) -> None:
     Restores:
       - retired_at to the value it had in the source snapshot (undoes merge retirements)
       - refines_refs → [] on ALL Row 2 requirements
-      - requirement_matching_log entries deleted
-      - requirement_gap_record entries for Row 2 reqs deleted
+      - RequirementMatching AnalysisPasses for this project deleted
+        (v0.2: provenance lives in analysis_pass, not service-log tables)
     """
     s = get_session()
     try:
@@ -191,28 +191,15 @@ def _reset_r11_row2(label: str) -> None:
             {"pid": PROJECT_ID},
         )
 
-        # 3. Delete matching log for this project
+        # 3. Delete RequirementMatching AnalysisPasses so idempotency check
+        #    treats Row 2 as not-yet-matched (v0.2 — no service-log tables).
         s.execute(
-            text("DELETE FROM requirement_matching_log WHERE project_id = :pid"),
+            text(
+                "DELETE FROM analysis_pass "
+                "WHERE project_id = :pid AND mechanism = 'RequirementMatching'"
+            ),
             {"pid": PROJECT_ID},
         )
-
-        # 4. Delete gap records for this project's Row 2 reqs
-        if _initial_retired:
-            placeholders = ", ".join(f":rid{i}" for i in range(len(_initial_retired)))
-            rid_params = {f"rid{i}": v for i, v in enumerate(_initial_retired.keys())}
-            s.execute(
-                text(
-                    f"DELETE FROM requirement_gap_record "
-                    f"WHERE project_id = :pid OR requirement_id IN ({placeholders})"
-                ),
-                {"pid": PROJECT_ID, **rid_params},
-            )
-        else:
-            s.execute(
-                text("DELETE FROM requirement_gap_record WHERE project_id = :pid"),
-                {"pid": PROJECT_ID},
-            )
 
         s.commit()
 

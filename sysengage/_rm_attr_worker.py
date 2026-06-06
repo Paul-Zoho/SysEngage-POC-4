@@ -59,8 +59,8 @@ def _reset_matching_state(project_id: str) -> None:
     """
     Clear Row 2 matching state for project_id:
       - refines_refs → [] on all Row 2 requirements
-      - requirement_matching_log rows for project_id
-      - requirement_gap_record rows whose requirement_id belongs to project_id Row 2
+      - RequirementMatching AnalysisPasses for this project deleted
+        (v0.2: provenance lives in analysis_pass, not service-log tables)
     """
     s = get_session()
     try:
@@ -72,16 +72,9 @@ def _reset_matching_state(project_id: str) -> None:
             {"pid": project_id},
         )
         s.execute(
-            text("DELETE FROM requirement_matching_log WHERE project_id = :pid"),
-            {"pid": project_id},
-        )
-        s.execute(
             text(
-                "DELETE FROM requirement_gap_record "
-                "WHERE requirement_id IN ("
-                "  SELECT requirement_id FROM requirement "
-                "  WHERE project_id = :pid AND row_target = '2'"
-                ")"
+                "DELETE FROM analysis_pass "
+                "WHERE project_id = :pid AND mechanism = 'RequirementMatching'"
             ),
             {"pid": project_id},
         )
@@ -113,41 +106,17 @@ def _substitute_row2_reqs(
 
     s = get_session()
     try:
-        # Collect existing Row 2 requirement IDs before deleting (so gap cleanup can use them)
-        existing_row2_ids: list[str] = [
-            row[0]
-            for row in s.execute(
-                text(
-                    "SELECT requirement_id FROM requirement "
-                    "WHERE project_id = :pid AND row_target = '2'"
-                ),
-                {"pid": target_project_id},
-            ).fetchall()
-        ]
-
-        # Delete gap records: rows with project_id match OR rows with matching requirement_id
-        # (handles pre-fix rows that have project_id = NULL in the 3e snapshot)
-        if existing_row2_ids:
-            placeholders = ", ".join(f":rid{i}" for i in range(len(existing_row2_ids)))
-            rid_params = {f"rid{i}": v for i, v in enumerate(existing_row2_ids)}
-            s.execute(
-                text(
-                    f"DELETE FROM requirement_gap_record "
-                    f"WHERE project_id = :pid OR requirement_id IN ({placeholders})"
-                ),
-                {"pid": target_project_id, **rid_params},
-            )
-        else:
-            s.execute(
-                text("DELETE FROM requirement_gap_record WHERE project_id = :pid"),
-                {"pid": target_project_id},
-            )
-
-        # Delete matching log + Row 2 requirements
+        # Delete RequirementMatching AnalysisPasses for this project
+        # (v0.2: provenance lives in analysis_pass, not service-log tables)
         s.execute(
-            text("DELETE FROM requirement_matching_log WHERE project_id = :pid"),
+            text(
+                "DELETE FROM analysis_pass "
+                "WHERE project_id = :pid AND mechanism = 'RequirementMatching'"
+            ),
             {"pid": target_project_id},
         )
+
+        # Delete Row 2 requirements
         s.execute(
             text(
                 "DELETE FROM requirement "

@@ -215,18 +215,21 @@ def _pass_done(mechanism: str, scope: str) -> str | None:
 
 
 def _matching_done(row_n: int) -> bool:
+    """Check for a completed RequirementMatching AnalysisPass for this row (v0.2)."""
     s = get_session()
     try:
-        n = s.execute(
+        scope = f"Row {row_n} requirements matched against Row {row_n - 1}"
+        row = s.execute(
             text(
-                "SELECT count(*) FROM requirement_matching_log rml "
-                "JOIN requirement r ON r.requirement_id = rml.requirement_id "
-                "  AND r.project_id = rml.project_id "
-                "WHERE rml.project_id = :pid AND r.row_target = :row"
+                "SELECT pass_id FROM analysis_pass "
+                "WHERE project_id = :p AND mechanism = 'RequirementMatching' "
+                "AND evaluated_scope = :scope "
+                "AND execution_status IN ('Completed','CompletedWithWarnings') "
+                "LIMIT 1"
             ),
-            {"pid": PROJECT_ID, "row": str(row_n)},
-        ).scalar()
-        return (n or 0) > 0
+            {"p": PROJECT_ID, "scope": scope},
+        ).fetchone()
+        return row is not None
     finally:
         s.close()
 
