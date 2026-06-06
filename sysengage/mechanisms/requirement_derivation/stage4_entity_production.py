@@ -1,21 +1,27 @@
 """
 Stage 4 — Entity Production and Ledger Commit (DM).
 
-Per Requirement Derivation Mechanism Spec v0.6 §4.4:
+Per Requirement Derivation Mechanism Spec v0.7 §4.4:
   4.4.1  requirement_id allocation (global per-project R###, includes retired).
   4.4.2  domain_refs DM-derivation (MD-2): intersect cci_refs with active Domain
          memberships; assert ≥1 domain_ref. Fail-closed if empty.
   4.4.3  Requirement entity construction (all spec §5.1 columns).
+  4.4.3a DD Object-slot binding (v0.7, DM): for each surviving proposal, extract
+         Functional Objects, Structural entities/elements, asserted relationships,
+         and named Constraint values; present each to the DD service via
+         resolve_and_record / record_relationship / record_value; build dd_binding
+         audit block in mechanism_data. No AI call; no fingerprint on this pass.
   4.4.4  FullRerun retirement (retired_at = now() on prior active Requirements).
   4.4.5  downstream_rerun_required: check Phase 5/6/8 AnalysisPasses.
-  4.4.6  Single transaction: retire (FullRerun), insert Requirements, replace
-         RequirementRegister.member_ids (project-wide), write AnalysisPass.
+  4.4.6  Single transaction: retire (FullRerun), insert Requirements, DD binding
+         (own sessions), replace RequirementRegister.member_ids (project-wide),
+         write AnalysisPass.
 
 Note: F80 disposition — domain_refs are derived by domain_id, never by name.
 Cross-row Domain name duplication (NQPS "Quality Governance" at Row 1 and Row 2)
 is harmless to derivation. F80 left Open per D5.
 
-No AI calls. DM mode only.
+No AI calls in Stage 4. DM mode only.
 """
 
 from __future__ import annotations
@@ -30,6 +36,12 @@ from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 from core.db import format_identifier, get_next_sequence_value
+from core.slots import extract_slot_terms
+from mechanisms.data_dictionary.service import (
+    record_relationship,
+    record_value,
+    resolve_and_record,
+)
 from mechanisms.requirement_derivation.stage1_preflight import ActiveDomain, Stage1Result
 from mechanisms.requirement_derivation.stage2_ai_derivation import Stage2Result
 from mechanisms.requirement_derivation.stage3_structural_validation import Stage3Result, TaggedProposal
@@ -38,6 +50,7 @@ from models.concern import ConcernModel
 _log = logging.getLogger(__name__)
 
 _JACCARD_THRESHOLD = 0.50
+_MIN_TERM_LEN = 2  # minimum character length for a term to be worth presenting to DD
 
 
 @dataclass
@@ -48,6 +61,7 @@ class Stage4Result:
     requirement_type_distribution: dict[str, int] = field(default_factory=dict)
     retirement_mapping: list[dict[str, Any]] = field(default_factory=list)
     downstream_rerun_required: bool = False
+    dd_binding: dict[str, Any] = field(default_factory=dict)
     status: str = "ok"
     failure_reason: str | None = None
 
@@ -193,6 +207,162 @@ def _derive_domain_refs(
     return domain_refs
 
 
+# ---------------------------------------------------------------------------
+# §4.4.3a — DD Object-slot binding helpers (v0.7)
+# ---------------------------------------------------------------------------
+
+def _build_dd_ops(
+    proposals: list[TaggedProposal],
+    req_ids: list[str],
+) -> list[dict[str, Any]]:
+    """
+    Build the list of DD service operations for §4.4.3a.
+
+    Per spec: term extraction reuses CHK-3d-09/ADVC-3d-02 slot parse
+    (via core.slots.extract_slot_terms).
+
+    Operations returned:
+      {op: "resolve",       term, context, provenance_ref}
+      {op: "relationship",  from_term, to_term, cardinality, provenance_ref}
+      {op: "value",         canonical_term, attr_name, value, provenance_ref}
+    """
+    ops: list[dict[str, Any]] = []
+
+    for proposal, req_id in zip(proposals, req_ids):
+        stmt = proposal.statement
+        rtype = proposal.requirement_type
+        slots = extract_slot_terms(stmt, rtype)
+
+        if rtype == "Functional":
+            obj = slots.get("object")
+            if obj and len(obj) > _MIN_TERM_LEN:
+                ops.append({"op": "resolve", "term": obj, "context": stmt, "provenance_ref": req_id})
+
+        elif rtype == "Structural":
+            entity = slots.get("entity")
+            assertion = slots.get("assertion")
+            is_rel = slots.get("is_relationship", False)
+
+            if entity and len(entity) > _MIN_TERM_LEN:
+                ops.append({"op": "resolve", "term": entity, "context": stmt, "provenance_ref": req_id})
+
+            if assertion and len(assertion) > _MIN_TERM_LEN:
+                if is_rel and entity and len(entity) > _MIN_TERM_LEN:
+                    ops.append({
+                        "op": "relationship",
+                        "from_term": entity,
+                        "to_term": assertion,
+                        "cardinality": "unspecified",
+                        "provenance_ref": req_id,
+                    })
+                else:
+                    ops.append({"op": "resolve", "term": assertion, "context": stmt, "provenance_ref": req_id})
+
+        elif rtype == "Constraint":
+            subject = slots.get("subject")
+            if subject and len(subject) > _MIN_TERM_LEN:
+                ops.append({"op": "resolve", "term": subject, "context": stmt, "provenance_ref": req_id})
+            if proposal.fit_criteria and proposal.fit_criteria.strip():
+                canonical_term = subject or stmt[:60]
+                ops.append({
+                    "op": "value",
+                    "canonical_term": canonical_term,
+                    "attr_name": "constraint_value",
+                    "value": proposal.fit_criteria.strip(),
+                    "provenance_ref": req_id,
+                })
+
+    return ops
+
+
+def _run_dd_binding(
+    proposals: list[TaggedProposal],
+    req_ids: list[str],
+    pass_data: dict[str, Any],
+) -> dict[str, Any]:
+    """
+    Execute §4.4.3a DD Object-slot binding for all surviving proposals.
+
+    Each DD service call uses its own session and commits independently (per
+    DD service design). Failures are caught per-operation and surfaced as
+    execution_warnings — they do not abort the ledger transaction.
+
+    Returns the dd_binding audit block for mechanism_data §4.4.3b.
+    """
+    ops = _build_dd_ops(proposals, req_ids)
+
+    terms_presented: int = 0
+    resolved: int = 0
+    new_canonical: int = 0
+    synonyms_recorded: int = 0
+    relationships_recorded: int = 0
+    values_recorded: int = 0
+    dd_unresolved: list[dict[str, Any]] = []
+
+    for op in ops:
+        try:
+            if op["op"] == "resolve":
+                terms_presented += 1
+                result = resolve_and_record(op["term"], op["context"], op["provenance_ref"])
+                outcome = result.get("outcome", "flagged")
+                if outcome == "flagged":
+                    dd_unresolved.append({
+                        "requirement_id": op["provenance_ref"],
+                        "term": op["term"],
+                        "reason": "flagged_ambiguous",
+                    })
+                else:
+                    resolved += 1
+                    if outcome == "canonical":
+                        new_canonical += 1
+                    elif outcome == "synonym":
+                        synonyms_recorded += 1
+
+            elif op["op"] == "relationship":
+                rel_result = record_relationship(
+                    op["from_term"],
+                    op["to_term"],
+                    op["cardinality"],
+                    op["provenance_ref"],
+                )
+                if rel_result.get("status") == "recorded":
+                    relationships_recorded += 1
+
+            elif op["op"] == "value":
+                val_result = record_value(
+                    op["canonical_term"],
+                    op["attr_name"],
+                    op["value"],
+                    op["provenance_ref"],
+                )
+                if val_result.get("status") == "recorded":
+                    values_recorded += 1
+
+        except Exception as exc:
+            _log.warning(
+                "DD binding op failed for term=%r req=%s: %s",
+                op.get("term") or op.get("from_term", "?"),
+                op.get("provenance_ref", "?"),
+                exc,
+            )
+            pass_data.setdefault("execution_warnings_stage4", []).append({
+                "type": "dd_binding_op_error",
+                "term": op.get("term") or op.get("from_term", "?"),
+                "provenance_ref": op.get("provenance_ref", "?"),
+                "error": str(exc),
+            })
+
+    return {
+        "terms_presented": terms_presented,
+        "resolved": resolved,
+        "new_canonical": new_canonical,
+        "synonyms_recorded": synonyms_recorded,
+        "relationships_recorded": relationships_recorded,
+        "values_recorded": values_recorded,
+        "dd_unresolved": dd_unresolved,
+    }
+
+
 def run_stage4(
     *,
     stage1: Stage1Result,
@@ -316,6 +486,12 @@ def run_stage4(
                     "now": now,
                 },
             )
+
+        # §4.4.3a — DD Object-slot binding (v0.7, DM).
+        # Present each Functional Object / Structural entity / asserted relationship
+        # / named Constraint value to the DD service. DD calls use their own sessions
+        # and commit independently. Failures are non-fatal (logged as warnings).
+        result.dd_binding = _run_dd_binding(proposals, new_ids, pass_data)
 
         # Step 3: Insert Concern entities for persistent orphans
         for concern_data in stage3.concern_entities:

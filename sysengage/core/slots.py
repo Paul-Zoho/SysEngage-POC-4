@@ -247,6 +247,76 @@ def _check_constraint(statement: str) -> list[AtomicityViolation]:
     return violations
 
 
+_RELATIONSHIP_VERB = re.compile(
+    r"\b(?:relates?\s+to|depends?\s+on|interfaces?\s+with|inherits?\s+from|"
+    r"is\s+part\s+of|extends?)\b",
+    re.IGNORECASE,
+)
+
+
+def extract_slot_terms(statement: str, requirement_type: str) -> dict:
+    """
+    Extract named slot terms from a requirement statement for DD binding.
+
+    Per §4.4.3a (v0.7): reuses CHK-3d-09/ADVC-3d-02 slot parse patterns.
+    Called by Stage 4 to identify Functional Objects, Structural entities /
+    elements, and Constraint subjects for presentation to the DD service.
+
+    Returns a dict whose keys depend on requirement_type:
+      Functional  → {"object": str | None}
+      Structural  → {"entity": str | None, "assertion": str | None,
+                     "is_relationship": bool}
+      Constraint  → {"subject": str | None}
+    Any value may be None if the slot is absent or unparseable.
+    """
+    rtype = requirement_type.strip()
+    if rtype == "Functional":
+        return _extract_functional_slots(statement)
+    elif rtype == "Structural":
+        return _extract_structural_slots(statement)
+    elif rtype == "Constraint":
+        return _extract_constraint_slots(statement)
+    return {}
+
+
+def _extract_functional_slots(statement: str) -> dict:
+    """Extract Object from Functional: [Condition,] Subject shall Action Object."""
+    m = _SHALL.search(statement)
+    if not m:
+        return {"object": None}
+    predicate = statement[m.end():].strip()
+    parts = predicate.split(None, 1)
+    obj = parts[1].strip() if len(parts) >= 2 else predicate
+    return {"object": obj or None}
+
+
+def _extract_structural_slots(statement: str) -> dict:
+    """Extract Entity and Assertion from Structural: Entity <structural-verb> Element."""
+    m = _STRUCTURAL_VERB.search(statement)
+    if m:
+        entity = statement[:m.start()].strip(" .,;") or None
+        assertion = statement[m.end():].strip(" .,;") or None
+        is_rel = bool(_RELATIONSHIP_VERB.search(statement))
+        return {"entity": entity, "assertion": assertion, "is_relationship": is_rel}
+    m2 = _SHALL.search(statement)
+    if m2:
+        entity = statement[:m2.start()].strip(" .,;") or None
+        rest = statement[m2.end():].strip()
+        parts = rest.split(None, 1)
+        assertion = parts[1].strip() if len(parts) >= 2 else (rest or None)
+        return {"entity": entity, "assertion": assertion, "is_relationship": False}
+    return {"entity": None, "assertion": None, "is_relationship": False}
+
+
+def _extract_constraint_slots(statement: str) -> dict:
+    """Extract Subject from Constraint: Subject shall <constraint-verb> Rule."""
+    m = _SHALL.search(statement)
+    if not m:
+        return {"subject": None}
+    subject = statement[:m.start()].strip(" .,;") or None
+    return {"subject": subject}
+
+
 def _check_structural(statement: str) -> list[AtomicityViolation]:
     violations: list[AtomicityViolation] = []
 

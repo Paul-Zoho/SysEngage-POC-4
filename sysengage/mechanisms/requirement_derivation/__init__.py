@@ -1,12 +1,13 @@
 """
 Pass 3d — Requirement Derivation mechanism orchestrator.
 
-Per Requirement Derivation Mechanism Spec v0.1 §3 and §4:
+Per Requirement Derivation Mechanism Spec v0.7 §3 and §4:
   Stateful multi-stage mechanism:
     Stage 1  — Pre-flight, CCI/Domain assembly, re-run scenario detection (DM)
     Stage 2  — Per-Domain AI derivation loop (IM)
     Stage 3  — Structural validation and Non-Loss repair (DM + IM conditional)
-    Stage 4  — Entity production, domain_refs derivation, ledger commit (DM)
+    Stage 4  — Entity production, domain_refs derivation, DD Object-slot binding
+               (§4.4.3a, v0.7 — active), ledger commit (DM)
 
 mode_active = "IM", declared_transformation_modes = ["IM", "DM"]
 
@@ -20,6 +21,8 @@ from __future__ import annotations
 import logging
 from datetime import datetime, timezone
 from typing import Any
+
+from sqlalchemy import text
 
 from core.db import format_identifier, get_next_sequence_value, get_session
 from core.ledger import (
@@ -330,6 +333,47 @@ def run_requirement_derivation(
                 "failure_reason": stage4.failure_reason,
             }
 
+        # --- VER-3d-17: every presented DD term is accounted for (resolved or unresolved) ---
+        dd_binding = stage4.dd_binding
+        _ver17_terms = dd_binding.get("terms_presented", 0)
+        _ver17_accounted = dd_binding.get("resolved", 0) + len(dd_binding.get("dd_unresolved", []))
+        if _ver17_terms != _ver17_accounted:
+            _log.warning(
+                "VER-3d-17 FAIL: terms_presented=%d != resolved=%d + dd_unresolved=%d "
+                "(implementation accounting defect)",
+                _ver17_terms, dd_binding.get("resolved", 0), len(dd_binding.get("dd_unresolved", [])),
+            )
+            pass_data.setdefault("execution_warnings_stage4", []).append({
+                "type": "ver_3d_17_fail",
+                "detail": "DD binding accounting mismatch — implementation defect",
+                "terms_presented": _ver17_terms,
+                "resolved": dd_binding.get("resolved", 0),
+                "dd_unresolved_count": len(dd_binding.get("dd_unresolved", [])),
+            })
+
+        # --- VER-3d-18: DD non-empty after a producing run (regression guard) ---
+        if stage4.requirement_count_produced > 0:
+            try:
+                _ver18_count = session.execute(
+                    text(
+                        "SELECT COUNT(*) FROM data_dictionary_entry "
+                        "WHERE entry_kind = 'canonical' AND retired_at IS NULL"
+                    )
+                ).scalar_one()
+                if _ver18_count == 0:
+                    _log.warning(
+                        "VER-3d-18 FAIL: DD is empty after producing %d requirements — "
+                        "DD binding may not be wired up correctly",
+                        stage4.requirement_count_produced,
+                    )
+                    pass_data.setdefault("execution_warnings_stage4", []).append({
+                        "type": "ver_3d_18_fail",
+                        "detail": "Data Dictionary empty after producing run — check DD binding",
+                        "requirement_count_produced": stage4.requirement_count_produced,
+                    })
+            except Exception as _ver18_exc:
+                _log.warning("VER-3d-18 check query failed: %s", _ver18_exc)
+
         # --- Write AnalysisPass in a new session (Stage 4 committed separately) ---
         pass_session = get_session()
         try:
@@ -399,6 +443,7 @@ def run_requirement_derivation(
                             "requirements_produced": stage4.requirements_produced,
                             "downstream_rerun_required": stage4.downstream_rerun_required,
                             "retirement_mapping": stage4.retirement_mapping,
+                            "dd_binding": stage4.dd_binding,
                             "mode_violations": [],
                         },
                         "execution_warnings": all_warnings,

@@ -268,6 +268,23 @@ def resolve_term(
         session.close()
 
 
+def resolve_and_record(
+    term: str,
+    context: str,
+    provenance_ref: str | None,
+) -> dict[str, Any]:
+    """
+    Spec §4.4.3a entry point — resolve a surface term and record the outcome.
+
+    Wraps resolve_term with the parameter order specified in §4.4.3a:
+      resolve_and_record(term, context, provenance_ref)
+
+    Returns the same dict as resolve_term:
+      {outcome: existing|synonym|canonical|flagged, dd_id: str|None, confidence: float}
+    """
+    return resolve_term(term, provenance_ref, context)
+
+
 def record_relationship(
     from_term: str,
     to_term: str,
