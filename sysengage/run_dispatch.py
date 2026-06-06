@@ -114,7 +114,10 @@ print(flush=True)
 import branch_manager as bm  # noqa: E402  (safe — does not import core.db)
 
 neon_project = bm._get_project_id()
-test_branch_name = f"test_dispatch_{PROJECT_CODE}_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}"
+_last_pass = PASSES[-1]          # e.g. "3c"
+_rows_seg  = "R" + "-".join(str(r) for r in ROWS)   # e.g. "R1", "R1-3"
+_ts        = datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')
+test_branch_name = f"test_{PROJECT_CODE}_ph03_{_last_pass}_{_rows_seg}_Launcher_{_ts}"
 
 if SNAPSHOT:
     print(SEP, flush=True)
