@@ -61,12 +61,18 @@ router.get("/snapshots", async (_req: Request, res: Response) => {
       }
     } catch { /* registry missing or malformed — proceed without descriptions */ }
 
-    // Neon is the source of truth: fetch live branches and filter to snap_* only
+    // Neon is the source of truth: all non-primary branches are valid sources
     const projectId = await getProjectId();
     const branches = await listBranches(projectId);
     const snapBranches = branches
-      .filter(b => b.name.startsWith("snap_"))
-      .sort((a, b) => a.name.localeCompare(b.name));
+      .filter(b => !b.isPrimary)
+      .sort((a, b) => {
+        // snap_* first, then test_*, then others; within each group newest first
+        const rank = (n: string) => n.startsWith("snap_") ? 0 : n.startsWith("test_") ? 1 : 2;
+        const rd = rank(a.name) - rank(b.name);
+        if (rd !== 0) return rd;
+        return b.created_at.localeCompare(a.created_at);
+      });
 
     // Join with registry for description
     const result = snapBranches.map(b => ({
