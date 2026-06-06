@@ -167,6 +167,7 @@ function LaunchPage() {
         setRun(prev => ({ ...prev, running: false, exitCode }));
         es.close(); esRef.current = null;
         fetchOutputs();
+        reloadConfig();
       });
       es.onerror = () => { setRun(prev => ({ ...prev, running: false })); es.close(); esRef.current = null; };
     } catch {
