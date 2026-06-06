@@ -4,6 +4,8 @@ import { randomUUID } from "crypto";
 import fs from "fs";
 import path from "path";
 import { logger } from "../lib/logger";
+import { getProjectId } from "../lib/neon";
+import { listBranches } from "./branches";
 
 const router: IRouter = Router();
 
@@ -47,14 +49,37 @@ function broadcast(rec: RunRecord, event: string, data: string) {
 // GET /api/snapshots
 // ---------------------------------------------------------------------------
 
-router.get("/snapshots", (_req: Request, res: Response) => {
+router.get("/snapshots", async (_req: Request, res: Response) => {
   try {
-    const raw = fs.readFileSync(REGISTRY_PATH, "utf-8");
-    const parsed = JSON.parse(raw);
-    res.json(parsed.snapshots ?? []);
+    // Load registry for state_description metadata (may be stale — used for enrichment only)
+    let registryByName = new Map<string, { state_description?: string }>();
+    try {
+      const raw = fs.readFileSync(REGISTRY_PATH, "utf-8");
+      const parsed = JSON.parse(raw) as { snapshots?: Array<{ name: string; state_description?: string }> };
+      for (const s of parsed.snapshots ?? []) {
+        registryByName.set(s.name, s);
+      }
+    } catch { /* registry missing or malformed — proceed without descriptions */ }
+
+    // Neon is the source of truth: fetch live branches and filter to snap_* only
+    const projectId = await getProjectId();
+    const branches = await listBranches(projectId);
+    const snapBranches = branches
+      .filter(b => b.name.startsWith("snap_"))
+      .sort((a, b) => a.name.localeCompare(b.name));
+
+    // Join with registry for description
+    const result = snapBranches.map(b => ({
+      name: b.name,
+      neon_branch_id: b.id,
+      created_at: b.created_at,
+      state_description: registryByName.get(b.name)?.state_description ?? null,
+    }));
+
+    res.json(result);
   } catch (err) {
-    logger.error({ err }, "Failed to read snapshot registry");
-    res.status(500).json({ error: "Failed to read snapshot registry" });
+    logger.error({ err }, "Failed to list snapshots");
+    res.status(500).json({ error: String(err) });
   }
 });
 
