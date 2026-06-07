@@ -101,13 +101,37 @@ Row 1 statements use enterprise-commitment verbs:
          particular is storage vocabulary — say "maintain records" / "be accountable for"
          at Row 1.
 
+### Domain entity vocabulary (REQUIRED — preserve the source's nouns)
+Abstraction at Row 1 lives in the SUBJECT and the VERB (the enterprise commits to / is
+accountable for / establishes) — NOT in renaming the things the enterprise commits to.
+KEEP the domain-entity nouns the source uses. If the source says "task", write "task" —
+NOT "work unit", "value-generating activity", or "strategic instrument". If the source
+says "reward" / "pocket money", write that — NOT "monetary reward as a strategic value
+exchange mechanism". Do NOT coin abstract paraphrases (instrument, mechanism, metric,
+exchange) for concrete source entities.
+  Right:  "The enterprise shall enable children to claim and complete tasks."
+  Wrong:  "The enterprise shall establish work units as strategic instruments for value
+           creation."
+This is a DOMAIN-ENTITY rule, not literal echoing: still neutralise genuinely system- or
+UI-level source nouns to their domain entity (source "claim button" / "screen" → the
+domain entity "claim" / "task", not "button"). Preserve the DOMAIN nouns (task, reward,
+child, earnings); drop only implementation/UI nouns.
+Why this matters: a single entity must carry ONE name from enterprise scope down to
+realisation. That consistent thread is what the Data Dictionary resolves and what
+cross-row refinement matches on; a Row-1-only synonym ("work unit" for "task") breaks the
+thread (Non-Loss failure) and starves entity extraction — an abstract paraphrase has no
+entity to extract, leaving Row 1 absent from the Data Dictionary.
+
 ### requirement_type reasoning (principle-based — choose, do not pattern-match)
 Weigh the source CCIs' Zachman columns and content against the row's abstraction level:
 - Why-column / motivation / rule / policy / commitment content → lean Constraint.
 - How / What / When / capability / function content → lean Functional.
-- Content expressing a composition, membership, or structural relationship at enterprise
-  scope (e.g. enterprise comprises divisions; enterprise participates in a legal structure)
-  → Structural.
+- Content expressing a measurable threshold, rate, latency, or capacity → Constraint,
+  verified by Measurement (the statement SHOULD carry fit_criteria — the threshold).
+- Content expressing a quality attribute (usability, maintainability, portability) →
+  Constraint (a bound on a quality dimension), verified by Inspection or Measurement.
+- Content asserting what an entity is — its composition, attributes, or relationships →
+  Structural.
 These are reasoning signals, not a lookup table. A genuinely ambiguous obligation may
 read as either Constraint or Functional — choose the dominant force; do not force a
 distribution.
@@ -125,7 +149,9 @@ distribution.
 ### What NOT to do
 - Do NOT introduce actors, behaviours, or constraints not present in the source CCIs.
 - Do NOT reproduce CCI description text verbatim as the statement — derive a normative
-  statement from it.
+  statement from it. "Derive" means re-cast the sentence into normative enterprise-
+  commitment form; it does NOT mean renaming the domain entities — keep the source's
+  domain nouns (see Domain entity vocabulary above).
 - Do NOT produce one thin requirement per CCI mechanically; consolidate where CCIs
   express one obligation, split where one CCI carries two.""",
 
