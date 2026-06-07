@@ -1,16 +1,18 @@
 """
-Stage 4 — Entity Production and Ledger Commit (DM).
+Stage 4 — Entity Production and Ledger Commit (DM + IM for §4.4.3a).
 
-Per Requirement Derivation Mechanism Spec v0.7 §4.4:
+Per Requirement Derivation Mechanism Spec v0.8 §4.4:
   4.4.1  requirement_id allocation (global per-project R###, includes retired).
   4.4.2  domain_refs DM-derivation (MD-2): intersect cci_refs with active Domain
          memberships; assert ≥1 domain_ref. Fail-closed if empty.
   4.4.3  Requirement entity construction (all spec §5.1 columns).
-  4.4.3a DD Object-slot binding (v0.7, DM): for each surviving proposal, extract
-         Functional Objects, Structural entities/elements, asserted relationships,
-         and named Constraint values; present each to the DD service via
-         resolve_and_record / record_relationship / record_value; build dd_binding
-         audit block in mechanism_data. No AI call; no fingerprint on this pass.
+  4.4.3a DD Object-slot binding (v0.8, IM + DM):
+         Step 1 — IM entity extraction: batched AI call reduces Object/Entity/Subject
+         slots to entity-grade noun phrases; fingerprinted as
+         'stage4_dd_entity_extraction'. Replaces the v0.7 verbatim DM slot copy.
+         Step 2 — DD service resolve/relationship/value calls (DM).
+         Step 3 — bind / flag; zero-term Functional/Structural → dd_unresolved.
+         VER-3d-19 violations recorded in dd_binding audit block.
   4.4.4  FullRerun retirement (retired_at = now() on prior active Requirements).
   4.4.5  downstream_rerun_required: check Phase 5/6/8 AnalysisPasses.
   4.4.6  Single transaction: retire (FullRerun), insert Requirements, DD binding
@@ -20,14 +22,13 @@ Per Requirement Derivation Mechanism Spec v0.7 §4.4:
 Note: F80 disposition — domain_refs are derived by domain_id, never by name.
 Cross-row Domain name duplication (NQPS "Quality Governance" at Row 1 and Row 2)
 is harmless to derivation. F80 left Open per D5.
-
-No AI calls in Stage 4. DM mode only.
 """
 
 from __future__ import annotations
 
 import json
 import logging
+import re
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from typing import Any
@@ -35,12 +36,19 @@ from typing import Any
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
+from core.ai_client import MODEL, get_ai_client
 from core.db import format_identifier, get_next_sequence_value
 from core.slots import extract_slot_terms
 from mechanisms.data_dictionary.service import (
     record_relationship,
     record_value,
     resolve_and_record,
+)
+from mechanisms.requirement_derivation.prompts.requirement_dd_extraction_prompt import (
+    build_dd_extraction_prompt,
+)
+from mechanisms.requirement_derivation.schemas.requirement_dd_extraction_response_schema import (
+    EntityExtractionItem,
 )
 from mechanisms.requirement_derivation.stage1_preflight import ActiveDomain, Stage1Result
 from mechanisms.requirement_derivation.stage2_ai_derivation import Stage2Result
@@ -50,7 +58,11 @@ from models.concern import ConcernModel
 _log = logging.getLogger(__name__)
 
 _JACCARD_THRESHOLD = 0.50
-_MIN_TERM_LEN = 2  # minimum character length for a term to be worth presenting to DD
+_MIN_TERM_LEN = 2
+
+# VER-3d-19 heuristic bounds
+_VER19_MAX_WORDS = 8
+_VER19_SENTENCE_PUNCT = re.compile(r"[.?!]\s*$")
 
 
 @dataclass
@@ -62,9 +74,14 @@ class Stage4Result:
     retirement_mapping: list[dict[str, Any]] = field(default_factory=list)
     downstream_rerun_required: bool = False
     dd_binding: dict[str, Any] = field(default_factory=dict)
+    ai_model_fingerprints: list[dict[str, Any]] = field(default_factory=list)
     status: str = "ok"
     failure_reason: str | None = None
 
+
+# ---------------------------------------------------------------------------
+# Internal helpers
+# ---------------------------------------------------------------------------
 
 def _jaccard_overlap(stmt_a: str, stmt_b: str) -> float:
     tokens_a = set(stmt_a.lower().split())
@@ -77,16 +94,384 @@ def _jaccard_overlap(stmt_a: str, stmt_b: str) -> float:
     return len(tokens_a & tokens_b) / len(union)
 
 
+def _strip_code_fence(text_: str) -> str:
+    """Strip markdown ```json ... ``` or ``` ... ``` code fences if present."""
+    m = re.search(r"```(?:json)?\s*([\s\S]*?)```", text_, re.DOTALL)
+    return m.group(1).strip() if m else text_.strip()
+
+
+def _raw_slot_description(slots: dict, requirement_type: str) -> str:
+    """
+    Format the slot parse output into a human-readable hint for the extraction prompt.
+    The AI uses this as the anchor for reduction, not as the term itself.
+    """
+    if requirement_type == "Functional":
+        obj = slots.get("object") or ""
+        return obj
+    elif requirement_type == "Structural":
+        entity = slots.get("entity") or ""
+        assertion = slots.get("assertion") or ""
+        if entity and assertion:
+            return f"{entity} / {assertion}"
+        return entity or assertion
+    elif requirement_type == "Constraint":
+        return slots.get("subject") or ""
+    return ""
+
+
+# ---------------------------------------------------------------------------
+# §4.4.3a Step 1 — IM entity extraction (v0.8)
+# ---------------------------------------------------------------------------
+
+def _extract_entity_terms_ai(
+    proposals: list[TaggedProposal],
+    req_ids: list[str],
+    pass_data: dict[str, Any],
+    row_ref: int,
+) -> tuple[dict[str, list[str]], list[dict[str, Any]]]:
+    """
+    Batch IM entity extraction for §4.4.3a Step 1 (v0.8).
+
+    Replaces the v0.7 verbatim DM slot copy. One AI call for all surviving
+    proposals; the model reduces each Object/Entity/Subject slot to its
+    entity-grade noun head(s).
+
+    Returns:
+      entity_terms  — dict mapping req_id → list of entity-grade term strings
+      fingerprints  — list containing one fingerprint dict (stage4_dd_entity_extraction)
+
+    On AI or parse failure, falls back to empty terms for all proposals and
+    logs a warning; does not abort the run.
+    """
+    items = []
+    for i, (proposal, req_id) in enumerate(zip(proposals, req_ids)):
+        slots = extract_slot_terms(proposal.statement, proposal.requirement_type)
+        raw_slot = _raw_slot_description(slots, proposal.requirement_type)
+        items.append({
+            "idx": i,
+            "statement": proposal.statement,
+            "requirement_type": proposal.requirement_type,
+            "raw_slot": raw_slot,
+        })
+
+    prompt = build_dd_extraction_prompt(items)
+
+    try:
+        client = get_ai_client()
+        msg = client.messages.create(
+            model=MODEL,
+            max_tokens=2048,
+            messages=[{"role": "user", "content": prompt}],
+        )
+        fingerprint = {
+            "stage": "stage4_dd_entity_extraction",
+            "model": msg.model,
+            "input_tokens": msg.usage.input_tokens,
+            "output_tokens": msg.usage.output_tokens,
+        }
+        raw_text = msg.content[0].text if msg.content else ""
+    except Exception as exc:
+        _log.warning("DD entity extraction AI call failed: %s — using empty terms", exc)
+        pass_data.setdefault("execution_warnings_stage4", []).append({
+            "type": "dd_entity_extraction_ai_error",
+            "error": str(exc),
+        })
+        fingerprint = {
+            "stage": "stage4_dd_entity_extraction",
+            "model": MODEL,
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "error": str(exc),
+        }
+        return {req_id: [] for req_id in req_ids}, [fingerprint]
+
+    entity_terms = _parse_extraction_response(raw_text, req_ids)
+    if not any(entity_terms.values()):
+        pass_data.setdefault("execution_warnings_stage4", []).append({
+            "type": "dd_entity_extraction_all_empty",
+            "detail": "AI entity extraction returned no terms for any proposal",
+        })
+
+    return entity_terms, [fingerprint]
+
+
+def _parse_extraction_response(
+    raw_text: str,
+    req_ids: list[str],
+) -> dict[str, list[str]]:
+    """
+    Parse AI extraction response into a req_id → terms mapping.
+    Falls back to empty lists on parse failure.
+    """
+    try:
+        data = json.loads(_strip_code_fence(raw_text))
+        if not isinstance(data, list):
+            raise ValueError(f"Expected JSON list, got {type(data).__name__}")
+        items = [EntityExtractionItem.model_validate(item) for item in data]
+        by_idx: dict[int, list[str]] = {item.idx: item.terms for item in items}
+        return {req_ids[i]: by_idx.get(i, []) for i in range(len(req_ids))}
+    except Exception as exc:
+        _log.warning(
+            "DD entity extraction response parse failed: %s — falling back to empty terms",
+            exc,
+        )
+        return {req_id: [] for req_id in req_ids}
+
+
+# ---------------------------------------------------------------------------
+# §4.4.3a Step 2 — Build DD ops from extracted terms
+# ---------------------------------------------------------------------------
+
+def _check_ver19(term: str, req_id: str) -> dict[str, Any] | None:
+    """
+    VER-3d-19: entity-grade term heuristic.
+    Returns a violation dict or None if the term passes.
+    """
+    word_count = len(term.split())
+    if word_count > _VER19_MAX_WORDS:
+        return {
+            "requirement_id": req_id,
+            "term": term,
+            "reason": f"word_count_{word_count}_exceeds_{_VER19_MAX_WORDS}",
+        }
+    if _VER19_SENTENCE_PUNCT.search(term):
+        return {
+            "requirement_id": req_id,
+            "term": term,
+            "reason": "sentence_terminal_punctuation",
+        }
+    return None
+
+
+def _build_dd_ops_from_terms(
+    proposals: list[TaggedProposal],
+    req_ids: list[str],
+    entity_terms: dict[str, list[str]],
+) -> tuple[list[dict[str, Any]], list[dict[str, Any]], list[dict[str, Any]]]:
+    """
+    Build DD service operation list from AI-extracted entity terms (v0.8).
+
+    Returns:
+      ops                  — list of DD service op dicts
+      zero_term_unresolved — dd_unresolved entries for Functional/Structural
+                             with zero extracted terms (O-3 guard from review)
+      ver19_violations     — VER-3d-19 entity-grade heuristic violations
+    """
+    ops: list[dict[str, Any]] = []
+    zero_term_unresolved: list[dict[str, Any]] = []
+    ver19_violations: list[dict[str, Any]] = []
+
+    for proposal, req_id in zip(proposals, req_ids):
+        rtype = proposal.requirement_type
+        terms = entity_terms.get(req_id, [])
+        stmt = proposal.statement
+
+        # VER-3d-19: check each term
+        for term in terms:
+            violation = _check_ver19(term, req_id)
+            if violation:
+                ver19_violations.append(violation)
+
+        if rtype in ("Functional", "Structural"):
+            if not terms:
+                # O-3 guard: zero-term for a type that should have an entity
+                zero_term_unresolved.append({
+                    "requirement_id": req_id,
+                    "term": None,
+                    "reason": "entity_extraction_empty",
+                })
+                continue
+
+            if rtype == "Structural":
+                # Check if statement asserts a relationship (DM slot parse for
+                # is_relationship flag only — not for the terms themselves)
+                slots = extract_slot_terms(stmt, rtype)
+                is_rel = slots.get("is_relationship", False)
+                if is_rel and len(terms) >= 2:
+                    ops.append({
+                        "op": "relationship",
+                        "from_term": terms[0],
+                        "to_term": terms[1],
+                        "cardinality": "unspecified",
+                        "provenance_ref": req_id,
+                    })
+                    for term in terms[2:]:
+                        if len(term) > _MIN_TERM_LEN:
+                            ops.append({
+                                "op": "resolve",
+                                "term": term,
+                                "context": stmt,
+                                "provenance_ref": req_id,
+                            })
+                else:
+                    for term in terms:
+                        if len(term) > _MIN_TERM_LEN:
+                            ops.append({
+                                "op": "resolve",
+                                "term": term,
+                                "context": stmt,
+                                "provenance_ref": req_id,
+                            })
+            else:
+                for term in terms:
+                    if len(term) > _MIN_TERM_LEN:
+                        ops.append({
+                            "op": "resolve",
+                            "term": term,
+                            "context": stmt,
+                            "provenance_ref": req_id,
+                        })
+
+        elif rtype == "Constraint":
+            for term in terms:
+                if len(term) > _MIN_TERM_LEN:
+                    ops.append({
+                        "op": "resolve",
+                        "term": term,
+                        "context": stmt,
+                        "provenance_ref": req_id,
+                    })
+            # Named value from fit_criteria (unchanged from v0.7 — not AI-extracted)
+            if proposal.fit_criteria and proposal.fit_criteria.strip():
+                canonical_term = terms[0] if terms else stmt[:60]
+                ops.append({
+                    "op": "value",
+                    "canonical_term": canonical_term,
+                    "attr_name": "constraint_value",
+                    "value": proposal.fit_criteria.strip(),
+                    "provenance_ref": req_id,
+                })
+
+    return ops, zero_term_unresolved, ver19_violations
+
+
+# ---------------------------------------------------------------------------
+# §4.4.3a — Top-level DD binding orchestrator
+# ---------------------------------------------------------------------------
+
+def _run_dd_binding(
+    proposals: list[TaggedProposal],
+    req_ids: list[str],
+    pass_data: dict[str, Any],
+    row_ref: int,
+) -> tuple[dict[str, Any], list[dict[str, Any]]]:
+    """
+    Execute §4.4.3a DD Object-slot binding (v0.8):
+      Step 1 — IM entity extraction (AI call).
+      Step 2 — DD service calls (resolve / relationship / value).
+      Step 3 — bind / flag.
+
+    dd_unresolved   — DD service flagged entries (terms_presented but not resolved);
+                      counted in VER-3d-17 accounting.
+    dd_zero_term    — Functional/Structural proposals where entity extraction returned
+                      no terms; NOT counted in terms_presented (no resolve op was made).
+    VER-3d-17:  terms_presented == resolved + len(dd_unresolved)  ← excludes dd_zero_term.
+    VER-3d-19:  entity-grade heuristic violations logged in ver_3d_19_violations.
+
+    Returns:
+      dd_binding   — audit block dict for mechanism_data §4.4.3b
+      fingerprints — list containing the stage4_dd_entity_extraction fingerprint
+    """
+    # Step 1: IM entity extraction
+    entity_terms, fingerprints = _extract_entity_terms_ai(
+        proposals, req_ids, pass_data, row_ref
+    )
+
+    # Step 2: Build ops from AI-extracted entity terms
+    ops, zero_term_entries, ver19_violations = _build_dd_ops_from_terms(
+        proposals, req_ids, entity_terms
+    )
+
+    terms_presented: int = 0
+    resolved: int = 0
+    new_canonical: int = 0
+    synonyms_recorded: int = 0
+    relationships_recorded: int = 0
+    values_recorded: int = 0
+    # dd_unresolved: DD service flagged entries only (VER-3d-17 scope)
+    dd_unresolved: list[dict[str, Any]] = []
+
+    for op in ops:
+        try:
+            if op["op"] == "resolve":
+                terms_presented += 1
+                result = resolve_and_record(op["term"], op["context"], op["provenance_ref"])
+                outcome = result.get("outcome", "flagged")
+                if outcome == "flagged":
+                    dd_unresolved.append({
+                        "requirement_id": op["provenance_ref"],
+                        "term": op["term"],
+                        "reason": "flagged_ambiguous",
+                    })
+                else:
+                    resolved += 1
+                    if outcome == "canonical":
+                        new_canonical += 1
+                    elif outcome == "synonym":
+                        synonyms_recorded += 1
+
+            elif op["op"] == "relationship":
+                rel_result = record_relationship(
+                    op["from_term"],
+                    op["to_term"],
+                    op["cardinality"],
+                    op["provenance_ref"],
+                )
+                if rel_result.get("status") == "recorded":
+                    relationships_recorded += 1
+
+            elif op["op"] == "value":
+                val_result = record_value(
+                    op["canonical_term"],
+                    op["attr_name"],
+                    op["value"],
+                    op["provenance_ref"],
+                )
+                if val_result.get("status") == "recorded":
+                    values_recorded += 1
+
+        except Exception as exc:
+            _log.warning(
+                "DD binding op failed for term=%r req=%s: %s",
+                op.get("term") or op.get("from_term", "?"),
+                op.get("provenance_ref", "?"),
+                exc,
+            )
+            pass_data.setdefault("execution_warnings_stage4", []).append({
+                "type": "dd_binding_op_error",
+                "term": op.get("term") or op.get("from_term", "?"),
+                "provenance_ref": op.get("provenance_ref", "?"),
+                "error": str(exc),
+            })
+
+    audit: dict[str, Any] = {
+        "terms_presented": terms_presented,
+        "resolved": resolved,
+        "new_canonical": new_canonical,
+        "synonyms_recorded": synonyms_recorded,
+        "relationships_recorded": relationships_recorded,
+        "values_recorded": values_recorded,
+        # DD service flagged entries — counted in terms_presented (VER-3d-17 scope)
+        "dd_unresolved": dd_unresolved,
+        # Zero-term extraction failures — NOT in terms_presented (no resolve call made)
+        "dd_zero_term": zero_term_entries,
+    }
+    if ver19_violations:
+        audit["ver_3d_19_violations"] = ver19_violations
+
+    return audit, fingerprints
+
+
+# ---------------------------------------------------------------------------
+# Stage 4 ledger helpers (unchanged from v0.7)
+# ---------------------------------------------------------------------------
+
 def _allocate_requirement_ids(
     session: Session, project_id: str, count: int
 ) -> list[str]:
     """
     Allocate `count` new requirement_ids (R001, R002, …).
     MAX query includes retired Requirements — ids are never reused per spec §4.4.1.
-
-    Known constraint: max 999 Requirement instances per project (R001–R999).
-    If a project approaches 800 allocated ids (including retired), raise a tracker
-    finding for a 4-digit format extension (R####).
     """
     row = session.execute(
         text(
@@ -97,7 +482,6 @@ def _allocate_requirement_ids(
     ).fetchone()
     next_seq = 1 if row[0] is None else row[0] + 1
 
-    # Ceiling advisory — log if approaching R999
     if next_seq + count > 800:
         _log.warning(
             "requirement_id ceiling advisory: next_seq=%d count=%d for project=%s — "
@@ -194,9 +578,6 @@ def _derive_domain_refs(
     """
     MD-2: DM-derived domain_refs — set of domain_ids whose cell_content_item_refs
     intersect proposal.cci_refs. Never AI-proposed.
-
-    F80 disposition: derived by domain_id, never by name — cross-row name
-    duplication is harmless to this computation.
     """
     proposal_ci_ids = set(proposal.cci_refs)
     domain_refs = sorted(
@@ -208,160 +589,8 @@ def _derive_domain_refs(
 
 
 # ---------------------------------------------------------------------------
-# §4.4.3a — DD Object-slot binding helpers (v0.7)
+# run_stage4 — main entry point
 # ---------------------------------------------------------------------------
-
-def _build_dd_ops(
-    proposals: list[TaggedProposal],
-    req_ids: list[str],
-) -> list[dict[str, Any]]:
-    """
-    Build the list of DD service operations for §4.4.3a.
-
-    Per spec: term extraction reuses CHK-3d-09/ADVC-3d-02 slot parse
-    (via core.slots.extract_slot_terms).
-
-    Operations returned:
-      {op: "resolve",       term, context, provenance_ref}
-      {op: "relationship",  from_term, to_term, cardinality, provenance_ref}
-      {op: "value",         canonical_term, attr_name, value, provenance_ref}
-    """
-    ops: list[dict[str, Any]] = []
-
-    for proposal, req_id in zip(proposals, req_ids):
-        stmt = proposal.statement
-        rtype = proposal.requirement_type
-        slots = extract_slot_terms(stmt, rtype)
-
-        if rtype == "Functional":
-            obj = slots.get("object")
-            if obj and len(obj) > _MIN_TERM_LEN:
-                ops.append({"op": "resolve", "term": obj, "context": stmt, "provenance_ref": req_id})
-
-        elif rtype == "Structural":
-            entity = slots.get("entity")
-            assertion = slots.get("assertion")
-            is_rel = slots.get("is_relationship", False)
-
-            if entity and len(entity) > _MIN_TERM_LEN:
-                ops.append({"op": "resolve", "term": entity, "context": stmt, "provenance_ref": req_id})
-
-            if assertion and len(assertion) > _MIN_TERM_LEN:
-                if is_rel and entity and len(entity) > _MIN_TERM_LEN:
-                    ops.append({
-                        "op": "relationship",
-                        "from_term": entity,
-                        "to_term": assertion,
-                        "cardinality": "unspecified",
-                        "provenance_ref": req_id,
-                    })
-                else:
-                    ops.append({"op": "resolve", "term": assertion, "context": stmt, "provenance_ref": req_id})
-
-        elif rtype == "Constraint":
-            subject = slots.get("subject")
-            if subject and len(subject) > _MIN_TERM_LEN:
-                ops.append({"op": "resolve", "term": subject, "context": stmt, "provenance_ref": req_id})
-            if proposal.fit_criteria and proposal.fit_criteria.strip():
-                canonical_term = subject or stmt[:60]
-                ops.append({
-                    "op": "value",
-                    "canonical_term": canonical_term,
-                    "attr_name": "constraint_value",
-                    "value": proposal.fit_criteria.strip(),
-                    "provenance_ref": req_id,
-                })
-
-    return ops
-
-
-def _run_dd_binding(
-    proposals: list[TaggedProposal],
-    req_ids: list[str],
-    pass_data: dict[str, Any],
-) -> dict[str, Any]:
-    """
-    Execute §4.4.3a DD Object-slot binding for all surviving proposals.
-
-    Each DD service call uses its own session and commits independently (per
-    DD service design). Failures are caught per-operation and surfaced as
-    execution_warnings — they do not abort the ledger transaction.
-
-    Returns the dd_binding audit block for mechanism_data §4.4.3b.
-    """
-    ops = _build_dd_ops(proposals, req_ids)
-
-    terms_presented: int = 0
-    resolved: int = 0
-    new_canonical: int = 0
-    synonyms_recorded: int = 0
-    relationships_recorded: int = 0
-    values_recorded: int = 0
-    dd_unresolved: list[dict[str, Any]] = []
-
-    for op in ops:
-        try:
-            if op["op"] == "resolve":
-                terms_presented += 1
-                result = resolve_and_record(op["term"], op["context"], op["provenance_ref"])
-                outcome = result.get("outcome", "flagged")
-                if outcome == "flagged":
-                    dd_unresolved.append({
-                        "requirement_id": op["provenance_ref"],
-                        "term": op["term"],
-                        "reason": "flagged_ambiguous",
-                    })
-                else:
-                    resolved += 1
-                    if outcome == "canonical":
-                        new_canonical += 1
-                    elif outcome == "synonym":
-                        synonyms_recorded += 1
-
-            elif op["op"] == "relationship":
-                rel_result = record_relationship(
-                    op["from_term"],
-                    op["to_term"],
-                    op["cardinality"],
-                    op["provenance_ref"],
-                )
-                if rel_result.get("status") == "recorded":
-                    relationships_recorded += 1
-
-            elif op["op"] == "value":
-                val_result = record_value(
-                    op["canonical_term"],
-                    op["attr_name"],
-                    op["value"],
-                    op["provenance_ref"],
-                )
-                if val_result.get("status") == "recorded":
-                    values_recorded += 1
-
-        except Exception as exc:
-            _log.warning(
-                "DD binding op failed for term=%r req=%s: %s",
-                op.get("term") or op.get("from_term", "?"),
-                op.get("provenance_ref", "?"),
-                exc,
-            )
-            pass_data.setdefault("execution_warnings_stage4", []).append({
-                "type": "dd_binding_op_error",
-                "term": op.get("term") or op.get("from_term", "?"),
-                "provenance_ref": op.get("provenance_ref", "?"),
-                "error": str(exc),
-            })
-
-    return {
-        "terms_presented": terms_presented,
-        "resolved": resolved,
-        "new_canonical": new_canonical,
-        "synonyms_recorded": synonyms_recorded,
-        "relationships_recorded": relationships_recorded,
-        "values_recorded": values_recorded,
-        "dd_unresolved": dd_unresolved,
-    }
-
 
 def run_stage4(
     *,
@@ -401,7 +630,6 @@ def run_stage4(
     for proposal in proposals:
         domain_refs = _derive_domain_refs(proposal, stage1.active_domains)
         if not domain_refs:
-            # Fail-closed: empty domain_refs is a defect — log and exclude
             stage3.validation_failures.append(
                 {
                     "check_id": "MD-2",
@@ -414,12 +642,9 @@ def run_stage4(
                 proposal.source_domain_id,
             )
             continue
-        # Store derived domain_refs on the proposal (temporary attribute, not schema)
         proposal._domain_refs = domain_refs  # type: ignore[attr-defined]
         valid_proposals.append(proposal)
 
-    # If MD-2 exclusions created new orphans, they remain in stage3.orphaned_ccis already
-    # (they passed CHK-3d-05 but are now excluded at Stage 4). Surface as warnings.
     excluded_count = len(proposals) - len(valid_proposals)
     if excluded_count > 0:
         pass_data.setdefault("execution_warnings_stage4", []).append(
@@ -436,6 +661,13 @@ def run_stage4(
         result.retirement_mapping = _compute_retirement_mapping(
             prior_active, proposals, new_ids
         )
+
+    # --- §4.4.3a DD entity extraction (IM, v0.8) — outside the ledger transaction ---
+    # The extraction AI call happens before the transaction so that failures
+    # do not roll back the ledger write. On extraction failure, empty terms are
+    # used and zero_term_unresolved entries are recorded.
+    dd_binding, dd_fingerprints = _run_dd_binding(proposals, new_ids, pass_data, row_ref)
+    result.ai_model_fingerprints = dd_fingerprints
 
     # --- 4.4.6 Ledger transaction ---
     now = datetime.now(timezone.utc)
@@ -487,11 +719,8 @@ def run_stage4(
                 },
             )
 
-        # §4.4.3a — DD Object-slot binding (v0.7, DM).
-        # Present each Functional Object / Structural entity / asserted relationship
-        # / named Constraint value to the DD service. DD calls use their own sessions
-        # and commit independently. Failures are non-fatal (logged as warnings).
-        result.dd_binding = _run_dd_binding(proposals, new_ids, pass_data)
+        # DD binding already run above (pre-transaction); store audit result
+        result.dd_binding = dd_binding
 
         # Step 3: Insert Concern entities for persistent orphans
         for concern_data in stage3.concern_entities:
@@ -542,7 +771,7 @@ def run_stage4(
         result.failure_reason = f"Ledger transaction rolled back: {exc}"
         return result
 
-    # Build result summary — v2.13 three-value triad (F89)
+    # Build result summary
     type_dist: dict[str, int] = {
         "Functional": 0,
         "Constraint": 0,

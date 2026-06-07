@@ -374,6 +374,25 @@ def run_requirement_derivation(
             except Exception as _ver18_exc:
                 _log.warning("VER-3d-18 check query failed: %s", _ver18_exc)
 
+        # --- VER-3d-19: entity-grade term guard (v0.8) ---
+        # No canonical DD term presented by §4.4.3a should be a verbatim Object-slot
+        # clause or exceed the entity-grade word-count heuristic (~8 words) or carry
+        # sentence-terminal punctuation. Violations are recorded in dd_binding by
+        # _build_dd_ops_from_terms and surfaced here as advisory warnings (not hard
+        # failures — the ledger write is already committed; violations are a signal
+        # for prompt tuning, not a reason to roll back).
+        _ver19_violations = dd_binding.get("ver_3d_19_violations", [])
+        if _ver19_violations:
+            _log.warning(
+                "VER-3d-19: %d entity-grade term violation(s) detected in DD binding",
+                len(_ver19_violations),
+            )
+            pass_data.setdefault("execution_warnings_stage4", []).append({
+                "type": "ver_3d_19_entity_grade_violations",
+                "count": len(_ver19_violations),
+                "violations": _ver19_violations,
+            })
+
         # --- Write AnalysisPass in a new session (Stage 4 committed separately) ---
         pass_session = get_session()
         try:
@@ -450,6 +469,7 @@ def run_requirement_derivation(
                         "ai_model_fingerprints": (
                             stage2.ai_model_fingerprints
                             + stage3.ai_model_fingerprints
+                            + stage4.ai_model_fingerprints
                         ),
                         "concern_entities": concern_entities_out,
                     },
