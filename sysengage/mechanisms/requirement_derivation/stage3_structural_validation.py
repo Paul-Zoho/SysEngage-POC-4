@@ -15,9 +15,12 @@ Per Requirement Derivation Mechanism Spec v0.6 §4.3:
   CHK-3d-06  Failure if all proposals rejected and repair produced nothing.
   CHK-3d-07  Exact-duplicate collapse (same statement + cci_refs set).
   CHK-3d-08  Row-appropriate statement subject (decidable; soft severity). Tests the
-             statement's grammatical subject against the row's required subject from
-             REQUIREMENT_ROW_GUIDANCE §5.4(a). Mismatch logs subject_vocabulary_mismatch
-             in execution_warnings and records the flag in subject_vocabulary_flags.
+             statement's grammatical subject against the row's permitted subject set
+             from REQUIREMENT_ROW_GUIDANCE §5.4(a). v0.9: Row 2 widened to four-class
+             taxonomy (actor / system-affordance / business / named-role) — only "the
+             enterprise" (Row 1 scope escape) is a mismatch at Row 2; system-subject
+             at Row 2 is now legitimate. Mismatch logs subject_vocabulary_mismatch in
+             execution_warnings and records the flag in subject_vocabulary_flags.
              Does NOT reject the Requirement or block production.
   CHK-3d-09  Typed-slot atomicity check (decidable, HARD; realises F88).
              Calls core.slots.check_atomicity per proposal. Hard violations reject
@@ -399,35 +402,52 @@ def run_stage3(
         r"database|module|interface|api|app)\b",
         re.IGNORECASE,
     )
+    _ENTERPRISE_SUBJECT_PATTERN = re.compile(
+        r"^the\s+enterprise\b",
+        re.IGNORECASE,
+    )
 
     _ROW1_REQUIRES_ENTERPRISE = "1"
+    _ROW2_FOUR_CLASS = "2"
 
     for idx, p in enumerate(proposals):
         stmt_stripped = p.statement.strip()
+        # Determine mismatch per row:
+        #   Row 1 — subject must be "the enterprise"; any system/component subject is a mismatch.
+        #   Row 2 — four-class taxonomy (actor / system-affordance / business / named-role) are
+        #            all legitimate; only "the enterprise" (Row 1 scope escape) is a mismatch.
+        #   Rows 3–5 — no decidable subject check at v0.1 (guidance carries the discipline).
+        detected_subject: str | None = None
         if str(row_ref) == _ROW1_REQUIRES_ENTERPRISE:
             if _SYSTEM_SUBJECT_PATTERN.match(stmt_stripped):
                 words = stmt_stripped.split()
                 detected_subject = " ".join(words[:2]) if len(words) >= 2 else stmt_stripped[:30]
-                placeholder = f"proposal_{idx + 1}:{stmt_stripped[:40].rstrip()}"
-                result.subject_vocabulary_flags.append(
-                    {
-                        "requirement_id_placeholder": placeholder,
-                        "row": row_ref,
-                        "detected_subject": detected_subject,
-                    }
-                )
-                result.execution_warnings.append(
-                    {
-                        "type": "subject_vocabulary_mismatch",
-                        "row": row_ref,
-                        "detected_subject": detected_subject,
-                        "statement_preview": stmt_stripped[:80],
-                    }
-                )
-                _log.info(
-                    "CHK-3d-08: Row %s subject mismatch — detected %r in %r",
-                    row_ref, detected_subject, stmt_stripped[:60],
-                )
+        elif str(row_ref) == _ROW2_FOUR_CLASS:
+            if _ENTERPRISE_SUBJECT_PATTERN.match(stmt_stripped):
+                words = stmt_stripped.split()
+                detected_subject = " ".join(words[:2]) if len(words) >= 2 else stmt_stripped[:30]
+
+        if detected_subject is not None:
+            placeholder = f"proposal_{idx + 1}:{stmt_stripped[:40].rstrip()}"
+            result.subject_vocabulary_flags.append(
+                {
+                    "requirement_id_placeholder": placeholder,
+                    "row": row_ref,
+                    "detected_subject": detected_subject,
+                }
+            )
+            result.execution_warnings.append(
+                {
+                    "type": "subject_vocabulary_mismatch",
+                    "row": row_ref,
+                    "detected_subject": detected_subject,
+                    "statement_preview": stmt_stripped[:80],
+                }
+            )
+            _log.info(
+                "CHK-3d-08: Row %s subject mismatch — detected %r in %r",
+                row_ref, detected_subject, stmt_stripped[:60],
+            )
 
     # -------------------------------------------------------------------------
     # CHK-3d-09 — Typed-slot atomicity (decidable, HARD; realises F88)

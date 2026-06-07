@@ -1,7 +1,7 @@
 """
 Requirement Row Guidance — REQUIREMENT_ROW_GUIDANCE prompt constants.
 
-Per Requirement Derivation Mechanism Spec v0.6 §5.4.
+Per Requirement Derivation Mechanism Spec v0.9 §5.4.
 
 DISTINCT from the domain ROW_GUIDANCE (which governs domain naming and grouping;
 imported from domain_derivation/prompts/domain_grouping_prompt.py). This dict
@@ -16,6 +16,14 @@ Subject/Action/Object with Object-recursion to surface Structural requirements;
 Constraint: Subject/Rule/Condition/Criteria; Structural: Entity/structural
 assertion). It explicitly prohibits cross-row parent invention (Matching/GQA
 responsibility, not Pass 3d's).
+
+v0.9 rewrites the Row 2 subject block from the v0.3 two-class taxonomy (business /
+named-role) to a FOUR-class taxonomy (actor/stakeholder, system-affordance, business,
+named-business-role) chosen by the BOUNDARY TEST. Vocabulary block made subject-class-
+aware; atomicity block gains the over-generation brake (complementary actor/system
+pairs are NOT duplicates). CHK-3d-08 widened accordingly in stage3 (system-subject at
+Row 2 no longer a mismatch; "the enterprise" at Row 2 is the out-of-set escape).
+Fixes the false-merge cascade at root — the subject slot now discriminates.
 
 Rows 1–5 are fully authored. Rows 1–2 are validated (Row 1: PMT Run 5 / NQPS
 Run 2; Row 2: PMT Row 2 Run 1 / NQPS Row 2 Run 1). Rows 3–5 are CANDIDATE
@@ -132,42 +140,85 @@ business must satisfy — stated as a persistent business responsibility, not a 
 step and not a system function.
 
 ### Statement subject (REQUIRED)
-Row 2 requirement statements take THE BUSINESS as their subject, or a named BUSINESS
-ROLE where the source CCI identifies an accountable business actor:
-  "The business shall ..."        (default)
-  "<Business role> shall ..."     (when a WHO-column CCI names an accountable role,
-                                   e.g. "The account holder shall ...")
-Do NOT use "The enterprise shall ..." — that is Row 1 (Planner) vocabulary, framing a
-scope-level commitment rather than a business responsibility. Do NOT use "The system
-shall ..." — that is Row 3+ vocabulary describing a technical realisation.
+Row 2 has FOUR legitimate statement subjects. Choose by the BOUNDARY TEST — do NOT
+default to the business. The boundary test: does the party or function this CCI
+describes cross the system boundary?
+
+(a) ACTOR / STAKEHOLDER subject — an external party interacting WITH the system
+    (reaching in to do something). Subject = the actor; verb = their real action:
+      "A child can claim a completed task."
+      "A parent can view their child's earnings."
+    These are Who-column, boundary-crossing statements. They NAME the system boundary
+    and are first-class. Do NOT re-express them as "the business shall enable the child
+    to ..." — that buries the actor in the object and loses the boundary. Required
+    wherever a CCI describes an actor interacting with the system (the Who column must
+    be occupied — Cell Occupancy).
+
+(b) SYSTEM subject — the capability the system PROVIDES at the boundary (the affordance
+    meeting the actor), stated as WHAT the system provides, NOT how:
+      "The system shall make completed tasks claimable by entitled children."
+      "The system shall make a child's earnings visible to the parent."
+    Legitimate at Row 2 as a BLACK-BOX affordance. Name the provided capability and NO
+    realisation (no API/schema/database/service/endpoint/algorithm/validation rule —
+    that is Row 3 HOW). "The system enables claimable tasks" = Row 2 (names the
+    mechanism the system provides); "the system exposes a claim operation validating
+    entitlement against the ledger" = Row 3 (names the realisation).
+
+(c) BUSINESS subject — what the business does BEHIND the boundary: a responsibility,
+    rule, or artefact it maintains:
+      "The business shall maintain a record of each task claim."
+      "The business shall enforce the weekly reset cycle."
+
+(d) NAMED BUSINESS ROLE — a WHO-column CCI naming an accountable internal role that
+    does NOT act through the system (off-boundary accountability):
+      "The account holder shall approve ..."
+
+The boundary test, applied:
+  - Party acts THROUGH the system (reaches in)        → ACTOR subject (a)
+  - System OFFERS the capability to that actor         → SYSTEM subject (b)
+  - Function happens BEHIND the boundary (responsibility/rule/record)
+                                                        → BUSINESS subject (c)
+  - Accountable internal party, off-system             → NAMED BUSINESS ROLE (d)
+
+Subject by Zachman column (illustration — the boundary test decides; this orients):
+  Who (external party interacting)     → ACTOR         "a child can claim a task"
+  Who (internal accountable party)     → BUSINESS ROLE "the account holder approves"
+  How (capability offered to an actor) → SYSTEM        "the system makes tasks claimable"
+  How (internal business process)      → BUSINESS      "the business settles compensation"
+  What (artefact the business keeps)   → BUSINESS      "maintain a record of each claim"
+  When (cycle / trigger)               → BUSINESS (or Condition slot) "enforce weekly reset"
+  Why (rule / goal / constraint)       → BUSINESS (Constraint) "enforce approval threshold"
+
+Do NOT use "The enterprise shall ..." — that is Row 1 (Planner) scope vocabulary.
 The distinction from Row 1: Row 1 says what the enterprise commits to at scope level
-("The enterprise shall recognise child users as participants"); Row 2 says what the
-business must be able to do or must enforce to deliver on that commitment ("The business
-shall maintain a record of each participant's compensated work").
+("The enterprise shall recognise child users as participants"); Row 2 says who does
+what at the business boundary and what the business is responsible for behind it
+("A child can claim a completed task"; "The system shall make tasks claimable"; "The
+business shall maintain a record of each claim").
 
 ### Normative form and atomicity
-- Use the normative "shall". One business responsibility per statement.
-- Apply the two-step "and" test (requirement-level analogue of the domain "and" test):
-  (1) is there a single responsibility that subsumes both clauses? Use it.
-  (2) If not, split into two requirements.
-- Row 2 capability statements are STATELESS obligations — "the business shall be able to
-  X" — NOT step-by-step sequences ("first the business does X, then Y"). A statement
-  describing an ordered workflow has dropped to Row 3+ and must be re-stated as a
-  capability.
+- Use the normative "shall" (or "can"/"may" for an ACTOR capability — "a child can claim…"). One obligation per statement.
+- Apply the two-step "and" test: (1) is there a single obligation that subsumes both clauses? Use it. (2) If not, split into two requirements.
+- OVER-GENERATION BRAKE: a single source concept can span columns (an actor-action, the system-affordance that enables it, and a business record). Author ONLY the column-aspects the source actually expresses — do NOT mechanically manufacture an actor + system + business statement for every concept. Where both an actor-action and its system-affordance ARE expressed, author both but treat them as a COMPLEMENTARY PAIR (the affordance enables the action — related, not two independent obligations, and NOT duplicates of each other). Never state one obligation twice under two different subjects.
+- Row 2 statements are STATELESS obligations — a capability/responsibility, NOT a step-by-step sequence ("first X, then Y"). A statement describing an ordered workflow has dropped to Row 3+ and must be re-stated.
 
 ### Statement vocabulary
-Row 2 statements use business-responsibility vocabulary:
-  Appropriate: maintain, record, govern, settle, approve, authorise, account for,
-               be responsible for, be accountable for, steward, enforce (a business
-               rule), make available, recognise (a business role)
-  Avoid: calculate, process, store, retrieve, aggregate, compute, manage, track,
-         retain, retention, generate, display
-         (these describe system functions or technical storage — they belong at Row 3
-         or below; use "record", "maintain", "account for", "make available" instead).
-         "retain"/"retention" in particular is technical storage vocabulary — say
-         "maintain a record" / "be accountable for" at Row 2.
-  Also avoid: any word implying a technical mechanism (API, schema, database, service,
-              endpoint, algorithm).
+Vocabulary depends on the SUBJECT CLASS:
+  ACTOR subject — the actor's real action verb: claim, approve, view, define, submit,
+    request. Do NOT wrap it as "be enabled to" / "be able to be given" — name the action.
+  SYSTEM subject — the provided capability (WHAT, never HOW): make available, make
+    visible, make claimable, present, provide, enable (a capability).
+  BUSINESS subject / role — business-responsibility vocabulary: maintain, record,
+    govern, settle, approve, authorise, account for, be responsible / accountable for,
+    steward, enforce (a business rule), recognise (a business role).
+  Avoid at Row 2 (ALL subjects): calculate, process, store, retrieve, aggregate,
+    compute, manage, track, retain / retention, generate, display — system-function /
+    technical-storage vocabulary belonging to Row 3+ ("retain"/"retention" → "maintain
+    a record").
+  Avoid (ALL subjects) — the WHAT/HOW guard: any word implying a technical REALISATION
+    mechanism — API, schema, database, service, endpoint, algorithm, validation rule.
+    This is what keeps a SYSTEM-subject statement a Row 2 black-box affordance (WHAT the
+    system provides) rather than a Row 3 design (HOW it provides it).
 
 ### requirement_type reasoning (principle-based — choose, do not pattern-match)
 Weigh the source CCIs' Zachman columns and content against the business-owner level:
@@ -176,8 +227,10 @@ Weigh the source CCIs' Zachman columns and content against the business-owner le
 - HOW-column business capability declarations / WHAT-column business artefacts the
   business must maintain / WHEN-column business triggers → lean Functional ("The
   business shall maintain a record of ...").
-- WHAT-column business entity composition or relationship (e.g. business role membership,
-  organisational structure, artefact composition) → Structural.
+- Content expressing a measurable business threshold, rate, or service level →
+  Constraint, verified by Measurement (the statement SHOULD carry fit_criteria).
+- Content expressing a business quality attribute → Constraint (quality bound).
+- Content asserting what a business entity is (composition/attributes/relationships) → Structural.
 Reasoning signals, not a lookup table. Note: at Row 2 the Functional/Constraint balance
 is typically more even than at Row 1 — business capability declarations (HOW-column) are
 genuinely Functional, while business rules (WHY-column) are genuinely Constraint. Do not
@@ -194,10 +247,12 @@ carry a Row-1 lean into Row 2; judge each statement on its source columns.
 
 """ + _SHARED_INTERROGATIVE_PREAMBLE + """
 ### What NOT to do
-- Do NOT introduce business roles, capabilities, or rules not present in the source CCIs.
+- Do NOT bury an interacting actor inside an object ("the business shall enable the child to claim …") — author the actor as subject (a). Burying it loses the boundary.
+- Do NOT introduce actors, roles, capabilities, or rules not present in the source CCIs.
 - Do NOT reproduce CCI description text verbatim — derive a normative statement.
-- Do NOT state a workflow sequence; state a stateless business capability.
-- Do NOT frame at enterprise/scope level (Row 1) or technical level (Row 3+).""",
+- Do NOT state a workflow sequence; state a stateless capability / responsibility.
+- Do NOT frame at enterprise/scope level (Row 1).
+- Do NOT describe HOW the system realises a capability (Row 3 — operations, validation, structure); for a system subject, name only WHAT it provides at the boundary.""",
 
     # Rows 3–5: AUTHORED AHEAD OF TEST (Mechanism Spec v0.4). Candidate guidance —
     # NOT yet validated against run evidence (Rows 1–2 were validate-then-author;
