@@ -475,3 +475,106 @@ def reject_synonym(
         raise
     finally:
         session.close()
+
+
+def get_canonical_ids_by_provenance_refs(
+    requirement_ids: list[str],
+) -> dict[str, list[str]]:
+    """
+    Batch read-only query: for each requirement_id return the list of canonical DD ids
+    bound to that requirement by resolve_and_record() calls from Requirement Derivation.
+
+    Covers all three resolved outcomes:
+      - 'canonical': new canonical entry whose provenance_ref = req_id
+      - 'synonym':   new synonym entry whose provenance_ref = req_id  (returns resolves_to)
+      - 'existing':  no new DD entry; looks up via resolution_log surface_term → DD name/synonym
+
+    Returns {requirement_id: [canonical_id, ...]}. Empty list means no resolved DD binding
+    exists for that requirement (either DD hasn't run yet, or every attempt was flagged).
+    """
+    if not requirement_ids:
+        return {}
+
+    session = get_session()
+    try:
+        rows = session.execute(
+            text(
+                """
+                WITH direct AS (
+                    SELECT
+                        provenance_ref AS req_id,
+                        CASE WHEN entry_kind = 'canonical' THEN dd_id
+                             ELSE resolves_to
+                        END AS canonical_id
+                    FROM data_dictionary_entry
+                    WHERE provenance_ref = ANY(:req_ids)
+                      AND entry_kind IN ('canonical', 'synonym')
+                      AND retired_at IS NULL
+                ),
+                existing_terms AS (
+                    SELECT DISTINCT provenance_ref AS req_id, surface_term
+                    FROM data_dictionary_resolution_log
+                    WHERE provenance_ref = ANY(:req_ids)
+                      AND outcome = 'existing'
+                ),
+                existing_by_name AS (
+                    SELECT et.req_id, e.dd_id AS canonical_id
+                    FROM existing_terms et
+                    JOIN data_dictionary_entry e
+                      ON lower(e.name) = lower(et.surface_term)
+                     AND e.entry_kind = 'canonical'
+                     AND e.retired_at IS NULL
+                ),
+                existing_by_synonym AS (
+                    SELECT et.req_id, d.resolves_to AS canonical_id
+                    FROM existing_terms et
+                    JOIN data_dictionary_entry d
+                      ON lower(d.surface_term) = lower(et.surface_term)
+                     AND d.entry_kind = 'synonym'
+                     AND d.retired_at IS NULL
+                    JOIN data_dictionary_entry c
+                      ON c.dd_id = d.resolves_to
+                     AND c.retired_at IS NULL
+                )
+                SELECT req_id, canonical_id FROM direct
+                UNION
+                SELECT req_id, canonical_id FROM existing_by_name
+                UNION
+                SELECT req_id, canonical_id FROM existing_by_synonym
+                """
+            ),
+            {"req_ids": list(requirement_ids)},
+        ).mappings().all()
+
+        result: dict[str, list[str]] = {rid: [] for rid in requirement_ids}
+        for row in rows:
+            req_id = row["req_id"]
+            cid = row["canonical_id"]
+            if req_id in result and cid and cid not in result[req_id]:
+                result[req_id].append(cid)
+        return result
+    finally:
+        session.close()
+
+
+def has_flagged_dd_resolution(requirement_id: str) -> bool:
+    """
+    Return True if the most recent DD resolution attempt for requirement_id
+    produced a 'flagged' outcome (DD-unresolved entity; deferred until review).
+
+    A requirement that was initially flagged but later successfully resolved
+    will return False (most-recent-outcome wins).
+    """
+    session = get_session()
+    try:
+        outcome = session.execute(
+            text(
+                "SELECT outcome FROM data_dictionary_resolution_log "
+                "WHERE provenance_ref = :req_id "
+                "ORDER BY created_at DESC LIMIT 1"
+            ),
+            {"req_id": requirement_id},
+        ).scalar_one_or_none()
+        return outcome == "flagged"
+    finally:
+        session.close()
