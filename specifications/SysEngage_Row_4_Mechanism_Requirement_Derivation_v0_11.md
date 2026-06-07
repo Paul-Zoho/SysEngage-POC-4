@@ -4,6 +4,16 @@
 
 Filename: SysEngage_Row_4_Mechanism_Requirement_Derivation_v0_5.md
 
+Version: 0.11 (Supersedes v0.10 — entity-vs-state reduction. Realises Row 3 Requirement Derivation v0.8 §4.1.1(c). Confirmed against the PMT source, which uses one noun — "task" — in states ("available", "completed", "claimed"): §4.4.3a entity extraction now reduces a STATE/lifecycle-qualified phrase to the BARE entity + state as an attribute ("available tasks"/"completed tasks" → entity `task`, status available/completed), never a compound canonical; and §5.4 Row 1 entity-vocabulary gains the bare-noun clause (the entity is the bare source noun; states and roles are attributes, NOT separate entities — do not coin "task opportunity", "completed achievement", "economic activity", "household economy" for `task`). Fixes the Row 1 Run2 relapse where v0.10 stopped wholesale abstraction ("work unit") but the model coined state-qualified entities, fragmenting one `task` into separate canonicals and re-opening the cross-row resolution gap. Option A (entity flat; state is an attribute value, recorded via the existing DataDictionaryEntry.attributes) — no DD schema or matching change. Rows 2–6 §5.4 unchanged; §4.4.3a state-reduction applies to all rows.)
+
+Version: 0.10 (Supersedes v0.9 — Row 1 domain-entity vocabulary preservation. Realises Row 3 Requirement Derivation v0.7 §4.1.1(c). Adds a source-entity-preservation rule to §5.4 REQUIREMENT_ROW_GUIDANCE["1"]: abstraction at Row 1 lives in the subject and verb, NOT in renaming the domain entities — keep the Source's domain nouns ("task", "reward", "earnings"); do NOT coin abstract paraphrases ("work unit", "value-generating activity", "strategic value exchange mechanism"). Fixes the observed Row 1 failure where entity-paraphrase produced statements with no extractable entity (entity_extraction_empty → terms_presented=0 → empty Row 1 DD → zero cross-row candidates → zero refine links). The existing "do not reproduce verbatim" rule is reframed so "derive" means re-cast to normative form, NOT relabel entities. Worded as domain-entity preservation, not literal echoing (genuine implementation/UI nouns still neutralise to their domain entity). No change to subject/verb/type guidance, atomicity, or schema. Rows 2–6 unchanged.)
+
+Version: 0.9 (Supersedes v0.8 — Row 2 subject taxonomy / boundary test. Realises Row 3 Requirement Derivation v0.6 §4.1.1(a) / Row 2 Understanding §2.3.3 (R2-AMEND-9, OD-R2-30). The §5.4 REQUIREMENT_ROW_GUIDANCE["2"] subject block is rewritten from "THE BUSINESS (or a named business role) only" to a FOUR-class taxonomy chosen by the BOUNDARY TEST: actor/stakeholder (crosses the boundary inward), system (the boundary affordance — WHAT the system provides, never HOW), business (off-boundary responsibility), named business role (off-boundary accountability). Vocabulary block made subject-class-aware; the no-realisation-vocabulary rule is repositioned as the WHAT/HOW guard that keeps a system-subject statement at Row 2. Atomicity block gains the over-generation brake (author the column-aspects the source expresses; actor-action and its system-affordance are a complementary pair, not independent duplicates). CHK-3d-08 Row 2 subject taxonomy widened accordingly (system-subject at Row 2 no longer a mismatch). Fixes the observed false-merge cascade (R023/R034-class) at its root: the subject slot now carries discriminating actor/system/business information instead of a constant "the business". No change to Stage 2/4 mechanics, DD binding (§4.4.3a), atomicity hard-reject (CHK-3d-09), or schema. Row 1 / Rows 3–6 subject guidance unchanged.)
+
+Version: 0.8 (Supersedes v0.7 — DD term extraction corrected to entity reduction. Realises Row 3 Requirement Derivation v0.5 §5.5 / Data Dictionary v0.2 §3.1. The §4.4.3a term-extraction step is rewritten from a DM slot-reuse ("present the Object slot") to an IM entity reduction: identify the domain entity/entities the Object denotes and present those entity-grade noun phrases to the DD, never the verbatim Object-slot clause. Fixes the observed defect where clausal Objects were stored as DD canonical names (e.g. "a mechanism enabling household members to select and claim available work opportunities."), making every entry a unique one-off and defeating resolution. Extraction is now model-assisted and fingerprinted. New VER-3d-19 (entity-grade term guard). No change to Stage 2 derivation, atomicity, typing, domain_refs, or refines_refs.)
+
+Version: 0.7 (Supersedes v0.6 — DD Object-slot binding activated; realises Row 3 Requirement Derivation v0.4 §5.5 / F90. New Stage 4 sub-step §4.4.3a presents each Functional Object slot / Structural entity / asserted relationship / named value to the Data Dictionary service's resolve-and-record (Row 4 Data Dictionary Service v0.1), which returns the canonical DataDictionaryEntry and records provenance back to the Requirement — this is the DD's incremental population path. The binding is a DM/service step; the derivation AI does not propose DD bindings (§4.2 contract extended). Stage 4 mechanism_data gains a dd_binding block; new VER-3d-17 (every Object/entity presented and resolved-or-flagged) and VER-3d-18 (DD non-empty after a producing run — the regression guard against the empty-DD defect). No change to Stage 2 derivation, atomicity (CHK-3d-09), typing, domain_refs (MD-2), or refines_refs (Matching-populated). Object-slot binding was declared-only through v0.6; v0.7 makes it operative.)
+
 Version: 0.6 (Supersedes v0.5. Interrogative-elaboration increment, realising Row 3 Requirement Derivation v0.3 / findings F87/F88. Changes: (1) §5.4 — shared interrogative-completeness guidance added across all five row blocks: the AI formulates statements by filling the type-required slots (Functional When/Who/Action/Object; Constraint Rule/Subject/Condition/Criteria; Structural composition via Object-recursion), interrogating source content per slot, making the row's set generatively complete and surfacing Structural requirements — staying within the row (no cross-row parent invention). (2) New ADVC-3d-02 — interrogative slot-completeness advisory (soft; logs `interrogative_completeness_advisory` for PLB-3d-07): flags thin type-required slots / un-interrogated Objects, distinct from the HARD CHK-3d-09 atomicity reject. Soft because completeness is generative guidance, and an over-eager hard gate would reject legitimately-terminal requirements. See §12.9 for the v0.5→v0.6 change detail. This completes the F87/F88 guidance that v0.5 explicitly deferred.)
 
 Date: 03 June 2026
@@ -161,7 +171,7 @@ Realises Row 3 §4 Stage 3. All in-memory except the repair prompt.
 
 **CHK-3d-07 — Exact-duplicate collapse.** Two proposals with identical `statement` (case-insensitive) **and** identical `cci_refs` set → collapse to first; log `duplicate_requirement_collapsed`. (No name-uniqueness analogue — Requirements have no unique name. Near-duplicates → PLB-3d-01.)
 
-**CHK-3d-08 — Row-appropriate statement subject (decidable; realises Row 3 §4 Stage 3 / closes F81 detection).** For each surviving Requirement, test the statement's grammatical subject against the row's required subject (§5.4(a)). At Row 1 the subject must be the enterprise; a statement opening "The system shall…" (or otherwise system/component-subjected) at Row 1 is a mismatch. **Severity (resolves Row 3 OQ-3d-03): soft** — a mismatch logs `subject_vocabulary_mismatch` in `mechanism_data.subject_vocabulary_flags` (`[{requirement_id_placeholder, row, detected_subject}]`) and surfaces via PLB-3d-02; it does NOT reject the Requirement or block production. Rationale: validated across Rows 1–3, 5 production runs (Tracker F81) — the §5.4 guidance held subject discipline at 100%, so the check has been a clean backstop rather than a frequent rejecter; soft severity is retained. The check is a decidable detector (subject extraction is a closed test), consistent with classifying it CHK not PLB.
+**CHK-3d-08 — Row-appropriate statement subject (decidable; realises Row 3 §4 Stage 3 / closes F81 detection).** For each surviving Requirement, test the statement's grammatical subject against the row's permitted subject set (§5.4(a)). At Row 1 the subject must be the enterprise; a statement opening "The system shall…" (or otherwise system/component-subjected) at Row 1 is a mismatch. **At Row 2 the permitted set is {the business, a named business role, an actor/stakeholder, the system} (the four-class taxonomy, R2-AMEND-9 / OD-R2-30): an actor-subject ("a child can claim…") and a system-subject ("the system shall make … claimable") are NOT mismatches at Row 2; only an out-of-set subject (e.g. "the enterprise shall…" at Row 2) is.** The WHAT-vs-HOW discrimination for a system-subject statement (does it name realisation — Row 3 — rather than the provided capability?) is a *vocabulary* concern enforced by §5.4's no-realisation-vocabulary guidance, NOT by this subject check; CHK-3d-08 tests the subject only. **Severity (resolves Row 3 OQ-3d-03): soft** — a mismatch logs `subject_vocabulary_mismatch` in `mechanism_data.subject_vocabulary_flags` (`[{requirement_id_placeholder, row, detected_subject}]`) and surfaces via PLB-3d-02; it does NOT reject the Requirement or block production. Rationale: validated across Rows 1–3, 5 production runs (Tracker F81) — the §5.4 guidance held subject discipline at 100%, so the check has been a clean backstop rather than a frequent rejecter; soft severity is retained. The check is a decidable detector (subject extraction is a closed test), consistent with classifying it CHK not PLB.
 
 **CHK-3d-09 — Typed-slot atomicity (decidable, HARD; realises Row 3 §4.1.1(b) / F88).** For each surviving Requirement, validate the statement against the slot pattern its `requirement_type` selects (F88):
 - *Functional* → `[Condition,] Subject shall Action Object`. Required slots present: Subject, Action, Object.
@@ -171,8 +181,6 @@ Realises Row 3 §4 Stage 3. All in-memory except the repair prompt.
 Reject (log `atomicity_violation {requirement_id_placeholder, violation}` in `validation_failures`) when any of: **compound condition** (two+ conditions joined by and/or); **compound object** (two+ independent objects joined by conjunction, unless an inseparable single concept — the conjunction is flagged decidably, and inseparable-concept is a Practitioner-reviewable exception, PLB-3d-01); **multiple constraint rules / criteria** in one statement; **missing required slot** for the type.
 
 **Severity: HARD (rejects).** Unlike CHK-3d-08 (soft, surface-form subject), a compound or slotless statement is a structural defect — it explodes the verification test space and cannot be elaborated downward (the recursive object-interrogation needs a single object). A rejected proposal's CCIs return to the orphan pool and are re-covered via CHK-3d-05 repair (the repair prompt instructs atomic single-obligation statements). The decidable detector is conjunction/slot-presence analysis; the inseparable-single-concept judgement is the one soft edge (logged, not auto-rejected). This is the physical realisation of the F88 hard-atomicity constraint (v0.4 carried only the soft "and"-test in guidance).
-
-**Implementation note — shared slot detector.** The conjunction/slot-presence detector is the shared, mechanism-neutral `core/slots.py` — the single implementation of the F88 slot canon. It is NOT private to this mechanism: Phase 4 Requirement Quality Analysis imports the same module to score missing-slot / compound violations as graded penalties (RQA D-q-2, parity guarded by VER-q-06). Because both consumers are known by design, `core/slots.py` is built as foundational work before this check (it is RD's first milestone), and CHK-3d-09 imports it rather than defining its own detector. This guarantees that "missing Object" and "compound object" mean exactly the same thing at creation (here, hard reject) and at scoring (RQA, graded penalty). Do not fork a local copy into the derivation package.
 
 **ADVC-3d-01 — Requirement-per-Domain soft bounds.** Per source Domain, count surviving Requirements; `m = len(domain.cell_content_item_refs)`. Zero Requirements → manifests as orphans (CHK-3d-05). `> m` Requirements → log `requirement_count_advisory {domain_id, requirement_count, cci_count}` (PLB-3d-06). Informational; production proceeds.
 
@@ -186,7 +194,30 @@ Realises Row 3 §4 Stage 4.
 
 **4.4.2 domain_refs DM-derivation (MD-2).** Per surviving proposal: `domain_refs = sorted({d.domain_id for d in active_domains if set(proposal.cci_refs) & set(d.cell_content_item_refs)})`. Assert `len(domain_refs) >= 1` (guaranteed under MD-1 post-CHK-3d-03) and every referenced Domain `row_target == str(current_row)`. Empty result → fail closed: reject proposal, log `{check_id:"MD-2", detail:"domain_refs derivation empty"}` in `validation_failures`; re-run CHK-3d-05 on the reduced set.
 
-**4.4.3 Requirement construction.** Build each Requirement: allocated `requirement_id`; `statement`; `requirement_type`; `row_target=str(current_row)`; `confidence`; `cci_refs`; derived `domain_refs`; `refines_refs=[]` (F82 — populated later by the Requirement Matching service, NOT by Pass 3d; §5.5 / F93); optional `rationale`/`fit_criteria`/`verification_method`/`priority` where present; `answer_refs=[]`.
+**4.4.3 Requirement construction.** Build each Requirement: allocated `requirement_id`; `statement`; `requirement_type`; `row_target=str(current_row)`; `confidence`; `cci_refs`; derived `domain_refs`; `refines_refs=[]` (F82 — populated later by the Requirement Matching service, NOT by Pass 3d; §5.5 / F93); optional `rationale`/`fit_criteria`/`verification_method`/`priority` where present; `answer_refs=[]`. The Requirement's controlled-vocabulary terms are then bound to the Data Dictionary in §4.4.3a (the binding is recorded in the DD, not as a field on the Requirement — the canonical Requirement payload is unchanged, ledger v2.14).
+
+**4.4.3a Object-slot DD binding (activates Row 3 v0.4 §5.5; F90).** For each surviving Requirement, extract its controlled-vocabulary terms and present them to the Data Dictionary service (Row 4 Data Dictionary Service v0.1):
+
+1. **Entity extraction from the Object (IM).** Identify the **domain entity/entities the Object denotes** — the controlled-vocabulary noun(s) the obligation concerns — and present *those*, not the verbatim Object slot. At lower rows the Object is often already entity-grade ("task", "child earnings") and reduction is near-identity; at Row 1 the Object is typically clausal ("a mechanism enabling household members to select and claim available work opportunities") and MUST be reduced to its entity head(s) (here: `work opportunity`, `household member`). A statement may yield zero, one, or several entity terms. This is an **interpretive act** (which noun is the domain entity vs an incidental modifier / verb nominalisation like "a mechanism enabling…"), so it is **model-assisted, not a verbatim slot copy**: the CHK-3d-09 slot parse bounds *where* to look (the Object slot), but reducing that slot to its entity head(s) is IM. The presented term MUST be an entity-grade noun phrase; presenting the Object clause or the full statement is prohibited (it defeats the DD — each clause is unique, resolves to nothing shared, and yields one canonical entry per statement). Structural → the **entity** asserted, plus any **relationship** `(entity_a, relation, entity_b)` the statement asserts; any **value referenced by name** in any type (e.g. `Task.status.available`) → the attribute value.
+
+   **Reduce STATE / lifecycle qualifiers to the bare entity (do NOT coin a qualified entity).** A phrase naming the entity *in a state* — "available tasks", "completed tasks", "claimed task" — reduces to the **bare entity** (`task`) with the state carried as an **attribute** (status = available / completed / claimed), recorded on the entry's `attributes` (DD §4.4 value-record), NOT minted as a separate canonical ("task opportunity", "completed achievement"). Likewise do not substitute a near-synonym or role/abstraction-qualified coinage for a source entity ("economic activity", "work unit", "household economy" for `task`/`child`). The rule: the presented term is the **bare source noun**; lifecycle states and role qualifiers are attributes *of* that entity, never new entities. This is what makes the available / completed / claimed states of one entity resolve to ONE canonical rather than three — and what keeps Row 1 and Row 2 sharing the same `task` canonical for cross-row matching.
+2. **Resolve-and-record (service call).** For each extracted term call the DD service `resolve_and_record(term, context=statement, provenance_ref=requirement_id)` (DD spec §4.1–§4.4). The service performs its own three-way judgement (canonical-match → synonym; no-match → new canonical entry; ambiguous → flagged) and returns the canonical `DataDictionaryEntry`. Relationships call the relationship-record operation (DD §4.3) after both endpoints resolve; named values call the value-record operation (DD §4.4). **These calls are what populate the DD** — Pass 3d is the DD's primary caller and the DD accretes incrementally across the run and across rows.
+3. **Bind / flag.** Resolved → the Requirement's Object/entity is bound (the binding lives in the DD via the entry's `provenance_ref` and synonym register; nothing is written onto the Requirement element). **Unresolved / flagged** → record `dd_unresolved {requirement_id, term, reason}` in `mechanism_data.dd_binding` (§4.4.3b). The Requirement is still produced (Non-Loss); the unresolved term is the signal that the Matching service must treat this Requirement as not-yet-matchable (Matching §4.1 / VER-rm-07).
+4. **Idempotency.** Re-presenting the same term resolves against existing entries and does not duplicate them (DD §6). On IdempotentRerun of Pass 3d, no DD calls are made (no new requirements).
+
+**Mode.** The entity extraction (step 1) is an **IM act** — a model-assisted reduction of the Object to its domain entity/entities — and its fingerprint IS recorded in the Pass 3d AnalysisPass `ai_model_fingerprints` (stage label `stage4_dd_entity_extraction`), alongside the Stage 2 derivation fingerprints. The DD service's own resolution judgement (same/new/ambiguous) is a separate IM act, fingerprinted within the DD service, not here. The derivation AI does not author DD entries — it presents candidate entity terms; the DD service decides resolution. (This corrects the v0.7 framing of extraction as a cheap DM slot-reuse, which produced verbatim clausal terms.)
+
+**Ordering.** §4.4.3a runs inside Stage 4, after §4.4.3 construction and before the §4.4.6 transaction commit, so the DD is populated within Pass 3d. The Requirement Matching service (Phase 3e) subsequently reads the populated DD. Runner-level: Matching MUST NOT run for a row before that row's Pass 3d (with §4.4.3a) has committed; a Matching invocation finding an empty DD is a precondition failure (defer/halt), not a free-text fallback.
+
+**4.4.3b dd_binding audit.** Stage 4 records a `dd_binding` block in `mechanism_data` (sibling to `subject_vocabulary_flags`, `validation_failures`):
+
+```jsonc
+"dd_binding": {
+  "terms_presented": 18, "resolved": 16, "new_canonical": 7,
+  "synonyms_recorded": 9, "relationships_recorded": 2, "values_recorded": 1,
+  "dd_unresolved": [ { "requirement_id": "R019", "term": "pocket money allocation", "reason": "flagged_ambiguous" } ]
+}
+```
 
 **4.4.4 FullRerun retirement (resolves Row 3 OQ-3d-04).** On FullRerun: set `retired_at=now()` on all active Requirements for the row before inserting the new set (soft-retire, not delete — preserves referential integrity for any downstream refs, consistent with the sibling OQ-3c-03 soft-delete). `query_max_requirement_id` includes retired; new ids continue forward. Build `retirement_mapping` (one per retired Requirement; `inferred_successor_requirement_id` populated if statement similarity ≥ 0.50 against a new Requirement).
 
@@ -245,7 +276,7 @@ RequirementProposal:
   priority:             Optional[Literal["High","Medium","Low"]]
   confidence:           float               (0.0..1.0)
 ```
-The AI does NOT return `requirement_id`, `row_target`, `domain_refs`, `refines_refs`, or `answer_refs` (Stage 4 / deferred / service-populated). `refines_refs` in particular is established by the separate Requirement Matching service (F85/F93), never proposed by the derivation AI. Enum enforced at parse (MD-5).
+The AI does NOT return `requirement_id`, `row_target`, `domain_refs`, `refines_refs`, or `answer_refs` (Stage 4 / deferred / service-populated). `refines_refs` in particular is established by the separate Requirement Matching service (F85/F93), never proposed by the derivation AI. The AI likewise does **not** propose Data Dictionary bindings: Object-slot/entity/value resolution is the §4.4.3a service call, not an AI output (the AI formulates the statement; the DD service resolves its terms). Enum enforced at parse (MD-5).
 
 **`requirement_incremental_response_schema.py` — IncrementalRerun:** **IMPORTANT — DISTINCT CLASS** `IncrementalRequirementProposal`. Same field shape; do NOT alias the primary class. Covers only `new_domain_ccis`; refs outside the new-CCI set logged `incremental_ref_outside_new_set`.
 
@@ -310,6 +341,36 @@ Row 1 statements use enterprise-commitment verbs:
          particular is storage vocabulary — say "maintain records" / "be accountable for"
          at Row 1.
 
+### Domain entity vocabulary (REQUIRED — preserve the source's nouns)
+Abstraction at Row 1 lives in the SUBJECT and the VERB (the enterprise commits to / is
+accountable for / establishes) — NOT in renaming the things the enterprise commits to.
+KEEP the domain-entity nouns the source uses. If the source says "task", write "task" —
+NOT "work unit", "value-generating activity", or "strategic instrument". If the source
+says "reward" / "pocket money", write that — NOT "monetary reward as a strategic value
+exchange mechanism". Do NOT coin abstract paraphrases (instrument, mechanism, metric,
+exchange) for concrete source entities.
+  Right:  "The enterprise shall enable children to claim and complete tasks."
+  Wrong:  "The enterprise shall establish work units as strategic instruments for value
+           creation."
+This is a DOMAIN-ENTITY rule, not literal echoing: still neutralise genuinely system- or
+UI-level source nouns to their domain entity (source "claim button" / "screen" → the
+domain entity "claim" / "task", not "button"). Preserve the DOMAIN nouns (task, reward,
+child, earnings); drop only implementation/UI nouns.
+
+The entity is the BARE source noun — not a qualified, compounded, or abstracted form. The
+source names ONE entity ("task") and describes it in STATES ("available", "completed",
+"claimed"); the entity is `task` and the states are ATTRIBUTES, not separate entities. Do
+NOT coin "task opportunity", "completed achievement", "economic activity", or "household
+economy" — those are the bare entity (`task`, `child`) dressed in a state or an
+abstraction. One entity, one bare name; states and roles are attributes of it.
+  Right:  "...children to claim available tasks ... and view completed tasks."   (entity: task)
+  Wrong:  "...identify available task opportunities ... view completed achievements." (two coined entities)
+Why this matters: a single entity must carry ONE name from enterprise scope down to
+realisation. That consistent thread is what the Data Dictionary resolves and what
+cross-row refinement matches on; a Row-1-only synonym ("work unit" for "task") OR a
+state-qualified coinage ("task opportunity"/"completed achievement" for "task") breaks the
+thread (Non-Loss failure) and fragments one entity into several Data Dictionary canonicals.
+
 ### requirement_type reasoning (principle-based — choose, do not pattern-match)
 Weigh the source CCIs' Zachman columns and content against the row's abstraction level:
 - Why-column / motivation / rule / policy / commitment content → lean Constraint.
@@ -337,7 +398,9 @@ distribution.
 ### What NOT to do
 - Do NOT introduce actors, behaviours, or constraints not present in the source CCIs.
 - Do NOT reproduce CCI description text verbatim as the statement — derive a normative
-  statement from it.
+  statement from it. "Derive" means re-cast the sentence into normative enterprise-
+  commitment form; it does NOT mean renaming the domain entities — keep the source's
+  domain nouns (see Domain entity vocabulary).
 - Do NOT produce one thin requirement per CCI mechanically; consolidate where CCIs
   express one obligation, split where one CCI carries two.
 """,
@@ -353,42 +416,85 @@ business must satisfy — stated as a persistent business responsibility, not a 
 step and not a system function.
 
 ### Statement subject (REQUIRED)
-Row 2 requirement statements take THE BUSINESS as their subject, or a named BUSINESS
-ROLE where the source CCI identifies an accountable business actor:
-  "The business shall ..."        (default)
-  "<Business role> shall ..."     (when a WHO-column CCI names an accountable role,
-                                   e.g. "The account holder shall ...")
-Do NOT use "The enterprise shall ..." — that is Row 1 (Planner) vocabulary, framing a
-scope-level commitment rather than a business responsibility. Do NOT use "The system
-shall ..." — that is Row 3+ vocabulary describing a technical realisation.
+Row 2 has FOUR legitimate statement subjects. Choose by the BOUNDARY TEST — do NOT
+default to the business. The boundary test: does the party or function this CCI
+describes cross the system boundary?
+
+(a) ACTOR / STAKEHOLDER subject — an external party interacting WITH the system
+    (reaching in to do something). Subject = the actor; verb = their real action:
+      "A child can claim a completed task."
+      "A parent can view their child's earnings."
+    These are Who-column, boundary-crossing statements. They NAME the system boundary
+    and are first-class. Do NOT re-express them as "the business shall enable the child
+    to ..." — that buries the actor in the object and loses the boundary. Required
+    wherever a CCI describes an actor interacting with the system (the Who column must
+    be occupied — Cell Occupancy).
+
+(b) SYSTEM subject — the capability the system PROVIDES at the boundary (the affordance
+    meeting the actor), stated as WHAT the system provides, NOT how:
+      "The system shall make completed tasks claimable by entitled children."
+      "The system shall make a child's earnings visible to the parent."
+    Legitimate at Row 2 as a BLACK-BOX affordance. Name the provided capability and NO
+    realisation (no API/schema/database/service/endpoint/algorithm/validation rule —
+    that is Row 3 HOW). "The system enables claimable tasks" = Row 2 (names the
+    mechanism the system provides); "the system exposes a claim operation validating
+    entitlement against the ledger" = Row 3 (names the realisation).
+
+(c) BUSINESS subject — what the business does BEHIND the boundary: a responsibility,
+    rule, or artefact it maintains:
+      "The business shall maintain a record of each task claim."
+      "The business shall enforce the weekly reset cycle."
+
+(d) NAMED BUSINESS ROLE — a WHO-column CCI naming an accountable internal role that
+    does NOT act through the system (off-boundary accountability):
+      "The account holder shall approve ..."
+
+The boundary test, applied:
+  - Party acts THROUGH the system (reaches in)        → ACTOR subject (a)
+  - System OFFERS the capability to that actor         → SYSTEM subject (b)
+  - Function happens BEHIND the boundary (responsibility/rule/record)
+                                                        → BUSINESS subject (c)
+  - Accountable internal party, off-system             → NAMED BUSINESS ROLE (d)
+
+Subject by Zachman column (illustration — the boundary test decides; this orients):
+  Who (external party interacting)     → ACTOR         "a child can claim a task"
+  Who (internal accountable party)     → BUSINESS ROLE "the account holder approves"
+  How (capability offered to an actor) → SYSTEM        "the system makes tasks claimable"
+  How (internal business process)      → BUSINESS      "the business settles compensation"
+  What (artefact the business keeps)   → BUSINESS      "maintain a record of each claim"
+  When (cycle / trigger)               → BUSINESS (or Condition slot) "enforce weekly reset"
+  Why (rule / goal / constraint)       → BUSINESS (Constraint) "enforce approval threshold"
+
+Do NOT use "The enterprise shall ..." — that is Row 1 (Planner) scope vocabulary.
 The distinction from Row 1: Row 1 says what the enterprise commits to at scope level
-("The enterprise shall recognise child users as participants"); Row 2 says what the
-business must be able to do or must enforce to deliver on that commitment ("The business
-shall maintain a record of each participant's compensated work").
+("The enterprise shall recognise child users as participants"); Row 2 says who does
+what at the business boundary and what the business is responsible for behind it
+("A child can claim a completed task"; "The system shall make tasks claimable"; "The
+business shall maintain a record of each claim").
 
 ### Normative form and atomicity
-- Use the normative "shall". One business responsibility per statement.
-- Apply the two-step "and" test (requirement-level analogue of the domain "and" test):
-  (1) is there a single responsibility that subsumes both clauses? Use it.
-  (2) If not, split into two requirements.
-- Row 2 capability statements are STATELESS obligations — "the business shall be able to
-  X" — NOT step-by-step sequences ("first the business does X, then Y"). A statement
-  describing an ordered workflow has dropped to Row 3+ and must be re-stated as a
-  capability.
+- Use the normative "shall" (or "can"/"may" for an ACTOR capability — "a child can claim…"). One obligation per statement.
+- Apply the two-step "and" test: (1) is there a single obligation that subsumes both clauses? Use it. (2) If not, split into two requirements.
+- OVER-GENERATION BRAKE: a single source concept can span columns (an actor-action, the system-affordance that enables it, and a business record). Author ONLY the column-aspects the source actually expresses — do NOT mechanically manufacture an actor + system + business statement for every concept. Where both an actor-action and its system-affordance ARE expressed, author both but treat them as a COMPLEMENTARY PAIR (the affordance enables the action — related, not two independent obligations, and NOT duplicates of each other). Never state one obligation twice under two different subjects.
+- Row 2 statements are STATELESS obligations — a capability/responsibility, NOT a step-by-step sequence ("first X, then Y"). A statement describing an ordered workflow has dropped to Row 3+ and must be re-stated.
 
 ### Statement vocabulary
-Row 2 statements use business-responsibility vocabulary:
-  Appropriate: maintain, record, govern, settle, approve, authorise, account for,
-               be responsible for, be accountable for, steward, enforce (a business
-               rule), make available, recognise (a business role)
-  Avoid: calculate, process, store, retrieve, aggregate, compute, manage, track,
-         retain, retention, generate, display
-         (these describe system functions or technical storage — they belong at Row 3
-         or below; use "record", "maintain", "account for", "make available" instead).
-         "retain"/"retention" in particular is technical storage vocabulary — say
-         "maintain a record" / "be accountable for" at Row 2.
-  Also avoid: any word implying a technical mechanism (API, schema, database, service,
-              endpoint, algorithm).
+Vocabulary depends on the SUBJECT CLASS:
+  ACTOR subject — the actor's real action verb: claim, approve, view, define, submit,
+    request. Do NOT wrap it as "be enabled to" / "be able to be given" — name the action.
+  SYSTEM subject — the provided capability (WHAT, never HOW): make available, make
+    visible, make claimable, present, provide, enable (a capability).
+  BUSINESS subject / role — business-responsibility vocabulary: maintain, record,
+    govern, settle, approve, authorise, account for, be responsible / accountable for,
+    steward, enforce (a business rule), recognise (a business role).
+  Avoid at Row 2 (ALL subjects): calculate, process, store, retrieve, aggregate,
+    compute, manage, track, retain / retention, generate, display — system-function /
+    technical-storage vocabulary belonging to Row 3+ ("retain"/"retention" → "maintain
+    a record").
+  Avoid (ALL subjects) — the WHAT/HOW guard: any word implying a technical REALISATION
+    mechanism — API, schema, database, service, endpoint, algorithm, validation rule.
+    This is what keeps a SYSTEM-subject statement a Row 2 black-box affordance (WHAT the
+    system provides) rather than a Row 3 design (HOW it provides it).
 
 ### requirement_type reasoning (principle-based — choose, do not pattern-match)
 Weigh the source CCIs' Zachman columns and content against the business-owner level:
@@ -415,10 +521,12 @@ carry a Row-1 lean into Row 2; judge each statement on its source columns.
   Do NOT default every requirement to High; omit if there is no basis.
 
 ### What NOT to do
-- Do NOT introduce business roles, capabilities, or rules not present in the source CCIs.
+- Do NOT bury an interacting actor inside an object ("the business shall enable the child to claim …") — author the actor as subject (a). Burying it loses the boundary.
+- Do NOT introduce actors, roles, capabilities, or rules not present in the source CCIs.
 - Do NOT reproduce CCI description text verbatim — derive a normative statement.
-- Do NOT state a workflow sequence; state a stateless business capability.
-- Do NOT frame at enterprise/scope level (Row 1) or technical level (Row 3+).
+- Do NOT state a workflow sequence; state a stateless capability / responsibility.
+- Do NOT frame at enterprise/scope level (Row 1).
+- Do NOT describe HOW the system realises a capability (Row 3 — operations, validation, structure); for a system subject, name only WHAT it provides at the boundary.
 """,
 
     # Rows 3–5: AUTHORED AHEAD OF TEST (Mechanism Spec v0.4). Candidate guidance — NOT yet validated
@@ -717,6 +825,9 @@ In `tests/test_requirement_derivation.py`, Neon test DB with transaction-rollbac
 | **VER-3d-14** | No `fit_criteria` present-but-empty | `fit_criteria IS NULL OR length>0` |
 | **VER-3d-15** | No surviving Requirement violates typed-slot atomicity (CHK-3d-09 hard) | assert `validation_failures` carries no surviving `atomicity_violation`; spot-check survivors parse to required slots for their type |
 | **VER-3d-16** | `refines_refs` valid: empty as produced by Pass 3d; if any present (post-Matching), each references an existing Requirement at `row_target − 1` | Pass 3d output: assert all empty. Post-Matching integration: expand; JOIN `requirement`; assert parent row = child row − 1 |
+| **VER-3d-17** | Every Functional Object slot and every Structural entity in the produced set was presented to the DD service and is either resolved to a `DataDictionaryEntry` or recorded in `mechanism_data.dd_binding.dd_unresolved` (none silently absent) | `test_dd_binding_complete` — for each survivor, assert its Object/entity term appears once in `dd_binding` as resolved or `dd_unresolved` |
+| **VER-3d-18** | Regression guard: after a Pass 3d run that produced ≥1 Requirement, the project Data Dictionary is non-empty (≥1 `DataDictionaryEntry`) | `test_dd_populated_after_derivation` — `requirement_count_produced >= 1 ⇒ count(DataDictionaryEntry) >= 1` |
+| **VER-3d-19** | Entity-grade term guard: no candidate term presented to the DD equals the verbatim Object slot or the full statement; DD `canonical.name` values produced by this run are entity-grade noun phrases (sanity bound: short — heuristically ≤ ~5 words — and not terminated by sentence punctuation) | `test_dd_terms_entity_grade` — assert no `dd_binding` term contains the statement's verb phrase / trailing period; spot-check produced canonical names against the bound |
 
 (CHK-3d-08 subject mismatch is recorded in `subject_vocabulary_flags` and reviewed via PLB-3d-02; it is soft severity and not a VER gate. CHK-3d-09 atomicity is HARD — VER-3d-15 gates it. ADVC-3d-02 interrogative-completeness is a soft advisory — it logs `interrogative_completeness_advisory` for PLB-3d-07 review and is not a VER gate, consistent with its generative-guidance nature.)
 
@@ -920,7 +1031,7 @@ v0.5 is the Tier 2 reconciliation to the closed cross-row/structural design (fin
 - The full **F87/F88 interrogative-elaboration guidance** — CSPO slot-elicitation prompts and per-requirement interrogative completeness questions that expand §5.4. v0.5 reconciles the *type vocabulary* of the guidance blocks and adds the *atomicity check*, but does not yet rewrite the prompts to elicit slot-structured CSPO statements or to run the interrogative completeness sweep. That is the next guidance-authoring increment.
 - The **Requirement Matching service** and **Data Dictionary service** internals (F85/F90) — declared as interfaces (refines_refs population, Object-slot binding) per Row 3 v0.2 §5.5; specified in their own service specs.
 
-**Re-implementation impact:** Alembic migration to alter `requirement_type` CHECK, add `Measurement` to `verification_method` CHECK, add `refines_refs` JSONB column (existing rows default `[]`); build the shared `core/slots.py` detector as foundational work (imported by both this check and Phase 4 RQA — D-q-2), then implement CHK-3d-09 in `stage3_structural_validation.py` calling `core/slots.py`; update the three response schemas' type Literal; update `requirement_row_guidance.py` type-reasoning lines. Existing PMT/NQPS data migrates per ledger v2.13 Appendix D (Performance/Suitability→Constraint, Non-Functional→Structural).
+**Re-implementation impact:** Alembic migration to alter `requirement_type` CHECK, add `Measurement` to `verification_method` CHECK, add `refines_refs` JSONB column (existing rows default `[]`); implement CHK-3d-09 in `stage3_structural_validation.py`; update the three response schemas' type Literal; update `requirement_row_guidance.py` type-reasoning lines. Existing PMT/NQPS data migrates per ledger v2.13 Appendix D (Performance/Suitability→Constraint, Non-Functional→Structural).
 
 ### 12.9 v0.5 → v0.6 change detail
 
@@ -931,18 +1042,19 @@ v0.6 adds the interrogative-elaboration guidance that v0.5 explicitly deferred (
 
 **Re-implementation impact:** update `prompts/requirement_row_guidance.py` with the shared interrogative preamble (and per-row slot vocabulary); implement ADVC-3d-02 as a soft advisory in `stage3_structural_validation.py` (logging only, no reject). No migration, no schema change.
 
-**Still NOT in v0.6 (deferred):** the Requirement Matching service and Data Dictionary service internals remain their own specs (now authored: Row 3/4 Data Dictionary v0.1, Row 3/4 Requirement Matching v0.1) — this spec still only *declares* their interfaces (§5.5). The state-completeness capability (F91) remains deferred.
+**Still NOT in v0.7 (deferred):** the Requirement Matching service internals remain its own spec (Row 3/4 Requirement Matching v0.2). **The Data Dictionary Object-slot binding is now active (§4.4.3a) — Pass 3d populates the DD; the DD service's internal resolution mechanics remain in the DD spec (Row 3/4 Data Dictionary v0.1).** The state-completeness capability (F91) remains deferred.
 
 ## Document End
 
-End of SysEngage Row 4 Mechanism: Requirement Derivation v0.6.
+End of SysEngage Row 4 Mechanism: Requirement Derivation v0.11.
 
-Physical realisation of the Row 3 (logical) Requirement Derivation spec v0.3, against ledger v2.13. Type/atomicity/schema reconciled (v0.5) PLUS interrogative-elaboration guidance (v0.6): §5.4 slot-filling-by-interrogation across all rows; ADVC-3d-02 soft completeness advisory; hard typed-slot atomicity (CHK-3d-09). `refines_refs` schema present, populated by the now-authored Requirement Matching service (Row 3/4 v0.1). Object-slot binding declared against the now-authored Data Dictionary service (Row 3/4 v0.1). OQ-3d-01..05 resolved. F80 Open; F81 Open (Rows 1–2 validated, Rows 3–5 candidate pending test, Row 6 stub); F82/F87/F88/F89 derivation portions realised here.
+Physical realisation of the Row 3 (logical) Requirement Derivation spec v0.7, against ledger v2.15. Reconciled type/atomicity/schema (v0.5) + interrogative elaboration (v0.6) + DD Object-slot binding (v0.7) + DD entity-reduction extraction (v0.8) + Row 2 subject taxonomy / boundary test (v0.9) + **Row 1 domain-entity vocabulary preservation (v0.10)**: §5.4 REQUIREMENT_ROW_GUIDANCE["1"] gains a source-entity-preservation rule — Row 1 abstraction lives in subject and verb, not in renaming domain entities; keep the source's domain nouns (task, reward, earnings), do not coin abstract paraphrases. Fixes the empty-Row-1-DD / zero-cross-row-recall failure at its root (entity-paraphrase left no entity to extract). The fix also removes the need for cross-abstraction DD synonymy: one entity, one name, all rows. §5.4 four-class Row 2 subjects; CHK-3d-08 widened taxonomy; CHK-3d-09 hard atomicity; ADVC-3d-02 advisory; DD binding §4.4.3a (entity reduction); VER-3d-17/18/19. `refines_refs` populated by Requirement Matching (Row 3/4 v0.3). F80 Open; F81 Open; F82/F87/F88/F89/F90 derivation portions realised here; Row 2 subject taxonomy realises R2-AMEND-9 / OD-R2-30.
 
 Companion artefacts:
-- SysEngage_Row_3_Mechanism_Requirement_Derivation_v0_3.md — logical authority (interrogative increment)
-- SysEngage_Row_3_Mechanism_Requirement_Matching_v0_1.md / SysEngage_Row_4_Mechanism_Requirement_Matching_v0_1.md — populates `refines_refs`
-- SysEngage_Row_3_Mechanism_Data_Dictionary_v0_1.md / SysEngage_Row_4_Mechanism_Data_Dictionary_v0_1.md — Object-slot vocabulary authority
+- SysEngage_Row_3_Mechanism_Requirement_Derivation_v0_7.md — logical authority (§4.1.1(c) domain-entity preservation; §4.1.1(a) subject taxonomy)
+- SysEngage_Row_2_Understanding_v1_5.md §2.3.3 — subject taxonomy & boundary semantics
+- SysEngage_Row_3_Mechanism_Data_Dictionary_v0_2.md / Row_4 v0.1 — the service §4.4.3a calls
+- SysEngage_Row_3_Mechanism_Requirement_Matching_v0_3.md / Row_4 v0.3 — populates `refines_refs`; subject-class distinctness + empty-candidate-set corrections are the remaining Matching cascade items
 - SysEngage_Row_4_Domain_Derivation_v0_24.md — structural sibling
-- SysEngage_Issues_Tracker_v0_63.md — F80–F93 disposition
-- sysengage_minimal_ledger_spec_v2_13.md — canonical Requirement schema authority
+- SysEngage_Issues_Tracker_v0_65.md — F80–F93 disposition
+- sysengage_minimal_ledger_spec_v2_15.md — canonical schema authority
