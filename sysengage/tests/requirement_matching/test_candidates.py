@@ -256,24 +256,34 @@ class TestEntityAnchorFilter(unittest.TestCase):
             {r["requirement_id"] for r in parents}, {"P001", "P002"}
         )
 
-    def test_pool_member_no_dd_binding_skipped_by_filter(self):
-        """Pool member with [] canonical_ids is skipped in entity filter."""
+    def test_pool_member_no_dd_binding_excluded_no_fallback(self):
+        """
+        Pool member with [] canonical_ids is skipped in entity filter.
+        Because the *child* is DD-bound, no fallback fires — the pool member
+        simply doesn't participate in entity-anchored matching.
+        """
         child = _req("C001", row=2)
         pool = [_req("P001", row=1)]
         canonical_map = {"C001": ["DD001"], "P001": []}
-        parents, siblings, _ = self._run(child, pool, canonical_map)
-        # P001 has no DD binding → excluded from entity filter → fallback fires
-        self.assertIn("P001", {r["requirement_id"] for r in parents})
+        parents, siblings, not_yet = self._run(child, pool, canonical_map)
+        # Child is DD-bound → no coverage-gap fallback; P001 has no binding → excluded
+        self.assertFalse(not_yet)
+        self.assertEqual(parents, [], "P001 excluded from entity filter; child is DD-bound so no fallback")
 
 
 # ---------------------------------------------------------------------------
-# TestCoverageGapFallback — entity filter yields nothing → full-row fallback
+# TestEntityAnchorNoFallback — DD-bound child with no pool match → empty sets
 # ---------------------------------------------------------------------------
 
-class TestCoverageGapFallback(unittest.TestCase):
+class TestEntityAnchorNoFallback(unittest.TestCase):
     """
-    When child has canonical_ids but none of the pool members share the entity
-    (coverage gap), the full row is returned rather than an empty candidate set.
+    When child has canonical_ids but no pool members share the entity anchor,
+    get_candidates must return empty candidate lists and not_yet_matchable=False.
+
+    The full-pool fallback is intentionally NOT applied here: the child is
+    DD-bound, so an empty candidate set is the correct signal (no match). Applying
+    a fallback would silently defeat the entity-anchored tractability guarantee
+    (Matching Spec §4.1 / D-rm-1).
     """
 
     def _run(self, child, pool, canonical_map):
@@ -287,22 +297,22 @@ class TestCoverageGapFallback(unittest.TestCase):
             from mechanisms.requirement_matching.candidates import get_candidates
             return get_candidates(child=child, pool=pool)
 
-    def test_no_matching_parents_triggers_full_parent_row(self):
+    def test_no_matching_parents_returns_empty(self):
+        """DD-bound child with no entity-matching parents → empty parents, not full row."""
         child = _req("C001", row=2)
         pool = [_req("P001", row=1), _req("P002", row=1)]
         canonical_map = {
             "C001": ["DD001"],
-            "P001": ["DD999"],   # different entity
+            "P001": ["DD999"],   # different entity — no match
             "P002": ["DD999"],
         }
         parents, siblings, not_yet = self._run(child, pool, canonical_map)
         self.assertFalse(not_yet)
-        self.assertEqual(
-            {r["requirement_id"] for r in parents}, {"P001", "P002"},
-            "Full parent row returned when entity filter finds nothing",
-        )
+        self.assertEqual(parents, [], "Empty parents expected — no coverage-gap fallback")
+        self.assertEqual(siblings, [])
 
-    def test_no_matching_siblings_triggers_full_sibling_row(self):
+    def test_no_matching_siblings_returns_empty(self):
+        """DD-bound child with no entity-matching siblings → empty siblings, not full row."""
         child = _req("C001", row=2)
         pool = [_req("S001", row=2), _req("S002", row=2)]
         canonical_map = {
@@ -310,18 +320,52 @@ class TestCoverageGapFallback(unittest.TestCase):
             "S001": ["DD999"],
             "S002": ["DD999"],
         }
-        _, siblings, _ = self._run(child, pool, canonical_map)
-        self.assertEqual(
-            {r["requirement_id"] for r in siblings}, {"S001", "S002"},
-            "Full sibling row returned when entity filter finds nothing",
-        )
+        _, siblings, not_yet = self._run(child, pool, canonical_map)
+        self.assertFalse(not_yet)
+        self.assertEqual(siblings, [], "Empty siblings expected — no coverage-gap fallback")
 
-    def test_fallback_excludes_child_from_siblings(self):
+    def test_not_yet_matchable_false_when_anchor_present_but_no_hits(self):
+        """not_yet_matchable must be False even when candidate sets are empty."""
         child = _req("C001", row=2)
-        pool = [_req("S001", row=2), _req("S002", row=2)]
-        canonical_map = {"C001": ["DD001"], "S001": ["DD999"], "S002": ["DD999"]}
-        _, siblings, _ = self._run(child, pool, canonical_map)
-        self.assertNotIn("C001", {r["requirement_id"] for r in siblings})
+        pool = [_req("P001", row=1)]
+        canonical_map = {"C001": ["DD001"], "P001": ["DD999"]}
+        parents, siblings, not_yet = self._run(child, pool, canonical_map)
+        self.assertFalse(not_yet)
+
+    def test_full_pool_fallback_only_fires_for_zero_dd_binding(self):
+        """
+        Confirm the full-pool fallback fires for a child with NO dd bindings,
+        but NOT for a child that has bindings with no pool overlap.
+        """
+        pool = [_req("P001", row=1), _req("S001", row=2)]
+        child = _req("C001", row=2)
+
+        # Child with zero bindings → fallback expected
+        empty_map = {"C001": [], "P001": [], "S001": []}
+        with patch(
+            "mechanisms.requirement_matching.candidates._get_canonical_ids_batch",
+            return_value=empty_map,
+        ), patch(
+            "mechanisms.requirement_matching.candidates._is_dd_flagged",
+            return_value=False,
+        ):
+            from mechanisms.requirement_matching.candidates import get_candidates
+            parents, siblings, not_yet = get_candidates(child=child, pool=pool)
+        self.assertFalse(not_yet)
+        self.assertIn("P001", {r["requirement_id"] for r in parents})
+
+        # Same child with a binding but no pool overlap → no fallback
+        bound_map = {"C001": ["DD001"], "P001": ["DD999"], "S001": ["DD999"]}
+        with patch(
+            "mechanisms.requirement_matching.candidates._get_canonical_ids_batch",
+            return_value=bound_map,
+        ), patch(
+            "mechanisms.requirement_matching.candidates._relationships_of",
+            return_value=[],
+        ):
+            parents2, siblings2, not_yet2 = get_candidates(child=child, pool=pool)
+        self.assertFalse(not_yet2)
+        self.assertEqual(parents2, [], "No fallback when child has DD binding but no entity overlap")
 
 
 # ---------------------------------------------------------------------------

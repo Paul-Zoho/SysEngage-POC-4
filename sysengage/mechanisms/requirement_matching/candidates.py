@@ -174,26 +174,12 @@ def get_candidates(
         elif req_row == child_row:
             candidate_siblings.append(req)
 
-    # ------------------------------------------------------------------
-    # Step 5 — fallback per row if anchor filter found nothing (coverage gap)
-    # ------------------------------------------------------------------
-    if not candidate_parents and parent_row:
-        _log.debug(
-            "get_candidates: %s no entity-anchored parents → full parent-row fallback",
-            child_id,
-        )
-        candidate_parents = [
-            r for r in pool if str(r.get("row_target", "")) == parent_row
-        ]
-    if not candidate_siblings:
-        _log.debug(
-            "get_candidates: %s no entity-anchored siblings → full sibling-row fallback",
-            child_id,
-        )
-        candidate_siblings = [
-            r for r in pool
-            if str(r.get("row_target", "")) == child_row
-            and r.get("requirement_id") != child_id
-        ]
-
+    # No coverage-gap fallback here: the child has a DD anchor, so returning an
+    # empty candidate set is the correct signal — the judge should find no match
+    # rather than receive the full pool and silently suppress the entity guarantee.
+    # Full-pool fallback fires only in Step 2b (child has zero DD bindings at all).
+    _log.debug(
+        "get_candidates: %s → %d parents, %d siblings (entity-anchored)",
+        child_id, len(candidate_parents), len(candidate_siblings),
+    )
     return candidate_parents, candidate_siblings, False
