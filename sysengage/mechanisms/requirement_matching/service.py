@@ -1,25 +1,33 @@
 """
 Public API for the Requirement Matching service.
 
-Per Requirement Matching Service Spec v0.2 §4.
+Per Requirement Matching Service Spec v0.3 §4.
 
 Stateless per call over the persistent requirement set.
 Not a numbered pass — invoked over an assembled requirement set; re-invokable
 incrementally.
 
 Operations:
-  match_requirement(child, pool) → result dict
-  match_row(row_n, project_id, practitioner_id)   — match all row n against row n-1
-  match_set(requirement_ids, project_id, practitioner_id) — incremental re-match
+  match_requirement(child, pool) → result dict   — pure judge, no DB writes
+  match_row(row_n, project_id, practitioner_id)  — match all row n against row n-1
+  match_set(requirement_ids, project_id, ...)    — incremental re-match
+
+v0.3 changes vs v0.2:
+  - match_row() restructured into two passes to support union-find merge:
+      Pass 1 — judge all row-n requirements (no DB writes); collect duplicate pairs.
+      Union-find — resolve all collected pairs into equivalence classes; select
+                   survivor = min(requirement_id) per class (deterministic).
+      Pass 2 — execute one execute_class_merge() per class; write refines_refs
+               for non-retired requirements only.
+  - match_requirement() no longer performs any DB writes; session parameter removed.
+    All DB writes are concentrated in match_row() / match_set().
+  - merge_records schema: retired_ids[] (array) + repointed_refs[] (list of ids).
+  - Hard Non-Loss assertion in execute_class_merge() (fail-closed; NonLossViolationError
+    leaves the class intact and flags all members for review).
 
 v0.2 changes vs v0.1:
-  - _append_matching_log() removed; provenance now goes into a per-execution
-    AnalysisPass (ProvAccumulator / provenance.py), not service-log tables.
-  - match_requirement() returns candidates_considered, multi_parent_ambiguous,
-    ai_fingerprints, and gap_record (when applicable) so the caller accumulates
-    full provenance.
-  - match_row() / match_set() write an AnalysisPass at commit time.
-  - gaps.py functions now return dicts (not DB writes).
+  - _append_matching_log() removed; provenance goes into a per-execution AnalysisPass.
+  - gaps.py functions return dicts (not DB writes).
 
 LPM: requirement statements are NEVER rewritten.
 """
@@ -39,7 +47,12 @@ from mechanisms.requirement_matching.gaps import (
 )
 from mechanisms.requirement_matching.gating import MATCH_CONFIDENCE_BAND
 from mechanisms.requirement_matching.judge import judge_duplicate, judge_refine
-from mechanisms.requirement_matching.merge import execute_merge
+from mechanisms.requirement_matching.merge import (
+    NonLossViolationError,
+    build_equivalence_classes,
+    execute_class_merge,
+    select_survivor,
+)
 from mechanisms.requirement_matching.provenance import ProvAccumulator
 from sqlalchemy import text
 
@@ -65,33 +78,35 @@ def _load_requirements(session, project_id: str) -> list[dict]:
 def match_requirement(
     child: dict,
     pool: list[dict],
-    session=None,
 ) -> dict[str, Any]:
     """
-    Match a single child requirement against the pool.
+    Judge a single child requirement against the pool.  Pure function — no DB writes.
 
     Per §4.3:
     1. candidates(child) — DD-based pre-filter
-    2. judge_refine + judge_duplicate
-    3. Gate and act (write refines_refs / merge)
+    2. judge_duplicate (same-row) then judge_refine (cross-row)
+    3. Gate and classify
+
+    DB writes (refines_refs, merge retirements) are performed by the caller
+    (match_row / match_set) after equivalence-class resolution.
 
     Returns
     -------
     dict with keys:
       outcome             — refine|no_match|duplicate|flagged|deferred|no_parents
-      matched_parent_ids  — list of parent ids (refine only)
-      duplicate_of        — survivor id (duplicate only)
+      matched_parent_ids  — list of parent ids (refine only, pre-row-validation)
+      duplicate_of        — id nominated by judge (duplicate only; may be updated
+                            by caller to actual class survivor after union-find)
       confidence          — float or None
       not_yet_matchable   — bool
       candidates_considered — list of requirement_ids from the DD pre-filter
       multi_parent_ambiguous — bool
       auto_recorded       — bool
       ai_fingerprints     — list of fingerprint dicts from judge calls
-      gap_record          — dict or None (upward gap, when outcome=no_match, row>1)
+      gap_record          — dict or None (upward gap when outcome=no_match, row>1)
     """
     child_row = str(child.get("row_target", ""))
     child_id = child["requirement_id"]
-    _child_pid = child.get("project_id", "")
 
     # Row 1: no parents, empty refines_refs is correct (spec §8, F-rm-7)
     if child_row == "1":
@@ -152,14 +167,9 @@ def match_requirement(
     dup_confidence = float(dup_result.get("confidence", 0.0))
     if dup_result.get("outcome") == "duplicate" and dup_confidence >= MATCH_CONFIDENCE_BAND:
         dup_of = dup_result.get("duplicate_of")
-        merge_record: dict | None = None
-        if session and dup_of:
-            mr = execute_merge(
-                session, survivor_id=dup_of, merged_id=child_id,
-                project_id=_child_pid,
-                rationale=dup_result.get("rationale", ""), auto_recorded=True,
-            )
-            merge_record = mr
+        # NOTE: No DB write here. The caller (match_row) collects all duplicate pairs,
+        # runs union-find to form equivalence classes, and executes one class merge
+        # per class with survivor = min(requirement_id).
         return {
             "outcome": "duplicate",
             "matched_parent_ids": [],
@@ -168,10 +178,9 @@ def match_requirement(
             "not_yet_matchable": False,
             "candidates_considered": candidate_sibling_ids,
             "multi_parent_ambiguous": False,
-            "auto_recorded": True,
+            "auto_recorded": dup_confidence >= MATCH_CONFIDENCE_BAND,
             "ai_fingerprints": all_fingerprints,
             "gap_record": None,
-            "_merge_record": merge_record,
         }
 
     # Step 2b: Refine judgement (D-rm-1)
@@ -212,23 +221,10 @@ def match_requirement(
 
     if refine_result.get("outcome") == "refine":
         matched_parent_ids = refine_result.get("matched_parent_ids", [])
-        # Verify each parent is at row_target - 1 (decidable, per VER-rm-01)
-        expected_parent_row = str(int(child_row) - 1)
-        valid_parent_ids = [
-            pid for pid in matched_parent_ids
-            if str(next(
-                (r.get("row_target", "") for r in pool if r["requirement_id"] == pid), ""
-            )) == expected_parent_row
-        ]
-        if session and valid_parent_ids:
-            session.execute(
-                text("UPDATE requirement SET refines_refs = CAST(:refs AS jsonb) "
-                     "WHERE requirement_id = :rid AND project_id = :pid"),
-                {"refs": json.dumps(valid_parent_ids), "rid": child_id, "pid": _child_pid},
-            )
+        # NOTE: row-validation and DB write happen in the caller after union-find.
         return {
             "outcome": "refine",
-            "matched_parent_ids": valid_parent_ids,
+            "matched_parent_ids": matched_parent_ids,
             "duplicate_of": None,
             "confidence": refine_confidence,
             "not_yet_matchable": False,
@@ -240,6 +236,7 @@ def match_requirement(
         }
 
     # No match — emit upward gap record (spec §4.6, F86)
+    _child_pid = child.get("project_id", "")
     gap = make_upward_gap_record(
         requirement_id=child_id, row_target=child_row, project_id=_child_pid
     )
@@ -257,6 +254,37 @@ def match_requirement(
     }
 
 
+def _apply_refine_write(session, child: dict, result: dict, pool: list[dict]) -> None:
+    """Write refines_refs for a refine-outcome child (row-validation included)."""
+    child_row = str(child.get("row_target", ""))
+    child_id = child["requirement_id"]
+    project_id = child.get("project_id", "")
+    matched_parent_ids = result.get("matched_parent_ids", [])
+
+    if not matched_parent_ids:
+        return
+
+    expected_parent_row = str(int(child_row) - 1) if child_row.isdigit() else ""
+    valid_parent_ids = [
+        pid for pid in matched_parent_ids
+        if str(next(
+            (r.get("row_target", "") for r in pool if r["requirement_id"] == pid),
+            "",
+        )) == expected_parent_row
+    ]
+    if not valid_parent_ids:
+        return
+
+    session.execute(
+        text(
+            "UPDATE requirement SET refines_refs = CAST(:refs AS jsonb) "
+            "WHERE requirement_id = :rid AND project_id = :pid"
+        ),
+        {"refs": json.dumps(valid_parent_ids), "rid": child_id, "pid": project_id},
+    )
+    result["matched_parent_ids"] = valid_parent_ids
+
+
 def match_row(
     row_n: int,
     project_id: str,
@@ -265,8 +293,15 @@ def match_row(
     """
     Match all row n requirements against row n-1.
 
-    Per §3.1: typical invocation.  Commits refines_refs, merge retirements,
-    and a single AnalysisPass (provenance) in one transaction.
+    Per §3.1 / §4.5: two-pass design for correct duplicate handling.
+      Pass 1 — judge every row-n requirement (pure; no DB writes).
+               Collect duplicate (child_id, duplicate_of) pairs.
+      Union-find — resolve pairs into equivalence classes;
+                   survivor = min(requirement_id) per class.
+      Pass 2 — execute one execute_class_merge() per class;
+               write refines_refs for non-retired requirements;
+               write one AnalysisPass and commit.
+
     Returns a summary dict.
     """
     prov = ProvAccumulator(
@@ -282,15 +317,100 @@ def match_row(
         row_n_reqs = [r for r in pool if str(r.get("row_target", "")) == str(row_n)]
         parent_reqs = [r for r in pool if str(r.get("row_target", "")) == str(row_n - 1)]
 
-        refined_parent_ids: set[str] = set()
+        # ----------------------------------------------------------------
+        # Pass 1: judge all row-n requirements (no DB writes)
+        # ----------------------------------------------------------------
+        judged: list[tuple[dict, dict]] = []  # (child, result)
+        dup_pairs: list[tuple[str, str]] = []
 
         for child in row_n_reqs:
-            result = match_requirement(child, pool, session=session)
+            result = match_requirement(child, pool)
+            judged.append((child, result))
+            if result["outcome"] == "duplicate" and result.get("duplicate_of"):
+                dup_pairs.append((child["requirement_id"], result["duplicate_of"]))
 
-            # Accumulate provenance
+        # ----------------------------------------------------------------
+        # Union-find: resolve equivalence classes; select min-id survivors
+        # ----------------------------------------------------------------
+        classes = build_equivalence_classes(dup_pairs)
+        # Map every requirement_id that participates in a class → its survivor
+        id_to_survivor: dict[str, str] = {}
+        for cls in classes:
+            survivor = select_survivor(cls)
+            for member in cls:
+                id_to_survivor[member] = survivor
+
+        all_retired: set[str] = set()
+        for cls in classes:
+            survivor = select_survivor(cls)
+            all_retired.update(cls - {survivor})
+
+        # ----------------------------------------------------------------
+        # Pass 2: DB writes
+        # ----------------------------------------------------------------
+
+        # 2a: Execute one class merge per equivalence class
+        class_merge_records: list[dict] = []
+        non_loss_flagged: set[str] = set()  # ids whose class failed Non-Loss
+
+        for cls in classes:
+            survivor_id = select_survivor(cls)
+            if len(cls) == 1:
+                continue  # single-member — no merge needed
+
+            # Best confidence: max over all duplicate-outcome judgements for class members
+            cls_confs = [
+                r.get("confidence") or 0.0
+                for child, r in judged
+                if child["requirement_id"] in cls and r["outcome"] == "duplicate"
+            ]
+            best_conf = max(cls_confs) if cls_confs else 0.0
+
+            try:
+                mr = execute_class_merge(
+                    session,
+                    class_members=cls,
+                    survivor_id=survivor_id,
+                    project_id=project_id,
+                    confidence=best_conf,
+                    rationale="Duplicate equivalence class (union-find, v0.3)",
+                    auto_recorded=best_conf >= MATCH_CONFIDENCE_BAND,
+                )
+                class_merge_records.append(mr)
+            except NonLossViolationError as exc:
+                _log.error("Non-Loss violation for class %s: %s", sorted(cls), exc)
+                # Fail-closed: leave class intact, flag all members for review
+                non_loss_flagged.update(cls)
+                all_retired -= (cls - {survivor_id})
+
+        # 2b: Write refines_refs for non-retired requirements
+        for child, result in judged:
+            child_id = child["requirement_id"]
+            if child_id in all_retired:
+                continue
+            if result["outcome"] == "refine":
+                _apply_refine_write(session, child, result, pool)
+
+        # ----------------------------------------------------------------
+        # Provenance accumulation
+        # ----------------------------------------------------------------
+        refined_parent_ids: set[str] = set()
+
+        for child, result in judged:
+            child_id = child["requirement_id"]
+            outcome = result["outcome"]
+
+            # Flags from Non-Loss violation override
+            if child_id in non_loss_flagged:
+                outcome = "flagged"
+            elif child_id in all_retired:
+                # Update duplicate_of to the actual class survivor
+                outcome = "duplicate"
+                result["duplicate_of"] = id_to_survivor.get(child_id, result.get("duplicate_of"))
+
             prov.add_match_record(
-                requirement_id=child["requirement_id"],
-                outcome=result["outcome"],
+                requirement_id=child_id,
+                outcome=outcome,
                 confidence=result.get("confidence"),
                 candidates_considered=result.get("candidates_considered", []),
                 parent_ids=result.get("matched_parent_ids"),
@@ -301,10 +421,11 @@ def match_row(
             prov.add_fingerprints(result.get("ai_fingerprints", []))
             if result.get("gap_record"):
                 prov.add_gap_record(result["gap_record"])
-            if result.get("_merge_record"):
-                prov.add_merge_record(result["_merge_record"])
 
-            refined_parent_ids.update(result.get("matched_parent_ids", []))
+            refined_parent_ids.update(result.get("matched_parent_ids") or [])
+
+        for mr in class_merge_records:
+            prov.add_merge_record(mr)
 
         # Downward gap check: parent-orphans at row n-1
         parent_id_set = {r["requirement_id"] for r in parent_reqs}
@@ -326,7 +447,6 @@ def match_row(
         pass_id = prov.write_pass(session)
         session.commit()
 
-        counts = {r["outcome"]: 0 for r in []}
         match_records = prov.match_records
         return {
             "row_matched": row_n,
@@ -338,6 +458,7 @@ def match_row(
             "duplicate_count": sum(1 for r in match_records if r["outcome"] == "duplicate"),
             "deferred_count": sum(1 for r in match_records if r["outcome"] == "deferred"),
             "downward_gap_count": len(orphaned_parents),
+            "merge_class_count": len(class_merge_records),
             "execution_status": prov._compute_execution_status(),
         }
 
@@ -361,6 +482,8 @@ def match_set(
     Incremental re-match for a specific subset of requirements.
     Useful after GQA generates a new parent and re-descends.
     Writes a single AnalysisPass per invocation (mechanism_data.row_ref=None).
+
+    Same two-pass pattern as match_row() for duplicate correctness.
     """
     prov = ProvAccumulator(
         project_id=project_id,
@@ -374,11 +497,75 @@ def match_set(
         pool = _load_requirements(session, project_id)
         children = [r for r in pool if r["requirement_id"] in requirement_ids]
 
+        # Pass 1: judge (no DB writes)
+        judged: list[tuple[dict, dict]] = []
+        dup_pairs: list[tuple[str, str]] = []
+
         for child in children:
-            result = match_requirement(child, pool, session=session)
+            result = match_requirement(child, pool)
+            judged.append((child, result))
+            if result["outcome"] == "duplicate" and result.get("duplicate_of"):
+                dup_pairs.append((child["requirement_id"], result["duplicate_of"]))
+
+        # Union-find
+        classes = build_equivalence_classes(dup_pairs)
+        id_to_survivor: dict[str, str] = {}
+        for cls in classes:
+            survivor = select_survivor(cls)
+            for member in cls:
+                id_to_survivor[member] = survivor
+
+        all_retired: set[str] = set()
+        for cls in classes:
+            survivor = select_survivor(cls)
+            all_retired.update(cls - {survivor})
+
+        # Pass 2: DB writes
+        class_merge_records: list[dict] = []
+        non_loss_flagged: set[str] = set()
+
+        for cls in classes:
+            survivor_id = select_survivor(cls)
+            if len(cls) == 1:
+                continue
+            cls_confs = [
+                r.get("confidence") or 0.0
+                for child, r in judged
+                if child["requirement_id"] in cls and r["outcome"] == "duplicate"
+            ]
+            best_conf = max(cls_confs) if cls_confs else 0.0
+            try:
+                mr = execute_class_merge(
+                    session,
+                    class_members=cls,
+                    survivor_id=survivor_id,
+                    project_id=project_id,
+                    confidence=best_conf,
+                    rationale="Duplicate equivalence class (union-find, v0.3)",
+                    auto_recorded=best_conf >= MATCH_CONFIDENCE_BAND,
+                )
+                class_merge_records.append(mr)
+            except NonLossViolationError as exc:
+                _log.error("Non-Loss violation for class %s: %s", sorted(cls), exc)
+                non_loss_flagged.update(cls)
+                all_retired -= (cls - {survivor_id})
+
+        for child, result in judged:
+            if child["requirement_id"] not in all_retired and result["outcome"] == "refine":
+                _apply_refine_write(session, child, result, pool)
+
+        for child, result in judged:
+            child_id = child["requirement_id"]
+            outcome = result["outcome"]
+            if child_id in non_loss_flagged:
+                outcome = "flagged"
+            elif child_id in all_retired:
+                outcome = "duplicate"
+                result["duplicate_of"] = id_to_survivor.get(child_id, result.get("duplicate_of"))
+
             prov.add_match_record(
-                requirement_id=child["requirement_id"],
-                outcome=result["outcome"],
+                requirement_id=child_id,
+                outcome=outcome,
                 confidence=result.get("confidence"),
                 candidates_considered=result.get("candidates_considered", []),
                 parent_ids=result.get("matched_parent_ids"),
@@ -389,8 +576,9 @@ def match_set(
             prov.add_fingerprints(result.get("ai_fingerprints", []))
             if result.get("gap_record"):
                 prov.add_gap_record(result["gap_record"])
-            if result.get("_merge_record"):
-                prov.add_merge_record(result["_merge_record"])
+
+        for mr in class_merge_records:
+            prov.add_merge_record(mr)
 
         pass_id = prov.write_pass(session)
         session.commit()
@@ -402,6 +590,8 @@ def match_set(
             "refine_count": sum(1 for r in match_records if r["outcome"] == "refine"),
             "no_match_count": sum(1 for r in match_records if r["outcome"] == "no_match"),
             "flagged_count": sum(1 for r in match_records if r["outcome"] == "flagged"),
+            "duplicate_count": sum(1 for r in match_records if r["outcome"] == "duplicate"),
+            "merge_class_count": len(class_merge_records),
         }
 
     except Exception as exc:
