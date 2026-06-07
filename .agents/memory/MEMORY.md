@@ -15,3 +15,4 @@
 - [RD transient failure after long DD run](rd-transient-failure.md) — RD can fail silently (pass_id=None, Failed) on first attempt after DD; just restart the runner to resume — do NOT delete the branch.
 - [Ledger element payload structure](ledger-element-payload-structure.md) — all element fields (row_target, refines_refs, etc.) are inside `payload`; top-level has only element_type/element_id/payload.
 - [Substitute mode ID remapping](substitute-mode-id-remapping.md) — source Row 2 IDs collide with target Row 1 IDs; always remap to R901+ range in substitute mode and return id_map.
+- [Neon data topology — main branch is empty](neon-data-topology.md) — production/main Neon branch has no project rows; all PMT data lives in snapshot/test branches. Launcher runs use project_id PMT_E2E; triple-run (run_pmt_rm_r2_3x) uses PMT_E2E_R11/R12/R13.

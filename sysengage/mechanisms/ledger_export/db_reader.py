@@ -10,6 +10,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
+from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 from models.analysis_pass import AnalysisPassModel
@@ -42,6 +43,7 @@ class ProjectData:
     requirements: list[RequirementModel] = field(default_factory=list)
     zachman_cells: list[ZachmanCellModel] = field(default_factory=list)
     ccis: list[CellContentItemModel] = field(default_factory=list)
+    data_dictionary_entries: list[dict] = field(default_factory=list)
 
 
 def read_project_data(project_id: str, session: Session) -> ProjectData:
@@ -145,6 +147,20 @@ def read_project_data(project_id: str, session: Session) -> ProjectData:
         .all()
     )
 
+    # DataDictionaryEntry rows have no project_id (the DD is project-wide).
+    # Export all non-retired entries ordered by dd_id for stable output.
+    dd_rows = session.execute(
+        text(
+            "SELECT dd_id, entry_kind, name, description, attributes, "
+            "surface_term, resolves_to, from_ref, to_ref, cardinality, "
+            "provenance_ref, confidence "
+            "FROM data_dictionary_entry "
+            "WHERE retired_at IS NULL "
+            "ORDER BY dd_id"
+        )
+    ).mappings().all()
+    data_dictionary_entries = [dict(r) for r in dd_rows]
+
     return ProjectData(
         project=project,
         sources=sources,
@@ -158,4 +174,5 @@ def read_project_data(project_id: str, session: Session) -> ProjectData:
         requirements=requirements,
         zachman_cells=zachman_cells,
         ccis=ccis,
+        data_dictionary_entries=data_dictionary_entries,
     )

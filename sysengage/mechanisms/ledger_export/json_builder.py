@@ -41,6 +41,8 @@ _ELEMENT_TYPE_ORDER: list[str] = [
     "DomainRegister",
     "Requirement",
     "RequirementRegister",
+    "DataDictionaryEntry",
+    "DataDictionaryRegister",
     "Question",
     "QuestionRegister",
     "Answer",
@@ -269,6 +271,34 @@ def _build_requirement_element(req) -> dict[str, Any]:
     }
 
 
+def _build_data_dictionary_element(entry: dict[str, Any]) -> dict[str, Any]:
+    """Build a DataDictionaryEntry element from a raw DB row dict."""
+    kind = entry["entry_kind"]
+    payload: dict[str, Any] = {
+        "dd_id": entry["dd_id"],
+        "entry_kind": kind,
+        "provenance_ref": entry.get("provenance_ref"),
+        "confidence": entry.get("confidence", 1.0),
+    }
+    if kind == "canonical":
+        payload["name"] = entry.get("name")
+        payload["description"] = entry.get("description") or ""
+        attrs = entry.get("attributes")
+        payload["attributes"] = list(attrs) if attrs is not None else []
+    elif kind == "synonym":
+        payload["surface_term"] = entry.get("surface_term")
+        payload["resolves_to"] = entry.get("resolves_to")
+    elif kind == "relationship":
+        payload["from_ref"] = entry.get("from_ref")
+        payload["to_ref"] = entry.get("to_ref")
+        payload["cardinality"] = entry.get("cardinality")
+    return {
+        "element_type": "DataDictionaryEntry",
+        "element_id": entry["dd_id"],
+        "payload": payload,
+    }
+
+
 def _build_zachman_cell_element(cell) -> dict[str, Any]:
     payload: dict[str, Any] = {
         "cell_id": cell.cell_id,
@@ -399,6 +429,9 @@ def build_canonical_ledger(data: ProjectData) -> dict[str, Any]:
     for req in data.requirements:
         elements.append(_build_requirement_element(req))
 
+    for dd_entry in data.data_dictionary_entries:
+        elements.append(_build_data_dictionary_element(dd_entry))
+
     for cell in data.zachman_cells:
         elements.append(_build_zachman_cell_element(cell))
 
@@ -481,6 +514,16 @@ def build_canonical_ledger(data: ProjectData) -> dict[str, Any]:
             "This register SHALL contain the identifiers of ALL Requirement elements present in the ledger.",
         )
         elements.append(req_register)
+
+    if data.data_dictionary_entries:
+        dd_ids = [e["dd_id"] for e in data.data_dictionary_entries]
+        dd_register = _build_register(
+            "DD_REG001",
+            "DataDictionary",
+            dd_ids,
+            "This register SHALL contain the identifiers of ALL DataDictionaryEntry elements present in the ledger.",
+        )
+        elements.append(dd_register)
 
     if data.zachman_cells:
         cell_ids = [cell.cell_id for cell in data.zachman_cells]
