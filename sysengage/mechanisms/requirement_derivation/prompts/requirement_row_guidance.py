@@ -116,11 +116,20 @@ This is a DOMAIN-ENTITY rule, not literal echoing: still neutralise genuinely sy
 UI-level source nouns to their domain entity (source "claim button" / "screen" → the
 domain entity "claim" / "task", not "button"). Preserve the DOMAIN nouns (task, reward,
 child, earnings); drop only implementation/UI nouns.
+
+The entity is the BARE source noun — not a qualified, compounded, or abstracted form. The
+source names ONE entity ("task") and describes it in STATES ("available", "completed",
+"claimed"); the entity is `task` and the states are ATTRIBUTES, not separate entities. Do
+NOT coin "task opportunity", "completed achievement", "economic activity", or "household
+economy" — those are the bare entity (`task`, `child`) dressed in a state or an
+abstraction. One entity, one bare name; states and roles are attributes of it.
+  Right:  "...children to claim available tasks ... and view completed tasks."   (entity: task)
+  Wrong:  "...identify available task opportunities ... view completed achievements." (two coined entities)
 Why this matters: a single entity must carry ONE name from enterprise scope down to
 realisation. That consistent thread is what the Data Dictionary resolves and what
-cross-row refinement matches on; a Row-1-only synonym ("work unit" for "task") breaks the
-thread (Non-Loss failure) and starves entity extraction — an abstract paraphrase has no
-entity to extract, leaving Row 1 absent from the Data Dictionary.
+cross-row refinement matches on; a Row-1-only synonym ("work unit" for "task") OR a
+state-qualified coinage ("task opportunity"/"completed achievement" for "task") breaks the
+thread (Non-Loss failure) and fragments one entity into several Data Dictionary canonicals.
 
 ### requirement_type reasoning (principle-based — choose, do not pattern-match)
 Weigh the source CCIs' Zachman columns and content against the row's abstraction level:

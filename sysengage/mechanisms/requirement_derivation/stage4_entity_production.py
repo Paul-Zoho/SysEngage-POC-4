@@ -49,6 +49,7 @@ from mechanisms.requirement_derivation.prompts.requirement_dd_extraction_prompt 
 )
 from mechanisms.requirement_derivation.schemas.requirement_dd_extraction_response_schema import (
     EntityExtractionItem,
+    StateQualifier,
 )
 from mechanisms.requirement_derivation.stage1_preflight import ActiveDomain, Stage1Result
 from mechanisms.requirement_derivation.stage2_ai_derivation import Stage2Result
@@ -120,7 +121,7 @@ def _raw_slot_description(slots: dict, requirement_type: str) -> str:
 
 
 # ---------------------------------------------------------------------------
-# §4.4.3a Step 1 — IM entity extraction (v0.8)
+# §4.4.3a Step 1 — IM entity extraction (v0.11)
 # ---------------------------------------------------------------------------
 
 def _extract_entity_terms_ai(
@@ -128,17 +129,19 @@ def _extract_entity_terms_ai(
     req_ids: list[str],
     pass_data: dict[str, Any],
     row_ref: int,
-) -> tuple[dict[str, list[str]], list[dict[str, Any]]]:
+) -> tuple[dict[str, list[str]], dict[str, list[StateQualifier]], list[dict[str, Any]]]:
     """
-    Batch IM entity extraction for §4.4.3a Step 1 (v0.8).
+    Batch IM entity extraction for §4.4.3a Step 1 (v0.11).
 
     Replaces the v0.7 verbatim DM slot copy. One AI call for all surviving
     proposals; the model reduces each Object/Entity/Subject slot to its
-    entity-grade noun head(s).
+    bare entity-grade noun head(s) and returns any lifecycle state qualifiers
+    for attribute recording (v0.11 state-reduction rule).
 
     Returns:
-      entity_terms  — dict mapping req_id → list of entity-grade term strings
-      fingerprints  — list containing one fingerprint dict (stage4_dd_entity_extraction)
+      entity_terms       — dict mapping req_id → list of bare entity-grade term strings
+      state_qualifier_map — dict mapping req_id → list of StateQualifier (entity, state)
+      fingerprints       — list containing one fingerprint dict (stage4_dd_entity_extraction)
 
     On AI or parse failure, falls back to empty terms for all proposals and
     logs a warning; does not abort the run.
@@ -183,25 +186,26 @@ def _extract_entity_terms_ai(
             "output_tokens": 0,
             "error": str(exc),
         }
-        return {req_id: [] for req_id in req_ids}, [fingerprint]
+        return {req_id: [] for req_id in req_ids}, {req_id: [] for req_id in req_ids}, [fingerprint]
 
-    entity_terms = _parse_extraction_response(raw_text, req_ids)
+    entity_terms, state_qualifier_map = _parse_extraction_response(raw_text, req_ids)
     if not any(entity_terms.values()):
         pass_data.setdefault("execution_warnings_stage4", []).append({
             "type": "dd_entity_extraction_all_empty",
             "detail": "AI entity extraction returned no terms for any proposal",
         })
 
-    return entity_terms, [fingerprint]
+    return entity_terms, state_qualifier_map, [fingerprint]
 
 
 def _parse_extraction_response(
     raw_text: str,
     req_ids: list[str],
-) -> dict[str, list[str]]:
+) -> tuple[dict[str, list[str]], dict[str, list[StateQualifier]]]:
     """
-    Parse AI extraction response into a req_id → terms mapping.
-    Falls back to empty lists on parse failure.
+    Parse AI extraction response into a req_id → terms mapping and a
+    req_id → state_qualifiers mapping (v0.11 §4.4.3a state-reduction).
+    Falls back to empty dicts on parse failure.
     """
     try:
         data = json.loads(_strip_code_fence(raw_text))
@@ -209,13 +213,19 @@ def _parse_extraction_response(
             raise ValueError(f"Expected JSON list, got {type(data).__name__}")
         items = [EntityExtractionItem.model_validate(item) for item in data]
         by_idx: dict[int, list[str]] = {item.idx: item.terms for item in items}
-        return {req_ids[i]: by_idx.get(i, []) for i in range(len(req_ids))}
+        sq_by_idx: dict[int, list[StateQualifier]] = {
+            item.idx: item.state_qualifiers for item in items
+        }
+        terms_map = {req_ids[i]: by_idx.get(i, []) for i in range(len(req_ids))}
+        sq_map = {req_ids[i]: sq_by_idx.get(i, []) for i in range(len(req_ids))}
+        return terms_map, sq_map
     except Exception as exc:
         _log.warning(
             "DD entity extraction response parse failed: %s — falling back to empty terms",
             exc,
         )
-        return {req_id: [] for req_id in req_ids}
+        empty_sq: dict[str, list[StateQualifier]] = {req_id: [] for req_id in req_ids}
+        return {req_id: [] for req_id in req_ids}, empty_sq
 
 
 # ---------------------------------------------------------------------------
@@ -247,6 +257,7 @@ def _build_dd_ops_from_terms(
     proposals: list[TaggedProposal],
     req_ids: list[str],
     entity_terms: dict[str, list[str]],
+    state_qualifier_map: dict[str, list[StateQualifier]] | None = None,
 ) -> tuple[list[dict[str, Any]], list[dict[str, Any]], list[dict[str, Any]]]:
     """
     Build DD service operation list from AI-extracted entity terms (v0.8).
@@ -342,6 +353,20 @@ def _build_dd_ops_from_terms(
                     "provenance_ref": req_id,
                 })
 
+    # State qualifier recording (v0.11 §4.4.3a): lifecycle states recorded as entity
+    # attribute values on the DD entry — one record_value() call per qualifier.
+    if state_qualifier_map:
+        for req_id in req_ids:
+            for qualifier in state_qualifier_map.get(req_id, []):
+                if qualifier.entity and qualifier.state:
+                    ops.append({
+                        "op": "value",
+                        "canonical_term": qualifier.entity,
+                        "attr_name": "lifecycle_state",
+                        "value": qualifier.state,
+                        "provenance_ref": req_id,
+                    })
+
     return ops, zero_term_unresolved, ver19_violations
 
 
@@ -373,13 +398,13 @@ def _run_dd_binding(
       fingerprints — list containing the stage4_dd_entity_extraction fingerprint
     """
     # Step 1: IM entity extraction
-    entity_terms, fingerprints = _extract_entity_terms_ai(
+    entity_terms, state_qualifier_map, fingerprints = _extract_entity_terms_ai(
         proposals, req_ids, pass_data, row_ref
     )
 
     # Step 2: Build ops from AI-extracted entity terms
     ops, zero_term_entries, ver19_violations = _build_dd_ops_from_terms(
-        proposals, req_ids, entity_terms
+        proposals, req_ids, entity_terms, state_qualifier_map
     )
 
     terms_presented: int = 0

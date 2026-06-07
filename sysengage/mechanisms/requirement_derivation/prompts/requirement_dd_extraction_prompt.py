@@ -1,13 +1,19 @@
 """
 prompts/requirement_dd_extraction_prompt.py
 
-Batch entity extraction prompt for §4.4.3a Step 1 (v0.8).
+Batch entity extraction prompt for §4.4.3a Step 1 (v0.11).
 
 The prompt receives the surviving requirements (statement + slot parse hint)
-and returns entity-grade noun phrases to present to the Data Dictionary.
+and returns bare entity-grade noun phrases to present to the Data Dictionary,
+plus any lifecycle state qualifiers to record as entity attributes.
+
 One call per Stage 4 run (not per requirement).
 
 Fingerprinted as 'stage4_dd_entity_extraction' in the AnalysisPass.
+
+v0.11 change: state-reduction rule added — state-qualified phrases
+("available tasks", "completed tasks") reduce to the bare entity ("task");
+states are returned separately as state_qualifiers for record_value() calls.
 """
 
 from __future__ import annotations
@@ -28,22 +34,24 @@ def build_dd_extraction_prompt(items: list[dict[str, Any]]) -> str:
                        / Subject); may be '' if unparseable
 
     Returns a prompt string whose expected AI response is a JSON array of
-    {idx: int, terms: list[str]}, same length and order as items.
+    {idx, terms, state_qualifiers}, same length and order as items.
     """
     items_json = json.dumps(items, indent=2, ensure_ascii=False)
 
     return f"""You are extracting entity-grade controlled-vocabulary terms from requirement statements to populate a Data Dictionary.
 
-For each requirement, identify the **domain entities** that the requirement's key slot **denotes** — the specific domain nouns (things, roles, states, concepts) the obligation is about.
+For each requirement, identify the **domain entities** that the requirement's key slot **denotes** — the specific domain nouns (things, roles, concepts) the obligation is about.
 
 ## Slot guide by type
-- **Functional** — reduce the Object slot to its entity head(s). Strip verbs, verbal nouns ("a mechanism enabling…"), and incidental modifiers. Keep the domain nouns.
-  Example: Object = "a mechanism enabling household members to select and claim available work opportunities"
-  → terms: ["work opportunity", "household member"]
-- **Structural** — return the entity being described and any composition element as separate terms.
-  Example: "Work Opportunity comprises status, assignee, and deadline"
-  → terms: ["work opportunity", "work opportunity status", "work opportunity assignee"]
-- **Constraint** — return the subject entity (the thing being constrained), reduced to its noun head.
+- **Functional** — reduce the Object slot to its BARE entity head(s). Strip verbs, verbal nouns ("a mechanism enabling…"), incidental modifiers, and lifecycle-state qualifiers.
+  Example (clausal reduction): Object = "a mechanism enabling children to claim and complete tasks"
+  → terms: ["task", "child"]
+  Example (state-qualified): Object = "available tasks and completed tasks"
+  → terms: ["task"]   (bare entity only; "available"/"completed" are state attributes, not new entities)
+- **Structural** — return the bare entity being described and any composition element as separate terms.
+  Example: "Task comprises status, assignee, and deadline"
+  → terms: ["task", "task status", "task assignee"]
+- **Constraint** — return the subject entity (the thing being constrained), reduced to its bare noun head.
   Example: Subject = "The settlement amount"
   → terms: ["settlement amount"]
 
@@ -52,15 +60,30 @@ For each requirement, identify the **domain entities** that the requirement's ke
 2. Do NOT return the verbatim raw_slot if it is a clause or sentence fragment.
 3. Do NOT return the full statement as a term.
 4. Return an empty list [] if no meaningful entity can be identified.
-5. Prefer specific domain vocabulary over generic nouns ("task assignment" over "assignment").
-6. A statement may yield 0, 1, or several terms.
+5. Return the BARE source noun — do NOT coin state-qualified or role-qualified compound entities.
+   "available tasks" → "task" (NOT "task opportunity" or "available task")
+   "completed tasks" → "task" (NOT "completed achievement")
+   "claimed task"    → "task" (NOT "claimed item")
+   Lifecycle states and role qualifiers are ATTRIBUTES of the entity, not new entities.
+6. Prefer specific domain vocabulary over generic nouns ("task" over "item").
+7. A statement may yield 0, 1, or several terms.
+
+## State qualifiers
+When the Object or slot describes an entity in a lifecycle state (e.g. "available tasks",
+"completed tasks", "claimed task"), return the state in `state_qualifiers` so it can be
+recorded as an attribute on the entity's Data Dictionary entry.
+- entity: the bare entity term (must appear in `terms`)
+- state: the lifecycle state value (e.g. "available", "completed", "claimed")
+Omit `state_qualifiers` (or use []) when no lifecycle state is expressed.
 
 ## Input
 {items_json}
 
 ## Output format
 Return **only** a JSON array, no prose, no code fence:
-[{{"idx": 0, "terms": ["term a", "term b"]}}, ...]
+[{{"idx": 0, "terms": ["task", "child"], "state_qualifiers": [{{"entity": "task", "state": "available"}}, {{"entity": "task", "state": "completed"}}]}}, ...]
 
+- `terms`: bare entity noun phrases (never state-qualified).
+- `state_qualifiers`: list of {{entity, state}} pairs for lifecycle states present in the slot; omit or use [] when none.
 Same length as input, same order.
 """
