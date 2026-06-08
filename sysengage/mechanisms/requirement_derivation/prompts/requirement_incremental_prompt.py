@@ -96,7 +96,7 @@ Each new Requirement must:
 2. Reference only ci_ids from the new CCIs list above in cci_refs.
 3. Have a requirement_type per the guidance.
 4. Have a confidence score in [0.0, 1.0].
-5. Optionally include rationale, fit_criteria (REQUIRED if type=Performance), verification_method, priority.
+5. Optionally include rationale, fit_criteria (REQUIRED if type=Measurement), verification_method, priority.
 
 Do NOT include: requirement_id, row_target, domain_refs, answer_refs.
 Do NOT reproduce CCI description text verbatim.
@@ -108,7 +108,7 @@ Respond with a JSON array of new Requirement proposals:
     "requirement_type": "Functional",
     "cci_refs": ["{new_domain_ccis[0]['ci_id'] if new_domain_ccis else 'CCI-ROW' + str(row_ref) + '-C-X-001'}"],
     "rationale": "optional",
-    "fit_criteria": "optional — required if type=Performance",
+    "fit_criteria": "optional — REQUIRED if type=Measurement",
     "verification_method": null,
     "priority": null,
     "confidence": 0.85

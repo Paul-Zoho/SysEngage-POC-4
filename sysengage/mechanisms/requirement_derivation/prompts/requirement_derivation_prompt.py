@@ -11,10 +11,12 @@ One call per active Domain in Stage 2. Injects:
 §5.4 guidance blocks:
   (a) REQUIREMENT_ROW_GUIDANCE[row] — row-specific subject, vocabulary, type-reasoning
       signals, and optional-field policy (Row 1 fully authored; Rows 2–6 stubs).
+      Also carries the shared interrogative-completeness preamble (ADVC-3d-02) and
+      shared concern-atomicity + non-redundancy block (ADVC-3d-03, v0.12).
   (b) Statement formulation discipline — atomic, single intent, normative phrasing,
       no inferred content; "and" compound test.
   (c) requirement_type reasoning signals — Why→Constraint, How/What/When→Functional,
-      measurable threshold→Performance, quality attribute→Suitability/Non-Functional.
+      measurable threshold→Measurement (fit_criteria REQUIRED), quality attribute→Constraint.
 
 LPM constraint: AI instructed not to reproduce CCI description text verbatim.
 Expected response format: JSON array of RequirementProposal objects.
@@ -54,12 +56,13 @@ Choose `requirement_type` by reasoning about the source CCIs' Zachman column and
   processing, lifecycle transitions, capability declarations)
   → lean toward `Functional`
 - **CCIs expressing a measurable threshold, rate, latency, capacity, or SLA**
-  → `Performance` — and the statement SHOULD carry `fit_criteria` with the specific
-  measurable criterion
+  → `Measurement` — the statement MUST carry `fit_criteria` with the specific
+  measurable criterion; set verification_method = "Measurement"
 - **CCIs expressing a quality attribute** (usability, maintainability, portability,
-  reliability, accessibility)
-  → `Suitability` or `Non-Functional` depending on whether the quality attribute
-  is a system characteristic (Suitability) or a non-functional constraint (Non-Functional)
+  reliability, accessibility) → `Constraint` (a quality bound); verification_method
+  Inspection or Measurement as appropriate
+- **CCIs asserting entity composition, attributes, or structural relationships**
+  → `Structural`
 
 These are reasoning signals to weigh against the CCI content and the row's
 abstraction level — not a deterministic lookup. The enum value you choose is your
@@ -124,7 +127,7 @@ Derive the canonical Requirements from the CCIs above. Each Requirement must:
 2. Reference the ci_ids it is derived from (cci_refs). Every CCI SHOULD be covered by at least one Requirement.
 3. Have a requirement_type assigned per the guidance above.
 4. Have a confidence score between 0.0 and 1.0 reflecting your certainty.
-5. Optionally include rationale, fit_criteria (REQUIRED if type=Performance), verification_method, priority.
+5. Optionally include rationale, fit_criteria (REQUIRED if type=Measurement), verification_method, priority.
 
 Do NOT include: requirement_id, row_target, domain_refs, or answer_refs — these are determined by the system.
 Do NOT reproduce CCI description text verbatim in the statement.
@@ -137,7 +140,7 @@ Respond with a JSON array of Requirement proposals in this exact format:
     "requirement_type": "Functional",
     "cci_refs": ["{domain_cci_set[0]['ci_id'] if domain_cci_set else 'CCI-ROW' + str(row_ref) + '-C-X-001'}"],
     "rationale": "optional — why this requirement exists",
-    "fit_criteria": "optional — required if type=Performance",
+    "fit_criteria": "optional — REQUIRED if type=Measurement",
     "verification_method": "Test",
     "priority": "High",
     "confidence": 0.90

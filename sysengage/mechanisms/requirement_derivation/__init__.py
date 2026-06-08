@@ -456,6 +456,7 @@ def run_requirement_derivation(
                                 stage3.duplicate_requirements_collapsed
                             ),
                             "subject_vocabulary_flags": stage3.subject_vocabulary_flags,
+                            "concern_atomicity_flags": stage3.concern_atomicity_flags,
                             "requirement_count_produced": stage4.requirement_count_produced,
                             "requirement_count_retired": stage4.requirement_count_retired,
                             "requirement_type_distribution": stage4.requirement_type_distribution,

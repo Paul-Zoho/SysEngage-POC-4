@@ -85,7 +85,7 @@ Derive covering Requirements for the orphaned CCIs above. For each orphaned CCI:
    Do NOT group CCIs from different Domains into one Requirement.
 3. Assign requirement_type per the guidance.
 4. Provide confidence in [0.0, 1.0].
-5. Optionally include rationale, fit_criteria (REQUIRED if type=Performance),
+5. Optionally include rationale, fit_criteria (REQUIRED if type=Measurement),
    verification_method, priority.
 
 Do NOT include: requirement_id, row_target, domain_refs, answer_refs.
@@ -99,7 +99,7 @@ Respond with a JSON array of covering Requirement proposals:
     "requirement_type": "Functional",
     "cci_refs": ["{orphaned_ccis[0]['ci_id'] if orphaned_ccis else 'CCI-ROW-X'}"],
     "rationale": "optional",
-    "fit_criteria": "optional — required if type=Performance",
+    "fit_criteria": "optional — REQUIRED if type=Measurement",
     "verification_method": null,
     "priority": null,
     "confidence": 0.80

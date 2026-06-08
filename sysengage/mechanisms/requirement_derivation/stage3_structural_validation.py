@@ -33,6 +33,10 @@ Per Requirement Derivation Mechanism Spec v0.6 §4.3:
              Object; Constraint: Subject/Rule; Structural: Entity/structural-assertion).
              Logs interrogative_completeness_advisory in execution_warnings only.
              Does NOT reject the Requirement.
+  ADVC-3d-03 Concern-atomicity over-bundling signal (v0.12). Records requirements
+             whose cci_refs span ≥2 classification types across ≥2 Zachman columns
+             into concern_atomicity_flags in Stage3Result. No execution_warning, no
+             reject — mechanism_data recording only (soft advisory).
 """
 
 from __future__ import annotations
@@ -72,6 +76,7 @@ class Stage3Result:
     validation_failures: list[dict[str, Any]] = field(default_factory=list)
     duplicate_requirements_collapsed: list[dict[str, Any]] = field(default_factory=list)
     subject_vocabulary_flags: list[dict[str, Any]] = field(default_factory=list)
+    concern_atomicity_flags: list[dict[str, Any]] = field(default_factory=list)
     ai_model_fingerprints: list[dict[str, Any]] = field(default_factory=list)
     execution_warnings: list[dict[str, Any]] = field(default_factory=list)
     concern_entities: list[dict[str, Any]] = field(default_factory=list)
@@ -598,6 +603,39 @@ def run_stage3(
                             "statement_preview": p.statement[:80],
                         }
                     )
+
+    # -------------------------------------------------------------------------
+    # ADVC-3d-03 — Concern-atomicity over-bundling signal (soft, v0.12)
+    # Records requirements whose cci_refs span ≥2 classification types across
+    # ≥2 Zachman columns. No execution_warning, no reject — mechanism_data only.
+    # -------------------------------------------------------------------------
+    _cci_meta: dict[str, dict[str, str]] = {
+        cci.ci_id: {
+            "column": cci.column,
+            "classification_type": cci.classification_type,
+        }
+        for cci in stage1.eligible_ccis
+    }
+    for idx, p in enumerate(proposals):
+        if not p.cci_refs:
+            continue
+        cols = {_cci_meta[r]["column"] for r in p.cci_refs if r in _cci_meta}
+        types = {_cci_meta[r]["classification_type"] for r in p.cci_refs if r in _cci_meta}
+        if len(cols) >= 2 and len(types) >= 2:
+            placeholder = f"proposal_{idx + 1}:{p.statement[:40].rstrip()}"
+            result.concern_atomicity_flags.append(
+                {
+                    "requirement_id_placeholder": placeholder,
+                    "cci_refs": list(p.cci_refs),
+                    "classification_types": sorted(types),
+                    "columns": sorted(cols),
+                }
+            )
+            _log.info(
+                "ADVC-3d-03: %s spans %d classification types across %d columns — "
+                "concern-atomicity over-bundling signal",
+                placeholder, len(types), len(cols),
+            )
 
     result.proposals = proposals
     return result

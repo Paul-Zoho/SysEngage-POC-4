@@ -1,7 +1,7 @@
 """
 Requirement Row Guidance — REQUIREMENT_ROW_GUIDANCE prompt constants.
 
-Per Requirement Derivation Mechanism Spec v0.9 §5.4.
+Per Requirement Derivation Mechanism Spec v0.12 §5.4.
 
 DISTINCT from the domain ROW_GUIDANCE (which governs domain naming and grouping;
 imported from domain_derivation/prompts/domain_grouping_prompt.py). This dict
@@ -24,6 +24,13 @@ aware; atomicity block gains the over-generation brake (complementary actor/syst
 pairs are NOT duplicates). CHK-3d-08 widened accordingly in stage3 (system-subject at
 Row 2 no longer a mismatch; "the enterprise" at Row 2 is the out-of-set escape).
 Fixes the false-merge cascade at root — the subject slot now discriminates.
+
+v0.12 adds a shared concern-atomicity + non-redundancy block (_SHARED_CONCERN_ATOMICITY_BLOCK)
+injected into all five row blocks (§5.4). Root cause: PMT R2 Run 11 produced a 4-concern
+bundled requirement and ~40% near-duplicates acting as merge-magnets. Two authoring rules
+added: (1) one obligation per CONCERN (not just sentence level — a silent CCI is a Non-Loss
+failure); (2) no near-duplicate restatements (CHK-3d-07 collapses exact duplicates only).
+Instrumented by ADVC-3d-03 in stage3_structural_validation.py.
 
 Rows 1–5 are fully authored. Rows 1–2 are validated (Row 1: PMT Run 5 / NQPS
 Run 2; Row 2: PMT Row 2 Run 1 / NQPS Row 2 Run 1). Rows 3–5 are CANDIDATE
@@ -59,6 +66,29 @@ verify that the type-required slots are filled before finalising the statement:
 Stay within this row's abstraction level. Do NOT invent parent-level requirements that would
 belong at Row N-1. Cross-row elaboration (parent-child requirement linkage) is the
 responsibility of the Requirement Matching service — not Pass 3d.
+"""
+
+_SHARED_CONCERN_ATOMICITY_BLOCK = """\
+### Concern-atomicity and non-redundancy (shared guidance — all rows)
+Two authoring failure modes must be avoided at the concern level — not just the sentence level:
+
+**1. Concern-atomicity — one obligation per concern.**
+A concern is a distinct obligation identified by its Zachman column AND classification type.
+When a Domain's CCIs span distinct columns AND distinct classification types (e.g. a
+How/Process CCI and a Why/Constraint CCI), derive SEPARATE requirements — one per concern.
+Do NOT bundle them into a single statement that lists all CCIs in cci_refs but only voices
+one concern. A CCI in `cci_refs` that the statement does not actually voice is a silent
+Non-Loss failure and a downstream merge-magnet that produces over-merged requirements in
+later passes.
+  Right: two requirements — one for the process obligation, one for the constraint.
+  Wrong: one requirement whose cci_refs lists both but the statement only voices the process.
+
+**2. Non-redundancy — voice each concern once.**
+Do not voice the same concern twice. Near-duplicate restatements — even from overlapping
+CCI sets — must NOT be generated. CHK-3d-07 collapses exact duplicates (same statement +
+same cci_refs set) only; it does not catch near-duplicates. If two proposed requirements
+express the same obligation with different phrasing, merge them into one. Vary only where
+the source content genuinely varies across CCIs.
 """
 
 REQUIREMENT_ROW_GUIDANCE: dict[str, str] = {
@@ -154,7 +184,7 @@ distribution.
   priority judgement. Do NOT default every requirement to High. If the content gives no
   basis, omit.
 
-""" + _SHARED_INTERROGATIVE_PREAMBLE + """
+""" + _SHARED_INTERROGATIVE_PREAMBLE + _SHARED_CONCERN_ATOMICITY_BLOCK + """
 ### What NOT to do
 - Do NOT introduce actors, behaviours, or constraints not present in the source CCIs.
 - Do NOT reproduce CCI description text verbatim as the statement — derive a normative
@@ -280,7 +310,7 @@ carry a Row-1 lean into Row 2; judge each statement on its source columns.
 - priority (High/Medium/Low): include only when the source supports a relative judgement.
   Do NOT default every requirement to High; omit if there is no basis.
 
-""" + _SHARED_INTERROGATIVE_PREAMBLE + """
+""" + _SHARED_INTERROGATIVE_PREAMBLE + _SHARED_CONCERN_ATOMICITY_BLOCK + """
 ### What NOT to do
 - Do NOT bury an interacting actor inside an object ("the business shall enable the child to claim …") — author the actor as subject (a). Burying it loses the boundary.
 - Do NOT introduce actors, roles, capabilities, or rules not present in the source CCIs.
@@ -352,7 +382,7 @@ carry a lean from another row.
 - priority: include only when the source supports a relative judgement; do not default
   to High.
 
-""" + _SHARED_INTERROGATIVE_PREAMBLE + """
+""" + _SHARED_INTERROGATIVE_PREAMBLE + _SHARED_CONCERN_ATOMICITY_BLOCK + """
 ### What NOT to do
 - Do NOT name technologies, platforms, or code constructs (Row 4+).
 - Do NOT frame as a business responsibility (Row 2) or describe a step-by-step algorithm (Row 5).
@@ -405,7 +435,7 @@ Judge each statement on its source columns.
   are testable); include when a natural method exists.
 - priority: include when the source supports it; do not default to High.
 
-""" + _SHARED_INTERROGATIVE_PREAMBLE + """
+""" + _SHARED_INTERROGATIVE_PREAMBLE + _SHARED_CONCERN_ATOMICITY_BLOCK + """
 ### What NOT to do
 - Do NOT frame as business (Row 2) or purely logical (Row 3) — name the physical realisation.
 - Do NOT drop to code-level/configuration detail (Row 5).
@@ -467,7 +497,7 @@ Row 5 statements use detailed-implementation vocabulary:
   Measurement when the criterion is a measurable numeric value.
 - priority: include when the source supports it; do not default to High.
 
-""" + _SHARED_INTERROGATIVE_PREAMBLE + """
+""" + _SHARED_INTERROGATIVE_PREAMBLE + _SHARED_CONCERN_ATOMICITY_BLOCK + """
 ### What NOT to do
 - Do NOT frame at business/logical/physical-choice level without the implementable detail.
 - Do NOT reproduce CCI description text verbatim — derive a normative specification.
