@@ -612,6 +612,53 @@ class TestRequirementTypeFilter(unittest.TestCase):
             "Type filter must be skipped when child has no requirement_type",
         )
 
+    def test_cross_type_excluded_on_fallback_path(self):
+        """
+        VER-rm-13 must hold even when the child has NO DD binding and takes
+        the full-pool fallback path.
+
+        Previously D-rm-7 was only applied in the entity-anchored path (Step 6),
+        so a child with no canonical_ids received ALL same-row siblings regardless
+        of requirement_type — the direct cause of the Run14 R024→R022 / R029→R028
+        false merges (both R024 and R029 had no DD binding on the run14 snapshot).
+        """
+        child = _req("R029", row=2,
+                     statement="The business shall ensure historical task data remains accessible",
+                     requirement_type="Constraint")
+        functional_sibling = _req("R028", row=2,
+                                  statement="The business shall maintain historical task data",
+                                  requirement_type="Functional")
+        constraint_sibling = _req("R027", row=2,
+                                  statement="The business shall comply with retention obligations",
+                                  requirement_type="Constraint")
+        pool = [child, functional_sibling, constraint_sibling]
+        # Child has NO DD binding → takes full-pool fallback
+        empty_map = {
+            "R029": [],
+            "R028": ["DD_HIST"],
+            "R027": [],
+        }
+        with patch(
+            "mechanisms.requirement_matching.candidates._get_canonical_ids_batch",
+            return_value=empty_map,
+        ), patch(
+            "mechanisms.requirement_matching.candidates._is_dd_flagged",
+            return_value=False,
+        ):
+            from mechanisms.requirement_matching.candidates import get_candidates
+            _, siblings, not_yet = get_candidates(child=child, pool=pool)
+
+        sibling_ids = {r["requirement_id"] for r in siblings}
+        self.assertFalse(not_yet)
+        self.assertNotIn(
+            "R028", sibling_ids,
+            "Functional sibling R028 must be excluded from Constraint child R029's fallback candidate set (D-rm-7)",
+        )
+        self.assertIn(
+            "R027", sibling_ids,
+            "Same-type Constraint sibling R027 must be retained in fallback candidate set",
+        )
+
     def test_all_three_types_each_isolated(self):
         """
         Three same-entity siblings of three different types — each child sees

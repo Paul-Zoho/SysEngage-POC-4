@@ -220,6 +220,36 @@ def get_candidates(
             if str(r.get("row_target", "")) == child_row
             and r.get("requirement_id") != child_id
         ]
+
+        # D-rm-5 + D-rm-7 apply in the fallback path too — both filters are
+        # purely field-based (no DD entity data required).  Skipping them in the
+        # fallback was allowing every same-row sibling (all types, all subject
+        # classes) to reach judge_duplicate, defeating both invariants.
+        child_subject_class = _classify_subject(child.get("statement", ""))
+        unfiltered = len(siblings)
+        siblings = [
+            s for s in siblings
+            if _classify_subject(s.get("statement", "")) == child_subject_class
+        ]
+        if len(siblings) < unfiltered:
+            _log.debug(
+                "get_candidates (fallback): %s subject=%r — dropped %d cross-class sibling(s) (D-rm-5)",
+                child_id, child_subject_class, unfiltered - len(siblings),
+            )
+
+        child_req_type = child.get("requirement_type", "")
+        if child_req_type:
+            unfiltered_type = len(siblings)
+            siblings = [
+                s for s in siblings
+                if s.get("requirement_type", "") == child_req_type
+            ]
+            if len(siblings) < unfiltered_type:
+                _log.debug(
+                    "get_candidates (fallback): %s requirement_type=%r — dropped %d cross-type sibling(s) (D-rm-7)",
+                    child_id, child_req_type, unfiltered_type - len(siblings),
+                )
+
         return parents, siblings, False
 
     # ------------------------------------------------------------------
