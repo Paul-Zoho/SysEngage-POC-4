@@ -33,8 +33,6 @@ Pass definitions
 Notes
 -----
 - Passes run in sorted numeric order regardless of the order supplied.
-- All passes are idempotent — if prior output already exists on the branch the
-  pass is skipped automatically.
 - If upstream state is missing (e.g. running 3c without 3b having run) the pass
   will produce nothing. This is by design — the caller is responsible for
   supplying the right snapshot.
@@ -191,50 +189,6 @@ print("[dispatch] Schema up to date.", flush=True)
 print(flush=True)
 
 # ---------------------------------------------------------------------------
-# Idempotency helpers
-# ---------------------------------------------------------------------------
-
-from sqlalchemy import text  # noqa: E402
-
-
-def _pass_done(mechanism: str, scope: str) -> str | None:
-    s = get_session()
-    try:
-        row = s.execute(
-            text(
-                "SELECT pass_id FROM analysis_pass "
-                "WHERE project_id = :p AND mechanism = :m AND evaluated_scope = :sc "
-                "AND execution_status IN ('Completed','CompletedWithWarnings') "
-                "ORDER BY created_at DESC LIMIT 1"
-            ),
-            {"p": PROJECT_ID, "m": mechanism, "sc": scope},
-        ).fetchone()
-        return row[0] if row else None
-    finally:
-        s.close()
-
-
-def _matching_done(row_n: int) -> bool:
-    """Check for a completed RequirementMatching AnalysisPass for this row (v0.2)."""
-    s = get_session()
-    try:
-        scope = f"Row {row_n} requirements matched against Row {row_n - 1}"
-        row = s.execute(
-            text(
-                "SELECT pass_id FROM analysis_pass "
-                "WHERE project_id = :p AND mechanism = 'RequirementMatching' "
-                "AND evaluated_scope = :scope "
-                "AND execution_status IN ('Completed','CompletedWithWarnings') "
-                "LIMIT 1"
-            ),
-            {"p": PROJECT_ID, "scope": scope},
-        ).fetchone()
-        return row is not None
-    finally:
-        s.close()
-
-
-# ---------------------------------------------------------------------------
 # Step 4 — run passes in order
 # ---------------------------------------------------------------------------
 
@@ -249,39 +203,35 @@ for pass_code in PASSES:
     # ── 3a: Source Capture + RLSRA ────────────────────────────────────────
     if pass_code == "3a":
         # SC runs once (all rows)
-        sc_done = _pass_done("SourceCapture", "All input material in this project")
-        if sc_done:
-            print(f"[dispatch] SC SKIP — pass {sc_done} already Completed.", flush=True)
+        if not SOURCE_DOC:
+            print("[dispatch] ERROR: pass 3a requires --source-doc.", file=sys.stderr, flush=True)
+            all_ok = False
         else:
-            if not SOURCE_DOC:
-                print("[dispatch] ERROR: pass 3a requires --source-doc.", file=sys.stderr, flush=True)
+            doc_path = VERIFICATION_INPUTS / SOURCE_DOC
+            if not doc_path.exists():
+                print(f"[dispatch] ERROR: source doc not found: {doc_path}", file=sys.stderr, flush=True)
                 all_ok = False
             else:
-                doc_path = VERIFICATION_INPUTS / SOURCE_DOC
-                if not doc_path.exists():
-                    print(f"[dispatch] ERROR: source doc not found: {doc_path}", file=sys.stderr, flush=True)
-                    all_ok = False
-                else:
-                    print(f"[dispatch] SC — {doc_path.name}", flush=True)
-                    try:
-                        sc_result = sc.run_source_capture(
-                            doc_path,
-                            project_id=PROJECT_ID,
-                            practitioner_id=PRACTITIONER_ID,
-                            read_mode="Full",
-                            segmentation_policy="default",
-                        )
-                        print(f"[dispatch]   SC status   = {sc_result.execution_status}", flush=True)
-                        print(f"[dispatch]   sources     = {sc_result.source_count}", flush=True)
-                        print(f"[dispatch]   segments    = {sc_result.segment_count}", flush=True)
-                        if sc_result.execution_status not in ("Completed", "CompletedWithWarnings"):
-                            print(f"[dispatch]   SC FAILED: {sc_result.failure_reason}", file=sys.stderr, flush=True)
-                            all_ok = False
-                    except Exception as exc:
-                        import traceback
-                        print(f"[dispatch] SC EXCEPTION: {exc}", file=sys.stderr, flush=True)
-                        traceback.print_exc()
+                print(f"[dispatch] SC — {doc_path.name}", flush=True)
+                try:
+                    sc_result = sc.run_source_capture(
+                        doc_path,
+                        project_id=PROJECT_ID,
+                        practitioner_id=PRACTITIONER_ID,
+                        read_mode="Full",
+                        segmentation_policy="default",
+                    )
+                    print(f"[dispatch]   SC status   = {sc_result.execution_status}", flush=True)
+                    print(f"[dispatch]   sources     = {sc_result.source_count}", flush=True)
+                    print(f"[dispatch]   segments    = {sc_result.segment_count}", flush=True)
+                    if sc_result.execution_status not in ("Completed", "CompletedWithWarnings"):
+                        print(f"[dispatch]   SC FAILED: {sc_result.failure_reason}", file=sys.stderr, flush=True)
                         all_ok = False
+                except Exception as exc:
+                    import traceback
+                    print(f"[dispatch] SC EXCEPTION: {exc}", file=sys.stderr, flush=True)
+                    traceback.print_exc()
+                    all_ok = False
 
         if not all_ok:
             print(flush=True)
@@ -289,10 +239,6 @@ for pass_code in PASSES:
 
         # RLSRA runs per row
         for row in ROWS:
-            rlsra_done = _pass_done("RowLensSourceReanalysis", f"All Sources (Row {row})")
-            if rlsra_done:
-                print(f"[dispatch] RLSRA Row {row} SKIP — pass {rlsra_done} already Completed.", flush=True)
-                continue
             print(f"[dispatch] RLSRA Row {row}…", flush=True)
             try:
                 r = rlsra.run(project_id=PROJECT_ID, practitioner_id=PRACTITIONER_ID, row_ref=row)
@@ -310,10 +256,6 @@ for pass_code in PASSES:
     # ── 3b: CCI Construction ───────────────────────────────────────────────
     elif pass_code == "3b":
         for row in ROWS:
-            cci_done = _pass_done("CellContentItemConstruction", f"All Row {row} Signals")
-            if cci_done:
-                print(f"[dispatch] CCI Row {row} SKIP — pass {cci_done} already Completed.", flush=True)
-                continue
             print(f"[dispatch] CCI Row {row}…", flush=True)
             try:
                 r = cci.run(project_id=PROJECT_ID, practitioner_id=PRACTITIONER_ID,
@@ -333,10 +275,6 @@ for pass_code in PASSES:
     # ── 3c: Domain Derivation ──────────────────────────────────────────────
     elif pass_code == "3c":
         for row in ROWS:
-            dd_done = _pass_done("DomainDerivation", f"Row {row} CCIs for project {PROJECT_ID}")
-            if dd_done:
-                print(f"[dispatch] DD Row {row} SKIP — pass {dd_done} already Completed.", flush=True)
-                continue
             print(f"[dispatch] DD Row {row}…", flush=True)
             try:
                 r = dd.run(project_id=PROJECT_ID, practitioner_id=PRACTITIONER_ID, row_ref=row)
@@ -354,10 +292,6 @@ for pass_code in PASSES:
     # ── 3d: Requirement Derivation ─────────────────────────────────────────
     elif pass_code == "3d":
         for row in ROWS:
-            rd_done = _pass_done("RequirementDerivation", f"Row {row} for {PROJECT_ID}")
-            if rd_done:
-                print(f"[dispatch] RD Row {row} SKIP — pass {rd_done} already Completed.", flush=True)
-                continue
             print(f"[dispatch] RD Row {row}…", flush=True)
             try:
                 r = rd.run_requirement_derivation(
@@ -377,9 +311,6 @@ for pass_code in PASSES:
         for row in ROWS:
             if row == 1:
                 print(f"[dispatch] RM Row 1 SKIP — Row 1 has no parent row to match against.", flush=True)
-                continue
-            if _matching_done(row):
-                print(f"[dispatch] RM Row {row} SKIP — matching log already populated.", flush=True)
                 continue
             print(f"[dispatch] RM Row {row}…", flush=True)
             try:
