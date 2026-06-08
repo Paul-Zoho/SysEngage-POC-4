@@ -88,8 +88,8 @@ function LaunchPage() {
   const [outputs, setOutputs] = useState<string[]>([]);
 
   const [project, setProject] = useState("PMT_E2E");
-  const [selectedRows, setSelectedRows] = useState<Set<number>>(new Set([1]));
-  const [selectedPasses, setSelectedPasses] = useState<Set<string>>(new Set(["3b"]));
+  const [selectedRows, setSelectedRows] = useState<Set<number>>(new Set(ROWS));
+  const [selectedPasses, setSelectedPasses] = useState<Set<string>>(new Set(PASSES));
   const [snapshot, setSnapshot] = useState("");
   const [sourceDoc, setSourceDoc] = useState("");
 
