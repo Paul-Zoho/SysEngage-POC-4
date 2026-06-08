@@ -50,7 +50,9 @@
       "status": "VERIFIED",
       "ver_criteria_passed": [],
       "neon_branch_id": "br-spring-water-ab1j4l83",
-      "neon_project_id": "sparkling-tree-75414608"
+      "neon_project_id": "sparkling-tree-75414608",
+      "neon_status": "deleted",
+      "neon_status_note": "Branch confirmed absent from Neon on 2026-06-08. Entry retained for history."
     },
     {
       "name": "snap_PMT_ph03_3d_R2_3x_20260606",
@@ -63,7 +65,9 @@
       "status": "VERIFIED",
       "ver_criteria_passed": [],
       "neon_branch_id": "br-solitary-heart-abegqepe",
-      "neon_project_id": "sparkling-tree-75414608"
+      "neon_project_id": "sparkling-tree-75414608",
+      "neon_status": "deleted",
+      "neon_status_note": "Branch confirmed absent from Neon on 2026-06-08. Parent for run_pmt_rm_r2_3x.py; must be rebuilt from snap_ph03_3c_AllProjects."
     },
     {
       "name": "snap_PMT_ph03_3e_R2_3x_20260606",
@@ -76,7 +80,9 @@
       "status": "VERIFIED",
       "ver_criteria_passed": [],
       "neon_branch_id": "br-ancient-grass-ab6zyv6i",
-      "neon_project_id": "sparkling-tree-75414608"
+      "neon_project_id": "sparkling-tree-75414608",
+      "neon_status": "deleted",
+      "neon_status_note": "Branch confirmed absent from Neon on 2026-06-08. Required by run_pmt_det_check.py / run_pmt_task37.py; rebuild via run_pmt_rm_r2_3x.py after restoring 3d parent."
     }
   ]
 }

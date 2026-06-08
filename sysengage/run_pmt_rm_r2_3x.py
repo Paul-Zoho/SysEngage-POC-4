@@ -81,10 +81,14 @@ neon_project = bm._get_project_id()
 
 source_branch = bm._find_branch_by_name(neon_project, SOURCE_SNAP)
 if not source_branch:
-    print(
-        f"[3x] ERROR: source snapshot branch '{SOURCE_SNAP}' not found in Neon.",
-        file=sys.stderr,
-    )
+    print(f"[3x] ERROR: source snapshot branch '{SOURCE_SNAP}' not found in Neon.", file=sys.stderr)
+    print("[3x]   The Neon branch for this snapshot was deleted.", file=sys.stderr)
+    print("[3x]   To rebuild it:", file=sys.stderr)
+    print("[3x]     1. Clone snap_ph03_3c_AllProjects (still alive).", file=sys.stderr)
+    print("[3x]     2. Run DD+RD for PMT_E2E_R11/R12/R13 rows 1+2 on that clone.", file=sys.stderr)
+    print("[3x]     3. Promote the clone to snap_PMT_ph03_3d_R2_3x_YYYYMMDD.", file=sys.stderr)
+    print("[3x]     4. Update SOURCE_SNAP in this file to the new date suffix.", file=sys.stderr)
+    print("[3x]     5. Re-run this script.", file=sys.stderr)
     sys.exit(1)
 source_branch_id = source_branch["id"]
 print(f"[3x]   Source snapshot : {SOURCE_SNAP} ({source_branch_id})", flush=True)

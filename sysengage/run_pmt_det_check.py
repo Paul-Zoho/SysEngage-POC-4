@@ -60,7 +60,14 @@ neon_project = bm._get_project_id()
 
 source_branch = bm._find_branch_by_name(neon_project, SOURCE_SNAP)
 if not source_branch:
-    print(f"[det] ERROR: source snapshot '{SOURCE_SNAP}' not found.", file=sys.stderr)
+    print(f"[det] ERROR: source snapshot '{SOURCE_SNAP}' not found in Neon.", file=sys.stderr)
+    print("[det]   The Neon branch for this snapshot was deleted.", file=sys.stderr)
+    print("[det]   To rebuild it:", file=sys.stderr)
+    print("[det]     1. Verify snap_PMT_ph03_3d_R2_3x_* exists (parent snapshot).", file=sys.stderr)
+    print("[det]        If it is also gone, re-run DD+RD for R11/R12/R13 from snap_ph03_3c_AllProjects.", file=sys.stderr)
+    print("[det]     2. Run: python -u sysengage/run_pmt_rm_r2_3x.py", file=sys.stderr)
+    print("[det]        This re-runs the triple RM pass and promotes the result to a new 3e snapshot.", file=sys.stderr)
+    print("[det]     3. Update SOURCE_SNAP in this file to the new snapshot name.", file=sys.stderr)
     sys.exit(1)
 
 existing = bm._find_branch_by_name(neon_project, BRANCH_NAME)
