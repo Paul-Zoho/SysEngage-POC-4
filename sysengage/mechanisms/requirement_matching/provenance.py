@@ -131,6 +131,7 @@ class ProvAccumulator:
             "processed": len(self.match_records),
             "refine_link": outcomes.count("refine"),
             "no_match": outcomes.count("no_match"),
+            "no_candidates": outcomes.count("no_candidates"),
             "duplicate_merge": outcomes.count("duplicate"),
             "flagged": outcomes.count("flagged"),
             "deferred": outcomes.count("deferred"),

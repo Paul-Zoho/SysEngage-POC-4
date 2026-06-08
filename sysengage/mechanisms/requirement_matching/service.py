@@ -43,6 +43,7 @@ from mechanisms.requirement_matching.candidates import get_candidates
 from mechanisms.requirement_matching.gaps import (
     compute_downward_gaps,
     make_downward_gap_record,
+    make_no_candidates_gap_record,
     make_upward_gap_record,
 )
 from mechanisms.requirement_matching.gating import MATCH_CONFIDENCE_BAND
@@ -142,6 +143,29 @@ def match_requirement(
             "auto_recorded": False,
             "ai_fingerprints": [],
             "gap_record": None,
+        }
+
+    # D-rm-6: DD-resolved child with zero parent candidates → no_candidates.
+    # Distinct from no_match (≥1 candidate offered but none judged a parent).
+    # Do NOT call judge_refine on an empty candidate set — that would silently
+    # stamp no_match (rationale: "No candidate parents to compare against"),
+    # masking what is really a pre-filter / cross-row vocabulary miss.
+    if not candidate_parents:
+        _child_pid = child.get("project_id", "")
+        gap = make_no_candidates_gap_record(
+            requirement_id=child_id, row_target=child_row, project_id=_child_pid
+        )
+        return {
+            "outcome": "no_candidates",
+            "matched_parent_ids": [],
+            "duplicate_of": None,
+            "confidence": None,
+            "not_yet_matchable": False,
+            "candidates_considered": [],
+            "multi_parent_ambiguous": False,
+            "auto_recorded": False,
+            "ai_fingerprints": [],
+            "gap_record": gap,
         }
 
     all_fingerprints: list[dict] = []
@@ -454,6 +478,7 @@ def match_row(
             "total": len(row_n_reqs),
             "refine_count": sum(1 for r in match_records if r["outcome"] == "refine"),
             "no_match_count": sum(1 for r in match_records if r["outcome"] == "no_match"),
+            "no_candidates_count": sum(1 for r in match_records if r["outcome"] == "no_candidates"),
             "flagged_count": sum(1 for r in match_records if r["outcome"] == "flagged"),
             "duplicate_count": sum(1 for r in match_records if r["outcome"] == "duplicate"),
             "deferred_count": sum(1 for r in match_records if r["outcome"] == "deferred"),
@@ -589,6 +614,7 @@ def match_set(
             "pass_id": pass_id,
             "refine_count": sum(1 for r in match_records if r["outcome"] == "refine"),
             "no_match_count": sum(1 for r in match_records if r["outcome"] == "no_match"),
+            "no_candidates_count": sum(1 for r in match_records if r["outcome"] == "no_candidates"),
             "flagged_count": sum(1 for r in match_records if r["outcome"] == "flagged"),
             "duplicate_count": sum(1 for r in match_records if r["outcome"] == "duplicate"),
             "merge_class_count": len(class_merge_records),

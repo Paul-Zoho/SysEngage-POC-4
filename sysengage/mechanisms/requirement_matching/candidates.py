@@ -1,7 +1,7 @@
 """
 DD-based candidate pre-filter for the Requirement Matching service.
 
-Per Requirement Matching Spec v0.1 §4.1 / D-rm-1.
+Per Requirement Matching Spec v0.4 §4.1 / D-rm-1, D-rm-5, D-rm-6.
 
 The pre-filter makes matching tractable by replacing an all-pairs free-text
 comparison with an entity-anchored candidate set:
@@ -16,6 +16,15 @@ comparison with an entity-anchored candidate set:
   - If no DD binding exists at all (DD simply hasn't run yet for this requirement),
     fall back to the full row pool (safe; entity-anchored guarantee not yet applicable).
 
+v0.4 / D-rm-5: candidate_siblings are additionally filtered to the child's own
+subject class (actor / system / business / enterprise) before being returned.
+Same-entity siblings of a different subject class are complementary (boundary
+sides / Zachman-column aspects of one concept), not duplicates — they are dropped
+from the sibling candidate set here and never offered to judge_duplicate.
+Subject class is decidable from the statement's leading noun phrase; an explicit
+`subject_class` field is read if present (none exists in the current schema, so
+the statement-based classification is used exclusively).
+
 Requirement Derivation §4.4.3a binds entity terms to requirements by calling
 resolve_and_record(term, context, provenance_ref=requirement_id), which writes to
 data_dictionary_entry (for canonical/synonym outcomes) and
@@ -25,8 +34,53 @@ data_dictionary_resolution_log (for all outcomes including existing/flagged).
 from __future__ import annotations
 
 import logging
+import re
 
 _log = logging.getLogger(__name__)
+
+# ---------------------------------------------------------------------------
+# D-rm-5 — subject-class classification (VER-rm-11)
+# ---------------------------------------------------------------------------
+#
+# Closed 4-class taxonomy matching CHK-3d-08 (stage3_structural_validation.py).
+# System: "the system / software / application / component / platform / tool /
+#          service / database / module / interface / api / app shall..."
+# Enterprise: "the enterprise shall..." (Row 1; rarely appears in cross-row siblings)
+# Business: "the business / the account holder / named-role shall..."
+# Actor: everything else — actor/stakeholder statements and named-role "can/may" forms.
+#
+# Derivation is purely from the statement text; no subject_class column exists
+# in the current requirement schema.
+
+_SYSTEM_SUBJECT_RE = re.compile(
+    r"^the\s+(?:system|software|application|component|platform|tool|service|"
+    r"database|module|interface|api|app)\b",
+    re.IGNORECASE,
+)
+_ENTERPRISE_SUBJECT_RE = re.compile(r"^the\s+enterprise\b", re.IGNORECASE)
+_BUSINESS_SUBJECT_RE = re.compile(r"^the\s+business\b", re.IGNORECASE)
+
+
+def _classify_subject(statement: str) -> str:
+    """
+    Return the subject class of a requirement statement.
+
+    Returns one of: "enterprise" | "system" | "business" | "actor"
+    "actor" is the catch-all for stakeholder, named-role, and unclassified forms.
+
+    Used by D-rm-5 to pre-separate same-entity siblings before duplicate
+    judgement.  Same-entity siblings with different subject classes are
+    complementary (different Zachman boundary sides of one concept), not
+    duplicates, and must not be offered to judge_duplicate.
+    """
+    stmt = statement.strip() if statement else ""
+    if _ENTERPRISE_SUBJECT_RE.match(stmt):
+        return "enterprise"
+    if _SYSTEM_SUBJECT_RE.match(stmt):
+        return "system"
+    if _BUSINESS_SUBJECT_RE.match(stmt):
+        return "business"
+    return "actor"
 
 
 def _get_canonical_ids_batch(requirement_ids: list[str]) -> dict[str, list[str]]:
@@ -174,12 +228,33 @@ def get_candidates(
         elif req_row == child_row:
             candidate_siblings.append(req)
 
+    # ------------------------------------------------------------------
+    # Step 5 — D-rm-5: filter siblings to the child's own subject class
+    # ------------------------------------------------------------------
+    # Same-entity siblings with a different subject class (actor / system /
+    # business / enterprise) address a different Zachman boundary side of
+    # the same concept — they are complementary, not duplicate.  Drop them
+    # from the sibling candidate set before they reach judge_duplicate.
+    child_subject_class = _classify_subject(child.get("statement", ""))
+    unfiltered_sibling_count = len(candidate_siblings)
+    candidate_siblings = [
+        s for s in candidate_siblings
+        if _classify_subject(s.get("statement", "")) == child_subject_class
+    ]
+    if len(candidate_siblings) < unfiltered_sibling_count:
+        _log.debug(
+            "get_candidates: %s subject_class=%r — dropped %d cross-class sibling(s) (D-rm-5)",
+            child_id,
+            child_subject_class,
+            unfiltered_sibling_count - len(candidate_siblings),
+        )
+
     # No coverage-gap fallback here: the child has a DD anchor, so returning an
-    # empty candidate set is the correct signal — the judge should find no match
-    # rather than receive the full pool and silently suppress the entity guarantee.
+    # empty parent candidate set is the correct signal (D-rm-6 — service.py will
+    # convert it to a no_candidates outcome rather than proceeding to judge).
     # Full-pool fallback fires only in Step 2b (child has zero DD bindings at all).
     _log.debug(
-        "get_candidates: %s → %d parents, %d siblings (entity-anchored)",
+        "get_candidates: %s → %d parents, %d siblings (entity-anchored, subject-filtered)",
         child_id, len(candidate_parents), len(candidate_siblings),
     )
     return candidate_parents, candidate_siblings, False
