@@ -1,7 +1,7 @@
 """
 Public API for the Requirement Matching service.
 
-Per Requirement Matching Service Spec v0.3 §4.
+Per Requirement Matching Service Spec v0.5 §4.
 
 Stateless per call over the persistent requirement set.
 Not a numbered pass — invoked over an assembled requirement set; re-invokable

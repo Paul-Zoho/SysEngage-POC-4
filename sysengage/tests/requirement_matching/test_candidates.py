@@ -8,6 +8,11 @@ Tests verify that get_candidates():
   - applies coverage-gap fallback when anchor filter yields no hits
   - filters pool by entity anchor intersection (canonical + related ids)
   - handles pool members with no DD binding (excluded from filter, present in fallback)
+  - D-rm-5 (VER-rm-11): filters siblings to child's own subject class
+  - D-rm-5 v0.5 ext: structural_entity class correctly detected ("Each X shall…")
+  - D-rm-7 (VER-rm-13): filters siblings to child's own requirement_type;
+    Functional / Structural / Constraint siblings are never duplicate-eligible
+    against a child of a different type
 
 All tests use unittest.mock.patch to avoid real DB calls.
 Per project convention: run tests individually, not as a full suite.
@@ -15,6 +20,8 @@ Per project convention: run tests individually, not as a full suite.
 Individual test run examples:
   pytest "tests/requirement_matching/test_candidates.py::TestDDFlaggedDeferred::test_flagged_child_not_yet_matchable" -v
   pytest "tests/requirement_matching/test_candidates.py::TestEntityAnchorFilter::test_pool_members_with_matching_canonical_id" -v
+  pytest "tests/requirement_matching/test_candidates.py::TestRequirementTypeFilter::test_cross_type_sibling_excluded" -v
+  pytest "tests/requirement_matching/test_candidates.py::TestStructuralEntitySubjectClass::test_each_entity_classified_structural" -v
 """
 
 from __future__ import annotations
@@ -32,8 +39,18 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 # Fixtures
 # ---------------------------------------------------------------------------
 
-def _req(req_id: str, row: int = 2, statement: str = "stmt") -> dict:
-    return {"requirement_id": req_id, "row_target": str(row), "statement": statement}
+def _req(
+    req_id: str,
+    row: int = 2,
+    statement: str = "stmt",
+    requirement_type: str = "Functional",
+) -> dict:
+    return {
+        "requirement_id": req_id,
+        "row_target": str(row),
+        "statement": statement,
+        "requirement_type": requirement_type,
+    }
 
 
 # Pool for most tests: 2 row-1 requirements + 2 row-2 siblings
@@ -420,6 +437,204 @@ class TestBatchQueryCalled(unittest.TestCase):
             get_candidates(child=child, pool=[])
 
         self.assertEqual(captured["ids"], {"C001"})
+
+
+# ---------------------------------------------------------------------------
+# TestStructuralEntitySubjectClass — D-rm-5 v0.5 extension (VER-rm-11)
+# ---------------------------------------------------------------------------
+
+class TestStructuralEntitySubjectClass(unittest.TestCase):
+    """
+    _classify_subject must return "structural_entity" for "Each <X> shall…" /
+    "Every <X> shall…" forms (v0.5 D-rm-5 extension), keeping them out of the
+    "actor" catch-all so they are not mis-bucketed with actor-form statements.
+    """
+
+    def _classify(self, statement: str) -> str:
+        from mechanisms.requirement_matching.candidates import _classify_subject
+        return _classify_subject(statement)
+
+    def test_each_entity_classified_structural(self):
+        self.assertEqual(self._classify("Each task shall have a monetary value"), "structural_entity")
+
+    def test_every_entity_classified_structural(self):
+        self.assertEqual(self._classify("Every order shall be assigned a unique identifier"), "structural_entity")
+
+    def test_case_insensitive(self):
+        self.assertEqual(self._classify("EACH Task shall …"), "structural_entity")
+
+    def test_system_not_reclassified(self):
+        """'The system shall…' must still be system, not structural_entity."""
+        self.assertEqual(self._classify("The system shall display tasks to the user"), "system")
+
+    def test_actor_form_not_structural(self):
+        """'A parent can define tasks' must still be actor."""
+        self.assertEqual(self._classify("A parent can define tasks with monetary values"), "actor")
+
+    def test_structural_sibling_excluded_from_actor_bucket(self):
+        """
+        A child with actor-form subject ("a parent can…") must not receive
+        a structural_entity sibling ("Each task shall…") in its candidate set
+        even when both share the same DD entity anchor.  (D-rm-5 / VER-rm-11)
+        """
+        child = _req("C001", row=2, statement="a parent can define tasks with values")
+        structural_sibling = _req("S001", row=2, statement="Each task shall have a monetary value")
+        pool = [child, structural_sibling]
+        canonical_map = {
+            "C001": ["DD001"],
+            "S001": ["DD001"],
+        }
+        with patch(
+            "mechanisms.requirement_matching.candidates._get_canonical_ids_batch",
+            return_value=canonical_map,
+        ), patch(
+            "mechanisms.requirement_matching.candidates._relationships_of",
+            return_value=[],
+        ):
+            from mechanisms.requirement_matching.candidates import get_candidates
+            _, siblings, _ = get_candidates(child=child, pool=pool)
+        sibling_ids = {r["requirement_id"] for r in siblings}
+        self.assertNotIn(
+            "S001", sibling_ids,
+            "structural_entity sibling must be excluded from actor-class child's sibling set",
+        )
+
+
+# ---------------------------------------------------------------------------
+# TestRequirementTypeFilter — D-rm-7 (VER-rm-13)
+# ---------------------------------------------------------------------------
+
+class TestRequirementTypeFilter(unittest.TestCase):
+    """
+    VER-rm-13: two requirements of different requirement_type (Functional /
+    Structural / Constraint) must never appear together in the duplicate
+    candidate set, regardless of shared entity or subject class.
+
+    get_candidates() Step 6 (D-rm-7) drops cross-type siblings before they
+    reach judge_duplicate.
+    """
+
+    def _run(self, child, pool, canonical_map):
+        with patch(
+            "mechanisms.requirement_matching.candidates._get_canonical_ids_batch",
+            return_value=canonical_map,
+        ), patch(
+            "mechanisms.requirement_matching.candidates._relationships_of",
+            return_value=[],
+        ):
+            from mechanisms.requirement_matching.candidates import get_candidates
+            return get_candidates(child=child, pool=pool)
+
+    def test_cross_type_sibling_excluded(self):
+        """
+        A Functional child must not receive a Structural sibling in its
+        duplicate candidate set even when both share the same entity anchor.
+        Mirrors the PMT R2 Run13 false merge: R030 (Functional) ↔ R014 (Structural).
+        """
+        child = _req("R030", row=2,
+                     statement="a parent can define tasks with monetary values",
+                     requirement_type="Functional")
+        structural_sibling = _req("R014", row=2,
+                                  statement="Each task shall have a monetary value",
+                                  requirement_type="Structural")
+        pool = [child, structural_sibling]
+        canonical_map = {"R030": ["DD_TASK"], "R014": ["DD_TASK"]}
+
+        _, siblings, _ = self._run(child, pool, canonical_map)
+        self.assertNotIn(
+            "R014",
+            {r["requirement_id"] for r in siblings},
+            "Structural sibling R014 must be excluded from Functional child R030's candidate set (D-rm-7)",
+        )
+
+    def test_cross_type_functional_constraint_excluded(self):
+        """
+        A Functional child must not receive a Constraint sibling.
+        Mirrors R028 (Functional) ↔ R029 (Constraint) from PMT R2 Run13.
+        """
+        child = _req("R028", row=2,
+                     statement="the system shall maintain a historical record of transactions",
+                     requirement_type="Functional")
+        constraint_sibling = _req("R029", row=2,
+                                  statement="the system shall retain completion records for the required duration",
+                                  requirement_type="Constraint")
+        pool = [child, constraint_sibling]
+        canonical_map = {"R028": ["DD_RECORD"], "R029": ["DD_RECORD"]}
+
+        _, siblings, _ = self._run(child, pool, canonical_map)
+        self.assertNotIn(
+            "R029",
+            {r["requirement_id"] for r in siblings},
+            "Constraint sibling R029 must be excluded from Functional child R028's candidate set (D-rm-7)",
+        )
+
+    def test_same_type_sibling_retained(self):
+        """
+        Two Functional requirements sharing an entity anchor must BOTH appear
+        in the candidate set — type filter must not over-exclude.
+        """
+        child = _req("R031", row=2,
+                     statement="a parent can add tasks to a list",
+                     requirement_type="Functional")
+        same_type_sibling = _req("R032", row=2,
+                                 statement="a parent can create new tasks in the system",
+                                 requirement_type="Functional")
+        pool = [child, same_type_sibling]
+        canonical_map = {"R031": ["DD_TASK"], "R032": ["DD_TASK"]}
+
+        _, siblings, _ = self._run(child, pool, canonical_map)
+        self.assertIn(
+            "R032",
+            {r["requirement_id"] for r in siblings},
+            "Same-type (Functional) sibling must be retained in the candidate set",
+        )
+
+    def test_no_requirement_type_field_allows_all(self):
+        """
+        When the child has no requirement_type (empty string), the type filter
+        is skipped — no siblings are dropped on type grounds.
+        """
+        child = {
+            "requirement_id": "C001",
+            "row_target": "2",
+            "statement": "a parent can view tasks",
+            "requirement_type": "",
+        }
+        sibling = _req("S001", row=2, statement="a parent can see all tasks",
+                       requirement_type="Functional")
+        pool = [child, sibling]
+        canonical_map = {"C001": ["DD_TASK"], "S001": ["DD_TASK"]}
+
+        _, siblings, _ = self._run(child, pool, canonical_map)
+        self.assertIn(
+            "S001",
+            {r["requirement_id"] for r in siblings},
+            "Type filter must be skipped when child has no requirement_type",
+        )
+
+    def test_all_three_types_each_isolated(self):
+        """
+        Three same-entity siblings of three different types — each child sees
+        only its own type in the sibling candidate set.
+        """
+        func = _req("F001", row=2, statement="a parent can add tasks", requirement_type="Functional")
+        struct = _req("S001", row=2, statement="Each task shall have an id", requirement_type="Structural")
+        constr = _req("C001", row=2, statement="the system shall retain tasks for 7 years", requirement_type="Constraint")
+        pool = [func, struct, constr]
+        canonical_map = {"F001": ["DD_TASK"], "S001": ["DD_TASK"], "C001": ["DD_TASK"]}
+
+        for child, forbidden_pair in [
+            (func, {"S001", "C001"}),
+            (struct, {"F001", "C001"}),
+            (constr, {"F001", "S001"}),
+        ]:
+            _, siblings, _ = self._run(child, pool, canonical_map)
+            sibling_ids = {r["requirement_id"] for r in siblings}
+            self.assertFalse(
+                sibling_ids & forbidden_pair,
+                f"Child {child['requirement_id']} ({child['requirement_type']}) must not see "
+                f"cross-type siblings {forbidden_pair}; got {sibling_ids}",
+            )
 
 
 if __name__ == "__main__":

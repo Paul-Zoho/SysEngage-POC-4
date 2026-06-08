@@ -1,7 +1,7 @@
 """
 IM matching judgement for the Requirement Matching service.
 
-Per Requirement Matching Service Spec v0.2 §4.2 (D-rm-1, D-rm-2).
+Per Requirement Matching Service Spec v0.5 §4.2 (D-rm-1, D-rm-2).
 
 judge_refine / judge_duplicate decide for each child requirement:
   - Against cross-row candidate_parents (row n-1): refine vs none.

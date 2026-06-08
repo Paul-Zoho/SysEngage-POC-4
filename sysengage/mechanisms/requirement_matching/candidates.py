@@ -1,7 +1,7 @@
 """
 DD-based candidate pre-filter for the Requirement Matching service.
 
-Per Requirement Matching Spec v0.4 §4.1 / D-rm-1, D-rm-5, D-rm-6.
+Per Requirement Matching Spec v0.5 §4.1 / D-rm-1, D-rm-5, D-rm-6, D-rm-7.
 
 The pre-filter makes matching tractable by replacing an all-pairs free-text
 comparison with an entity-anchored candidate set:
@@ -17,13 +17,28 @@ comparison with an entity-anchored candidate set:
     fall back to the full row pool (safe; entity-anchored guarantee not yet applicable).
 
 v0.4 / D-rm-5: candidate_siblings are additionally filtered to the child's own
-subject class (actor / system / business / enterprise) before being returned.
-Same-entity siblings of a different subject class are complementary (boundary
-sides / Zachman-column aspects of one concept), not duplicates — they are dropped
-from the sibling candidate set here and never offered to judge_duplicate.
-Subject class is decidable from the statement's leading noun phrase; an explicit
-`subject_class` field is read if present (none exists in the current schema, so
-the statement-based classification is used exclusively).
+subject class (actor / system / business / enterprise / structural_entity) before
+being returned.  Same-entity siblings of a different subject class are
+complementary (boundary sides / Zachman-column aspects of one concept), not
+duplicates — they are dropped from the sibling candidate set here and never
+offered to judge_duplicate.  Subject class is decidable from the statement's
+leading noun phrase; an explicit `subject_class` field is read if present (none
+exists in the current schema, so the statement-based classification is used).
+
+v0.5 / D-rm-5 extended: the "structural_entity" subject class is now explicit.
+Structural requirements whose subject is the entity they describe
+("Each Task shall …", "Every Order shall …") are a distinct class from actor /
+system / business / enterprise.  Previously these fell into the "actor" catch-all,
+putting them in the same duplicate bucket as actor-form statements about the same
+entity — which is incorrect.
+
+v0.5 / D-rm-7: candidate_siblings are further filtered to the child's own
+`requirement_type` (Functional / Structural / Constraint).  Only requirements of
+the SAME type are duplicate-eligible — a Functional, a Structural, and a
+Constraint requirement assert categorically different kinds of obligation and are
+never duplicates, regardless of shared entity or subject vocabulary.  This is
+decided from `requirement.requirement_type` (a Requirement field), automatic, and
+applied before the IM duplicate judgement.  New VER-rm-13.
 
 Requirement Derivation §4.4.3a binds entity terms to requirements by calling
 resolve_and_record(term, context, provenance_ref=requirement_id), which writes to
@@ -42,31 +57,43 @@ _log = logging.getLogger(__name__)
 # D-rm-5 — subject-class classification (VER-rm-11)
 # ---------------------------------------------------------------------------
 #
-# Closed 4-class taxonomy matching CHK-3d-08 (stage3_structural_validation.py).
-# System: "the system / software / application / component / platform / tool /
-#          service / database / module / interface / api / app shall..."
-# Enterprise: "the enterprise shall..." (Row 1; rarely appears in cross-row siblings)
-# Business: "the business / the account holder / named-role shall..."
-# Actor: everything else — actor/stakeholder statements and named-role "can/may" forms.
+# Closed 5-class taxonomy (v0.5 adds structural_entity):
+# System:            "the system / software / application / component / platform /
+#                     tool / service / database / module / interface / api / app shall…"
+# Enterprise:        "the enterprise shall…" (Row 1; rarely appears in siblings)
+# Business:          "the business / the account holder / named-role shall…"
+# Structural entity: "Each <Entity> shall…" / "Every <Entity> shall…"
+#                    The subject is the entity the requirement describes (v0.5 D-rm-5
+#                    extension).  Distinct from actor-form statements about the same
+#                    entity — previously these fell into the "actor" catch-all.
+# Actor:             catch-all — actor/stakeholder statements and named-role "can/may"
+#                    forms that don't match any of the above.
 #
 # Derivation is purely from the statement text; no subject_class column exists
-# in the current requirement schema.
+# in the current requirement schema.  The structural_entity check must come BEFORE
+# the actor catch-all so "Each Task shall…" is not swallowed by actor.
 
+_ENTERPRISE_SUBJECT_RE = re.compile(r"^the\s+enterprise\b", re.IGNORECASE)
 _SYSTEM_SUBJECT_RE = re.compile(
     r"^the\s+(?:system|software|application|component|platform|tool|service|"
     r"database|module|interface|api|app)\b",
     re.IGNORECASE,
 )
-_ENTERPRISE_SUBJECT_RE = re.compile(r"^the\s+enterprise\b", re.IGNORECASE)
 _BUSINESS_SUBJECT_RE = re.compile(r"^the\s+business\b", re.IGNORECASE)
+# "Each Task shall …" / "Every Order shall …" — entity-subject Structural form
+_STRUCTURAL_ENTITY_RE = re.compile(r"^(?:each|every)\s+\w+\b", re.IGNORECASE)
 
 
 def _classify_subject(statement: str) -> str:
     """
     Return the subject class of a requirement statement.
 
-    Returns one of: "enterprise" | "system" | "business" | "actor"
+    Returns one of:
+      "enterprise" | "system" | "business" | "structural_entity" | "actor"
+
     "actor" is the catch-all for stakeholder, named-role, and unclassified forms.
+    "structural_entity" covers "Each <Entity> shall …" / "Every <Entity> shall …"
+    where the subject is the entity the requirement describes (v0.5 D-rm-5 ext).
 
     Used by D-rm-5 to pre-separate same-entity siblings before duplicate
     judgement.  Same-entity siblings with different subject classes are
@@ -80,6 +107,8 @@ def _classify_subject(statement: str) -> str:
         return "system"
     if _BUSINESS_SUBJECT_RE.match(stmt):
         return "business"
+    if _STRUCTURAL_ENTITY_RE.match(stmt):
+        return "structural_entity"
     return "actor"
 
 
@@ -249,12 +278,34 @@ def get_candidates(
             unfiltered_sibling_count - len(candidate_siblings),
         )
 
+    # ------------------------------------------------------------------
+    # Step 6 — D-rm-7: filter siblings to child's own requirement_type
+    # ------------------------------------------------------------------
+    # Functional / Structural / Constraint requirements assert categorically
+    # different kinds of obligation — never duplicates of each other, even when
+    # they share the same entity and subject class.  This is decidable from the
+    # requirement_type field and applied before the IM duplicate judgement.
+    child_req_type = child.get("requirement_type", "")
+    if child_req_type:
+        unfiltered_type_count = len(candidate_siblings)
+        candidate_siblings = [
+            s for s in candidate_siblings
+            if s.get("requirement_type", "") == child_req_type
+        ]
+        if len(candidate_siblings) < unfiltered_type_count:
+            _log.debug(
+                "get_candidates: %s requirement_type=%r — dropped %d cross-type sibling(s) (D-rm-7)",
+                child_id,
+                child_req_type,
+                unfiltered_type_count - len(candidate_siblings),
+            )
+
     # No coverage-gap fallback here: the child has a DD anchor, so returning an
     # empty parent candidate set is the correct signal (D-rm-6 — service.py will
     # convert it to a no_candidates outcome rather than proceeding to judge).
     # Full-pool fallback fires only in Step 2b (child has zero DD bindings at all).
     _log.debug(
-        "get_candidates: %s → %d parents, %d siblings (entity-anchored, subject-filtered)",
+        "get_candidates: %s → %d parents, %d siblings (entity-anchored, subject-filtered, type-filtered)",
         child_id, len(candidate_parents), len(candidate_siblings),
     )
     return candidate_parents, candidate_siblings, False

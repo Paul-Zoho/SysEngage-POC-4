@@ -112,14 +112,17 @@ class ProvAccumulator:
         return "Incremental re-match"
 
     def _compute_execution_status(self) -> str:
+        # Ledger v2.15 enum: "Success" | "PartialSuccess" | "Failed"
+        # PartialSuccess when judge failures were flagged or requirements were
+        # deferred (execution completed but with partial-failure conditions).
         outcomes = [r["outcome"] for r in self.match_records]
         if not outcomes:
-            return "Completed"
+            return "Success"
         has_flagged = any(o == "flagged" for o in outcomes)
         has_deferred = any(o == "deferred" for o in outcomes)
         if has_flagged or has_deferred:
-            return "CompletedWithWarnings"
-        return "Completed"
+            return "PartialSuccess"
+        return "Success"
 
     def _mean_confidence(self) -> float:
         confs = [r["confidence"] for r in self.match_records if r["confidence"] is not None]
