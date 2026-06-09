@@ -1,0 +1,29 @@
+This run exposes the real problem, and it's not where the metric looks clean. Row 3 is empty (0 requirements) — so the cascade did not run below Row 2. Row 1→2 works perfectly again (11/11), but Row 2→3 is 0/27: all 27 Row 2 seeds are uncovered, because there's no Row 3 at all for them to be covered by.
+The diagnostic detail tells the story precisely:
+
+Row 2 derivation pass: path_r=13, seed_coverage 11/11 — Path R ran, refined all Row 1 seeds. Healthy.
+Row 3 derivation pass: row=None, seed_coverage=None, path_r=None — the Row 3 pass effectively didn't execute as a refinement pass. No seed coverage computed, no Path R count, no row even identified. It produced 0 requirements.
+Row 4 pass: path_r=0, the 1 requirement is the platform constraint again (row-native, no_candidates — same R045-type as before).
+
+So Path R is implemented and works — but only the Row 1→Row 2 descent actually ran it. The Row 2→Row 3 descent didn't fire: no Path R, no seeds processed, no output. That's why Row 3 is empty and Row 4 has only its single native constraint.
+This is almost certainly not a spec defect — it's the same shape of gap we've hit repeatedly: the mechanism runs at one row but not the one below. Two candidate causes, and the data leans toward the first:
+
+The Row 3 derivation pass didn't receive its seed set / didn't invoke Path R. row=None on that pass is the tell — the pass exists in the ledger but isn't parameterised as a Row 3 refinement pass (no row_ref, no seed_coverage struct, no path_r_count). It looks like the pipeline ran Row 1→2 under the new refinement code, then stopped — Row 3 derivation either ran under old code (CCI-only, found ~0 Row 3 CCIs, produced nothing) or didn't execute the refinement path at all. Given Row 2 produced 27 requirements that should have seeded Row 3 richly (27 seeds → many Row 3 children), getting 0 means the seed set wasn't fed to the Row 3 pass.
+Less likely: every Row 2 seed was judged terminal — but we removed terminal, and CHK-3d-10 would have hard-failed on 27 unrefined seeds rather than silently producing 0 with elaboration_gaps=0. The fact that elaboration_gaps=0 while Row 3 is empty is itself the contradiction: CHK-3d-10 should have flagged 27 extinct seeds. It didn't fire because the Row 3 refinement pass didn't run — there was no seed-coverage computation to trip the check.
+
+So the honest read: the cascade is only half-deployed. Row 1→2 runs the new Path-R refinement (and validates beautifully — 11/11, clean fan-out, D-rm-8 working in pass0). Row 2→3 does not run it — the Row 3 derivation pass shows row=None / path_r=None, produced nothing, and CHK-3d-10 didn't fire because the pass didn't execute as a refinement pass. This is a build/wiring gap at Row 3+, not a spec gap — the exact propagation risk flagged in the tracker, now manifest one row down.
+The evidence that it's wiring, not design:
+
+The identical mechanism produces 11/11 at Row 1→2 and 0/27 at Row 2→3. Same spec, opposite outcome — that's deployment, not specification.
+row=None on the Row 3 pass: the pass isn't even identifying its row, so it can't be assembling "the surviving Row 2 requirements as the seed set." The seed-set assembly (Stage 1, the thing v0.13 added) isn't happening at Row 3.
+CHK-3d-10's silence (elaboration_gaps=0 with 0 Row 3 output) confirms the check never ran — it can't assert seed coverage if the pass didn't load seeds.
+
+So F87 is validated at Row 1→2 and unproven below, and the reason it's unproven is that the refinement pass isn't wired for Row 3+ in this build — not that the spec fails there.
+What I'd want confirmed before concluding, and it's one question to the build:
+Does the build run the Path-R refinement pass for Row 3 and Row 4, or only Row 2? The row=None / path_r=None on the Row 3 derivation pass strongly suggests Row 3+ derivation is still on the old CCI-only path (or the seed-set input isn't wired beyond Row 2). If so, the fix is purely implementation: extend the Path-R invocation (seed-set assembly + refinement prompt + CHK-3d-10) to every row ≥ 2, not just Row 2. Then re-run, and Row 2→3 seed-coverage should jump from 0/27 the way Row 1→2 went to 11/11.
+Two things, then:
+
+For the tracker: I'd record Run19 + R4_Run3 together as F87 validated at Row 1→2, blocked below by a Row-3+ build-wiring gap (Path-R pass not invoked for rows ≥ 3; row=None, CHK-3d-10 not firing). F87 stays Open — and importantly, this is not a spec finding; it's the propagation/wiring risk the tracker already flags, now concretely located at Row 3. Worth logging so the build knows exactly where to look.
+The actionable build instruction is specific: the Row 2 derivation invocation carries row_ref, assembles the seed set, calls Path R (path_r=13), and computes seed_coverage. The Row 3 invocation does none of those (row=None, no seed_coverage, path_r=None). So the Path-R wiring that exists at Row 2 needs to be applied to the Row 3 and Row 4 derivation passes. It's a loop-over-rows gap, not new logic.
+
+So — strong news and a clear blocker. The mechanism is proven correct where it runs (Row 1→2, definitively); it just isn't running below Row 2 in this build. Do you want me to log this in the tracker as the Row-3+ wiring gap (F87 validated-at-Row-2, blocked-below), and is the Row 3+ Path-R invocation something you can confirm on the build side?Opus 4.8 High
