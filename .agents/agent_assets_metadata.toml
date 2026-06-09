@@ -150,3 +150,9 @@ id = "wXzN0AgT-qVAAVC-E-eKo"
 uri = "file://verification_outputs/RD_v0_14_Implementation_Status_Report.md"
 type = "text"
 title = "RD v0.14 Implementation Status Report"
+
+[[outputs]]
+id = "if3nmdI5QNXtjtd2P8Auk"
+uri = "file://verification_outputs/RD_v0_15_Spec_Review.md"
+type = "text"
+title = "RD v0.15 Spec Review"
