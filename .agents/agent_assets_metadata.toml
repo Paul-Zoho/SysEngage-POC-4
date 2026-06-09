@@ -144,3 +144,9 @@ id = "VeOJbMrsd0qGzSHS7BzgI"
 uri = "file://verification_outputs/PMT_Ph03_3c_DomainDerivation_R1_Run2.json"
 type = "unspecified"
 title = "PMT Ph03 3c DomainDerivation R1 — 3b baseline run"
+
+[[outputs]]
+id = "wXzN0AgT-qVAAVC-E-eKo"
+uri = "file://verification_outputs/RD_v0_14_Implementation_Status_Report.md"
+type = "text"
+title = "RD v0.14 Implementation Status Report"
