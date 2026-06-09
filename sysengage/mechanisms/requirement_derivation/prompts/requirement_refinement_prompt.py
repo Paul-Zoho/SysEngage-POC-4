@@ -78,7 +78,7 @@ Return a JSON array of objects. Each object must conform to:
   "rationale": "<brief rationale>",
   "fit_criteria": "<measurement criterion or null>",
   "verification_method": "<Inspection|Demonstration|Test|Analysis|Measurement or null>",
-  "priority": "<Must|Should|Could|null>",
+  "priority": "<High|Medium|Low|null>",
   "confidence": 0.0
 }}
 ```

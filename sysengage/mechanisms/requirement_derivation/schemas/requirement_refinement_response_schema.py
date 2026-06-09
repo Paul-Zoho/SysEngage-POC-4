@@ -10,7 +10,7 @@ Per Requirement Derivation Spec v0.13 §4.2 (Path R):
 
 from __future__ import annotations
 
-from typing import Literal
+from typing import Literal, Optional
 
 from pydantic import BaseModel, Field
 
@@ -30,5 +30,5 @@ class RefinementProposal(BaseModel):
     rationale: str | None = None
     fit_criteria: str | None = None
     verification_method: str | None = None
-    priority: str | None = None
+    priority: Optional[Literal["High", "Medium", "Low"]] = None
     confidence: float = 1.0
