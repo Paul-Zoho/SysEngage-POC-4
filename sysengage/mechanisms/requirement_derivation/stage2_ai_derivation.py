@@ -1,7 +1,7 @@
 """
 Stage 2 — Per-Domain AI Derivation Act (IM).
 
-Per Requirement Derivation Mechanism Spec v0.13 §4.2:
+Per Requirement Derivation Mechanism Spec v0.17 §4.2:
   Path R (rows >= 2, FirstRun/FullRerun only): interrogative elaboration of
     row n-1 seeds BEFORE Path N. One AI call for all seeds; each returned
     proposal has refines_refs=[seed_id] set at derivation. cci_refs may be

@@ -9,8 +9,10 @@ Per Requirement Derivation Mechanism Spec v0.1 §4.1:
      project-wide active members (not []).
   5. Pass 3c invariant guard: CCIs exist but no Domains → Failed.
   6. Large-set advisory: row CCI count vs threshold.
-  7. Re-run scenario detection: two-part SHA-256 hash (CCI-ids + active Domain-ids).
-     Domain-set change → FullRerun (MD-3).
+  7. Re-run scenario detection: three-part SHA-256 hash for rows >= 2
+     (CCI-ids + active Domain-ids + surviving row n-1 requirement-ids);
+     two-part for Row 1 (no seed segment). Domain-set change or seed-set
+     change → FullRerun (MD-3).
 
 No AI calls. DM mode only.
 """
