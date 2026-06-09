@@ -603,14 +603,27 @@ def _derive_domain_refs(
     """
     MD-2: DM-derived domain_refs — set of domain_ids whose cell_content_item_refs
     intersect proposal.cci_refs. Never AI-proposed.
+
+    v0.13: For Path R proposals with empty cci_refs but non-empty refines_refs,
+    fall back to [source_domain_id] so the proposal passes the MD-2 assert.
     """
-    proposal_ci_ids = set(proposal.cci_refs)
-    domain_refs = sorted(
-        d.domain_id
-        for d in active_domains
-        if proposal_ci_ids & set(d.cell_content_item_refs)
-    )
-    return domain_refs
+    if proposal.cci_refs:
+        proposal_ci_ids = set(proposal.cci_refs)
+        domain_refs = sorted(
+            d.domain_id
+            for d in active_domains
+            if proposal_ci_ids & set(d.cell_content_item_refs)
+        )
+        return domain_refs
+
+    if proposal.refines_refs and proposal.source_domain_id:
+        active_domain_ids = {d.domain_id for d in active_domains}
+        if proposal.source_domain_id in active_domain_ids:
+            return [proposal.source_domain_id]
+        if active_domains:
+            return [active_domains[0].domain_id]
+
+    return []
 
 
 # ---------------------------------------------------------------------------
@@ -738,7 +751,7 @@ def run_stage4(
                     "verification_method": proposal.verification_method,
                     "priority": proposal.priority,
                     "answer_refs": json.dumps([]),
-                    "refines_refs": json.dumps([]),
+                    "refines_refs": json.dumps(sorted(proposal.refines_refs)),
                     "confidence": proposal.confidence,
                     "now": now,
                 },

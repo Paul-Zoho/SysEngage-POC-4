@@ -133,6 +133,7 @@ class ProvAccumulator:
         counts: dict[str, int] = {
             "processed": len(self.match_records),
             "refine_link": outcomes.count("refine"),
+            "pre_linked": outcomes.count("pre_linked"),
             "no_match": outcomes.count("no_match"),
             "no_candidates": outcomes.count("no_candidates"),
             "duplicate_merge": outcomes.count("duplicate"),

@@ -124,6 +124,53 @@ def match_requirement(
             "gap_record": None,
         }
 
+    # -----------------------------------------------------------------------
+    # D-rm-8 — Pre-linked short-circuit (v0.6, provenance-blind).
+    # If child.refines_refs is populated (set at derivation by Path R), verify
+    # each parent exists at row_target − 1 (dangling → flag), then record
+    # pre_linked and skip the refine judgement. Steps 1+ run only for empty
+    # refines_refs children.
+    # -----------------------------------------------------------------------
+    refines_refs: list[str] = child.get("refines_refs") or []
+    if refines_refs and child_row.isdigit():
+        expected_parent_row = str(int(child_row) - 1)
+        pool_by_id = {r["requirement_id"]: r for r in pool}
+        dangling = [
+            pid for pid in refines_refs
+            if pid not in pool_by_id
+            or str(pool_by_id[pid].get("row_target", "")) != expected_parent_row
+        ]
+        if dangling:
+            _log.warning(
+                "D-rm-8: child=%s has dangling refines_refs %s at row %s",
+                child_id, dangling, child_row,
+            )
+            return {
+                "outcome": "flagged",
+                "matched_parent_ids": [],
+                "duplicate_of": None,
+                "confidence": 0.0,
+                "not_yet_matchable": False,
+                "candidates_considered": [],
+                "multi_parent_ambiguous": False,
+                "auto_recorded": False,
+                "ai_fingerprints": [],
+                "gap_record": None,
+                "detail": f"D-rm-8: dangling refines_refs {dangling}",
+            }
+        return {
+            "outcome": "pre_linked",
+            "matched_parent_ids": list(refines_refs),
+            "duplicate_of": None,
+            "confidence": 1.0,
+            "not_yet_matchable": False,
+            "candidates_considered": [],
+            "multi_parent_ambiguous": False,
+            "auto_recorded": True,
+            "ai_fingerprints": [],
+            "gap_record": None,
+        }
+
     # Step 1: DD-based candidate pre-filter
     candidate_parents, candidate_siblings, not_yet_matchable = get_candidates(
         child=child, pool=pool

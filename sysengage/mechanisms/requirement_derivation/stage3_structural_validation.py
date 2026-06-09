@@ -49,8 +49,14 @@ from typing import Any
 
 from core.ai_client import MODEL, get_ai_client
 from core.slots import check_atomicity, violation_summary
+from mechanisms.requirement_derivation.prompts.requirement_refinement_prompt import (
+    build_requirement_refinement_prompt,
+)
 from mechanisms.requirement_derivation.prompts.requirement_repair_prompt import (
     build_requirement_repair_prompt,
+)
+from mechanisms.requirement_derivation.schemas.requirement_refinement_response_schema import (
+    RefinementProposal,
 )
 from mechanisms.requirement_derivation.schemas.requirement_repair_response_schema import (
     RepairRequirementProposal,
@@ -63,6 +69,7 @@ from mechanisms.requirement_derivation.stage1_preflight import (
 from mechanisms.requirement_derivation.stage2_ai_derivation import (
     Stage2Result,
     TaggedProposal,
+    _resolve_source_domain_id,
 )
 
 _log = logging.getLogger(__name__)
@@ -80,6 +87,8 @@ class Stage3Result:
     ai_model_fingerprints: list[dict[str, Any]] = field(default_factory=list)
     execution_warnings: list[dict[str, Any]] = field(default_factory=list)
     concern_entities: list[dict[str, Any]] = field(default_factory=list)
+    elaboration_gaps: list[str] = field(default_factory=list)
+    seed_coverage: dict[str, Any] = field(default_factory=dict)
     status: str = "ok"
     failure_reason: str | None = None
 
@@ -185,6 +194,7 @@ def _run_repair(
                 statement=rp.statement,
                 requirement_type=rp.requirement_type,
                 cci_refs=list(rp.cci_refs),
+                refines_refs=[],
                 rationale=rp.rationale,
                 fit_criteria=rp.fit_criteria,
                 verification_method=rp.verification_method,
@@ -237,16 +247,18 @@ def run_stage3(
     proposals = surviving
 
     # -------------------------------------------------------------------------
-    # CHK-3d-02 — No empty cci_refs
+    # CHK-3d-02 — Reject only when BOTH cci_refs AND refines_refs are empty.
+    # v0.13 relaxation: Path R proposals may have empty cci_refs when
+    # refines_refs is set; they pass this check.
     # -------------------------------------------------------------------------
     surviving = []
     for p in proposals:
-        if not p.cci_refs:
+        if not p.cci_refs and not p.refines_refs:
             result.validation_failures.append(
                 {
                     "check_id": "CHK-3d-02",
                     "source_domain_id": p.source_domain_id,
-                    "detail": "empty cci_refs",
+                    "detail": "empty cci_refs AND empty refines_refs",
                 }
             )
         else:
@@ -254,10 +266,16 @@ def run_stage3(
     proposals = surviving
 
     # -------------------------------------------------------------------------
-    # CHK-3d-03 — cci_refs resolve to source Domain's eligible membership
+    # CHK-3d-03 — cci_refs resolve to source Domain's eligible membership.
+    # v0.13: proposals with empty cci_refs but non-empty refines_refs skip the
+    # membership check (they are Path R proposals; cci_refs populated later).
     # -------------------------------------------------------------------------
     cleaned: list[TaggedProposal] = []
     for p in proposals:
+        if not p.cci_refs and p.refines_refs:
+            cleaned.append(p)
+            continue
+
         domain = domain_by_id.get(p.source_domain_id)
         if domain is None:
             result.validation_failures.append(
@@ -281,12 +299,12 @@ def run_stage3(
                 }
             )
 
-        if not valid_refs:
+        if not valid_refs and not p.refines_refs:
             result.validation_failures.append(
                 {
                     "check_id": "CHK-3d-02",
                     "source_domain_id": p.source_domain_id,
-                    "detail": "empty cci_refs after stripping out-of-Domain refs (CHK-3d-03)",
+                    "detail": "empty cci_refs after stripping out-of-Domain refs (CHK-3d-03) and refines_refs also empty",
                 }
             )
         else:
@@ -636,6 +654,146 @@ def run_stage3(
                 "concern-atomicity over-bundling signal",
                 placeholder, len(types), len(cols),
             )
+
+    # -------------------------------------------------------------------------
+    # CHK-3d-10 — Downward Non-Loss: every row n-1 seed is refined by ≥1
+    # surviving proposal (v0.13).
+    # Only applies when stage2.seed_set is non-empty (rows >= 2, Path R ran).
+    # Unrefined seeds → one re-prompt elaboration attempt;
+    # persistent → elaboration_gaps in mechanism_data + warning.
+    # -------------------------------------------------------------------------
+    seed_set = stage2.seed_set
+    if seed_set:
+        all_seed_ids = {s["requirement_id"] for s in seed_set}
+        refined_seed_ids = {ref for p in proposals for ref in p.refines_refs}
+        unrefined_seed_ids = all_seed_ids - refined_seed_ids
+
+        result.seed_coverage = {
+            "total_seeds": len(all_seed_ids),
+            "refined_count": len(refined_seed_ids & all_seed_ids),
+            "unrefined_count": len(unrefined_seed_ids),
+            "unrefined_seed_ids": sorted(unrefined_seed_ids),
+        }
+
+        if unrefined_seed_ids:
+            _log.info(
+                "CHK-3d-10: %d unrefined seed(s) — attempting elaboration repair: %s",
+                len(unrefined_seed_ids), sorted(unrefined_seed_ids),
+            )
+            result.execution_warnings.append(
+                {
+                    "type": "chk3d10_repair_performed",
+                    "unrefined_count": len(unrefined_seed_ids),
+                    "unrefined_seed_ids": sorted(unrefined_seed_ids),
+                }
+            )
+
+            unrefined_seeds = [
+                s for s in seed_set if s["requirement_id"] in unrefined_seed_ids
+            ]
+            domains_context = [
+                {
+                    "domain_id": d.domain_id,
+                    "name": d.name,
+                    "description": d.description,
+                    "cell_content_items": [
+                        {
+                            "ci_id": c.ci_id,
+                            "column": c.column,
+                            "classification_type": c.classification_type,
+                            "description": c.description,
+                        }
+                        for c in stage1.eligible_ccis
+                        if c.ci_id in set(d.cell_content_item_refs)
+                    ],
+                }
+                for d in stage1.active_domains
+            ]
+            repair_prompt = build_requirement_refinement_prompt(
+                row_ref=row_ref,
+                seeds=unrefined_seeds,
+                domains=domains_context,
+            )
+
+            chk10_proposals: list[TaggedProposal] = []
+            try:
+                client = get_ai_client()
+                msg = client.messages.create(
+                    model=MODEL,
+                    max_tokens=2048,
+                    messages=[{"role": "user", "content": repair_prompt}],
+                )
+                fp = {
+                    "stage": "stage3_chk3d10_repair",
+                    "model": msg.model,
+                    "input_tokens": msg.usage.input_tokens,
+                    "output_tokens": msg.usage.output_tokens,
+                }
+                result.ai_model_fingerprints.append(fp)
+                raw_text = msg.content[0].text if msg.content else ""
+                try:
+                    import json as _json
+                    _raw = re.search(r"```(?:json)?\s*([\s\S]*?)```", raw_text, re.DOTALL)
+                    _stripped = _raw.group(1).strip() if _raw else raw_text.strip()
+                    _parsed_items = _json.loads(_stripped)
+                    if isinstance(_parsed_items, list):
+                        for item in _parsed_items:
+                            rp = RefinementProposal.model_validate(item)
+                            if rp.refines_refs and rp.refines_refs[0] in unrefined_seed_ids:
+                                src_did = _resolve_source_domain_id(list(rp.cci_refs), stage1)
+                                chk10_proposals.append(
+                                    TaggedProposal(
+                                        source_domain_id=src_did,
+                                        statement=rp.statement,
+                                        requirement_type=rp.requirement_type,
+                                        cci_refs=list(rp.cci_refs),
+                                        refines_refs=list(rp.refines_refs),
+                                        rationale=rp.rationale,
+                                        fit_criteria=rp.fit_criteria,
+                                        verification_method=rp.verification_method,
+                                        priority=rp.priority,
+                                        confidence=rp.confidence,
+                                    )
+                                )
+                except Exception as parse_exc:
+                    _log.warning("CHK-3d-10 repair response parse failed: %s", parse_exc)
+                    result.execution_warnings.append(
+                        {"type": "chk3d10_repair_failed", "detail": str(parse_exc)}
+                    )
+            except Exception as exc:
+                _log.warning("CHK-3d-10 repair AI call failed: %s", exc)
+                result.execution_warnings.append(
+                    {"type": "chk3d10_repair_failed", "detail": str(exc)}
+                )
+
+            if chk10_proposals:
+                proposals.extend(chk10_proposals)
+                _log.info(
+                    "CHK-3d-10 repair: %d proposals recovered", len(chk10_proposals)
+                )
+                refined_seed_ids_after = {
+                    ref for p in proposals for ref in p.refines_refs
+                }
+                unrefined_seed_ids = all_seed_ids - refined_seed_ids_after
+                result.seed_coverage["unrefined_count"] = len(unrefined_seed_ids)
+                result.seed_coverage["unrefined_seed_ids"] = sorted(unrefined_seed_ids)
+
+            if unrefined_seed_ids:
+                result.elaboration_gaps = sorted(unrefined_seed_ids)
+                if result.status != "failed":
+                    result.status = "ok_with_warnings"
+                result.execution_warnings.append(
+                    {
+                        "type": "chk3d10_seed_extinct",
+                        "elaboration_gap_count": len(unrefined_seed_ids),
+                        "elaboration_gaps": sorted(unrefined_seed_ids),
+                    }
+                )
+                _log.warning(
+                    "CHK-3d-10: %d seed(s) remain unrefined after repair — "
+                    "elaboration_gaps recorded: %s",
+                    len(unrefined_seed_ids), sorted(unrefined_seed_ids),
+                )
 
     result.proposals = proposals
     return result
