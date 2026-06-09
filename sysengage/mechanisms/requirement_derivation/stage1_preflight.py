@@ -69,6 +69,21 @@ class Stage1Result:
     failure_reason: str | None = None
 
 
+def _load_seed_ids(session: Session, project_id: str, parent_row_ref: int) -> list[str]:
+    """Return sorted active requirement_ids for row n-1, used in hash computation."""
+    rows = session.execute(
+        text(
+            "SELECT requirement_id FROM requirement "
+            "WHERE project_id = :pid "
+            "  AND row_target = :row "
+            "  AND retired_at IS NULL "
+            "ORDER BY requirement_id"
+        ),
+        {"pid": project_id, "row": str(parent_row_ref)},
+    ).fetchall()
+    return [r[0] for r in rows]
+
+
 def run_stage1(
     *,
     project_id: str,
@@ -215,12 +230,20 @@ def run_stage1(
             project_id,
         )
 
-    # Re-run scenario detection — two-part hash (MD-3)
+    # Re-run scenario detection — hash (MD-3)
+    # For rows >= 2 the seed set (row n-1 requirements) is also an input: include
+    # sorted seed requirement_ids so that a newly-committed upstream row forces a
+    # FullRerun rather than a false IdempotentRerun.
     sorted_ci_ids = sorted(c.ci_id for c in result.eligible_ccis)
     sorted_domain_ids = sorted(d.domain_id for d in result.active_domains)
-    hash_input = (
-        "CCI:" + "|".join(sorted_ci_ids) + "||DOM:" + "|".join(sorted_domain_ids)
-    )
+    hash_input = "CCI:" + "|".join(sorted_ci_ids) + "||DOM:" + "|".join(sorted_domain_ids)
+    if row_ref >= 2:
+        seed_ids = _load_seed_ids(session, project_id, row_ref - 1)
+        hash_input += "||SEEDS:" + "|".join(seed_ids)
+        _log.info(
+            "Hash: included %d seed IDs from row %d for project %s",
+            len(seed_ids), row_ref - 1, project_id,
+        )
     result.current_hash = hashlib.sha256(hash_input.encode("utf-8")).hexdigest()
 
     prior_pass = session.execute(
