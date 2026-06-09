@@ -142,6 +142,7 @@ class Stage2Result:
     effective_scenario: str = "FirstRun"
     seed_set: list[dict[str, Any]] = field(default_factory=list)
     path_r_count: int = 0
+    seed_set_surviving_count: int = 0  # VER-3d-21: independent count of surviving row n-1 reqs
 
 
 def _call_ai(prompt: str) -> tuple[Any, dict[str, Any]]:
@@ -209,6 +210,22 @@ def _parse_refinement_response(text_: str) -> list[RefinementProposal] | None:
         return [RefinementProposal.model_validate(item) for item in data]
     except Exception:
         return None
+
+
+def _count_surviving_requirements(
+    session: Session, project_id: str, parent_row_ref: int
+) -> int:
+    """Independent count of surviving row n-1 requirements (VER-3d-21 baseline)."""
+    row = session.execute(
+        text(
+            "SELECT COUNT(*) FROM requirement "
+            "WHERE project_id = :pid "
+            "  AND row_target = :row "
+            "  AND retired_at IS NULL"
+        ),
+        {"pid": project_id, "row": str(parent_row_ref)},
+    ).scalar()
+    return int(row or 0)
 
 
 def _load_seeds(
@@ -591,17 +608,31 @@ def run_stage2(
     """
     if stage1.scenario in ("FirstRun", "FullRerun"):
         seed_set: list[dict[str, Any]] = []
+        surviving_count: int = 0
         if row_ref >= 2:
             try:
                 seed_set = _load_seeds(session, project_id, row_ref - 1)
+                surviving_count = _count_surviving_requirements(session, project_id, row_ref - 1)
                 _log.info(
-                    "Path R: loaded %d seeds from row %d for project %s",
-                    len(seed_set), row_ref - 1, project_id,
+                    "Path R: loaded %d seeds from row %d for project %s (surviving=%d)",
+                    len(seed_set), row_ref - 1, project_id, surviving_count,
                 )
             except Exception as exc:
                 _log.warning(
                     "Path R seed load failed — proceeding without seeds: %s", exc
                 )
-        return _run_derivation_path(stage1, row_ref, stage1.scenario, seed_set=seed_set)
+        result = _run_derivation_path(stage1, row_ref, stage1.scenario, seed_set=seed_set)
+        result.seed_set_surviving_count = surviving_count
+        if row_ref >= 2 and not seed_set:
+            result.execution_warnings.append({
+                "type": "empty_seed_set_upstream_gap",
+                "parent_row_ref": row_ref - 1,
+            })
+            _log.warning(
+                "empty_seed_set_upstream_gap: row %d has no surviving seeds from row %d "
+                "(upstream pass may not have produced requirements)",
+                row_ref, row_ref - 1,
+            )
+        return result
     else:
         return _run_incremental_path(stage1, session, row_ref, project_id)

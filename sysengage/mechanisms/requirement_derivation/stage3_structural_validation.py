@@ -656,6 +656,36 @@ def run_stage3(
             )
 
     # -------------------------------------------------------------------------
+    # VER-3d-21 — Seed-set provenance guard (v0.14).
+    # Asserts that the seed set loaded by Stage 2 equals the independent
+    # count of surviving row n-1 requirements.  A mismatch means a
+    # provenance filter (e.g. filtering by cci_refs/refines_refs) has crept
+    # into _load_seeds, silently excluding row-native Path-N seeds.
+    # Only runs when Stage 2 recorded a non-zero surviving_count (i.e. a
+    # fresh FirstRun/FullRerun at row >= 2; not IdempotentRerun/Row 1).
+    # -------------------------------------------------------------------------
+    if stage2.seed_set_surviving_count > 0:
+        if len(stage2.seed_set) != stage2.seed_set_surviving_count:
+            _log.warning(
+                "VER-3d-21 FAIL: seed_set size=%d but surviving row n-1 "
+                "requirement count=%d — provenance filter suspected in _load_seeds",
+                len(stage2.seed_set),
+                stage2.seed_set_surviving_count,
+            )
+            result.execution_warnings.append(
+                {
+                    "type": "ver3d21_seed_set_size_mismatch",
+                    "seed_set_count": len(stage2.seed_set),
+                    "surviving_count": stage2.seed_set_surviving_count,
+                }
+            )
+        else:
+            _log.info(
+                "VER-3d-21 OK: seed_set size=%d matches surviving count",
+                len(stage2.seed_set),
+            )
+
+    # -------------------------------------------------------------------------
     # CHK-3d-10 — Downward Non-Loss: every row n-1 seed is refined by ≥1
     # surviving proposal (v0.13).
     # Only applies when stage2.seed_set is non-empty (rows >= 2, Path R ran).
