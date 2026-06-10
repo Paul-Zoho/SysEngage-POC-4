@@ -145,12 +145,12 @@ class Stage2Result:
     seed_set_surviving_count: int = 0  # VER-3d-21: independent count of surviving row n-1 reqs
 
 
-def _call_ai(prompt: str) -> tuple[Any, dict[str, Any]]:
+def _call_ai(prompt: str, *, max_tokens: int = 8192) -> tuple[Any, dict[str, Any]]:
     """Issue a single AI call; return (message, fingerprint_dict)."""
     client = get_ai_client()
     msg = client.messages.create(
         model=MODEL,
-        max_tokens=4096,
+        max_tokens=max_tokens,
         messages=[{"role": "user", "content": prompt}],
     )
     fingerprint = {
@@ -335,7 +335,12 @@ def _run_path_r(
 
     if parsed is None:
         _log.warning("Path R parse failure after retry — skipping Path R")
-        result.execution_warnings.append({"type": "path_r_parse_failure"})
+        raw_preview = ""
+        if msg is not None and msg.content:
+            raw_preview = msg.content[0].text[:200]
+        result.execution_warnings.append(
+            {"type": "path_r_parse_failure", "response_preview": raw_preview}
+        )
         return []
 
     valid_seed_ids = {s["requirement_id"] for s in seeds}

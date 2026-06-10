@@ -94,11 +94,11 @@ class Stage3Result:
     failure_reason: str | None = None
 
 
-def _call_repair_ai(prompt: str) -> tuple[Any, dict[str, Any]]:
+def _call_repair_ai(prompt: str, *, max_tokens: int = 4096) -> tuple[Any, dict[str, Any]]:
     client = get_ai_client()
     msg = client.messages.create(
         model=MODEL,
-        max_tokens=2048,
+        max_tokens=max_tokens,
         messages=[{"role": "user", "content": prompt}],
     )
     fingerprint = {
@@ -751,7 +751,7 @@ def run_stage3(
                 client = get_ai_client()
                 msg = client.messages.create(
                     model=MODEL,
-                    max_tokens=2048,
+                    max_tokens=8192,
                     messages=[{"role": "user", "content": repair_prompt}],
                 )
                 fp = {

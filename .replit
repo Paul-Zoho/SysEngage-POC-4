@@ -29,7 +29,7 @@ outputType = "console"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "python -u sysengage/run_pmt_task37.py"
+args = "python -u sysengage/run_pmt_rd_r5_rerun.py"
 
 [agent]
 stack = "PNPM_WORKSPACE"

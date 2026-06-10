@@ -18,3 +18,4 @@
 - [Neon data topology — main branch is empty](neon-data-topology.md) — production/main Neon branch has no project rows; all PMT data lives in snapshot/test branches. Launcher runs use project_id PMT_E2E; triple-run (run_pmt_rm_r2_3x) uses PMT_E2E_R11/R12/R13.
 - [Neon branch vs registry divergence](neon-branch-registry-divergence.md) — registry entry surviving after Neon branch deletion; _find_branch_by_name confirms live state; registry neon_status:"deleted" marks stale entries.
 - [run_dispatch execution_status guards](dispatch-status-guards.md) — all 5 mechanism status guards must accept both old ("Completed","CompletedWithWarnings") and new v2.15 ("Success","PartialSuccess") enum values.
+- [RD mechanism AI token limits](rd-token-limits.md) — stage2 Path R (8192) and stage3 CHK-3d-10 repair (8192) need headroom; Row 5 / 26 seeds blew the old 4096/2048 ceilings → parse failure.
