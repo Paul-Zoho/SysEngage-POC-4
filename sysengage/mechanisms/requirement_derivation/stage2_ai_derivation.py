@@ -271,6 +271,96 @@ def _resolve_source_domain_id(
     return stage1.active_domains[0].domain_id if stage1.active_domains else ""
 
 
+_PATH_R_BATCH_SIZE = 15
+
+
+def _run_path_r_batch(
+    batch_seeds: list[dict[str, Any]],
+    batch_index: int,
+    total_batches: int,
+    domains_context: list[dict[str, Any]],
+    row_ref: int,
+    valid_seed_ids: set[str],
+    stage1: Stage1Result,
+    result: Stage2Result,
+) -> list[TaggedProposal]:
+    """
+    Run one Path R batch of seeds (called by _run_path_r when batching).
+    Returns proposals for this batch; logs warnings into result.
+    """
+    prompt = build_requirement_refinement_prompt(
+        row_ref=row_ref,
+        seeds=batch_seeds,
+        domains=domains_context,
+    )
+
+    parsed: list[RefinementProposal] | None = None
+    msg = None
+    for attempt in range(2):
+        try:
+            msg, fp = _call_ai(prompt)
+        except Exception as exc:
+            _log.warning(
+                "Path R batch %d/%d AI error attempt=%d: %s",
+                batch_index + 1, total_batches, attempt + 1, exc,
+            )
+            if attempt == 1:
+                result.execution_warnings.append({
+                    "type": "path_r_ai_error",
+                    "batch": batch_index,
+                    "detail": str(exc),
+                })
+                return []
+            continue
+
+        fp["stage"] = f"stage2_path_r_batch{batch_index}"
+        result.ai_model_fingerprints.append(fp)
+
+        parsed = _parse_refinement_response(msg.content[0].text)
+        if parsed is not None:
+            break
+        if attempt == 0:
+            _log.warning(
+                "Path R batch %d/%d parse failure — retrying once",
+                batch_index + 1, total_batches,
+            )
+
+    if parsed is None:
+        _log.warning(
+            "Path R batch %d/%d parse failure after retry — batch skipped",
+            batch_index + 1, total_batches,
+        )
+        raw_preview = ""
+        if msg is not None and msg.content:
+            raw_preview = msg.content[0].text[:200]
+        result.execution_warnings.append({
+            "type": "path_r_parse_failure",
+            "batch": batch_index,
+            "batch_seed_ids": [s["requirement_id"] for s in batch_seeds],
+            "response_preview": raw_preview,
+        })
+        return []
+
+    proposals: list[TaggedProposal] = []
+    for item in parsed:
+        if not item.refines_refs or item.refines_refs[0] not in valid_seed_ids:
+            _log.warning(
+                "Path R batch %d/%d: proposal with invalid refines_refs=%s — skipped",
+                batch_index + 1, total_batches, item.refines_refs,
+            )
+            result.execution_warnings.append({
+                "type": "path_r_invalid_refines_refs",
+                "batch": batch_index,
+                "refines_refs": item.refines_refs,
+                "statement_preview": item.statement[:60],
+            })
+            continue
+        source_did = _resolve_source_domain_id(list(item.cci_refs), stage1)
+        proposals.append(TaggedProposal.from_refinement(item, source_did))
+
+    return proposals
+
+
 def _run_path_r(
     stage1: Stage1Result,
     seeds: list[dict[str, Any]],
@@ -278,9 +368,10 @@ def _run_path_r(
     result: Stage2Result,
 ) -> list[TaggedProposal]:
     """
-    Path R — seed-elaboration (v0.13).
-    One AI call for all row n-1 seeds; returns TaggedProposals with refines_refs
-    set at derivation.  Logged under fingerprint "stage2_path_r".
+    Path R — seed-elaboration (v0.14).
+    Seeds are processed in batches of _PATH_R_BATCH_SIZE to keep each AI call's
+    output well within the max_tokens ceiling.  All batch proposals are combined
+    and returned.  Logged under fingerprint "stage2_path_r_batch<N>".
     On failure, logs a warning and returns empty list (Path N still runs).
     """
     if not seeds:
@@ -305,65 +396,40 @@ def _run_path_r(
         for d in stage1.active_domains
     ]
 
-    prompt = build_requirement_refinement_prompt(
-        row_ref=row_ref,
-        seeds=seeds,
-        domains=domains_context,
+    valid_seed_ids = {s["requirement_id"] for s in seeds}
+    batches = [
+        seeds[i : i + _PATH_R_BATCH_SIZE]
+        for i in range(0, len(seeds), _PATH_R_BATCH_SIZE)
+    ]
+    total_batches = len(batches)
+    _log.info(
+        "Path R: %d seeds → %d batch(es) of ≤%d",
+        len(seeds), total_batches, _PATH_R_BATCH_SIZE,
     )
 
-    parsed: list[RefinementProposal] | None = None
-    for attempt in range(2):
-        try:
-            msg, fp = _call_ai(prompt)
-        except Exception as exc:
-            _log.warning("Path R AI error attempt=%d: %s", attempt + 1, exc)
-            if attempt == 1:
-                result.execution_warnings.append(
-                    {"type": "path_r_ai_error", "detail": str(exc)}
-                )
-                return []
-            continue
-
-        fp["stage"] = "stage2_path_r"
-        result.ai_model_fingerprints.append(fp)
-
-        parsed = _parse_refinement_response(msg.content[0].text)
-        if parsed is not None:
-            break
-        if attempt == 0:
-            _log.warning("Path R parse failure — retrying once")
-
-    if parsed is None:
-        _log.warning("Path R parse failure after retry — skipping Path R")
-        raw_preview = ""
-        if msg is not None and msg.content:
-            raw_preview = msg.content[0].text[:200]
-        result.execution_warnings.append(
-            {"type": "path_r_parse_failure", "response_preview": raw_preview}
+    all_proposals: list[TaggedProposal] = []
+    for batch_index, batch_seeds in enumerate(batches):
+        batch_proposals = _run_path_r_batch(
+            batch_seeds=batch_seeds,
+            batch_index=batch_index,
+            total_batches=total_batches,
+            domains_context=domains_context,
+            row_ref=row_ref,
+            valid_seed_ids=valid_seed_ids,
+            stage1=stage1,
+            result=result,
         )
-        return []
+        all_proposals.extend(batch_proposals)
+        _log.info(
+            "Path R batch %d/%d: %d proposals (running total %d)",
+            batch_index + 1, total_batches, len(batch_proposals), len(all_proposals),
+        )
 
-    valid_seed_ids = {s["requirement_id"] for s in seeds}
-    proposals: list[TaggedProposal] = []
-    for item in parsed:
-        if not item.refines_refs or item.refines_refs[0] not in valid_seed_ids:
-            _log.warning(
-                "Path R: proposal with invalid refines_refs=%s — skipped",
-                item.refines_refs,
-            )
-            result.execution_warnings.append(
-                {
-                    "type": "path_r_invalid_refines_refs",
-                    "refines_refs": item.refines_refs,
-                    "statement_preview": item.statement[:60],
-                }
-            )
-            continue
-        source_did = _resolve_source_domain_id(list(item.cci_refs), stage1)
-        proposals.append(TaggedProposal.from_refinement(item, source_did))
-
-    _log.info("Path R: %d proposals produced from %d seeds", len(proposals), len(seeds))
-    return proposals
+    _log.info(
+        "Path R: %d proposals total from %d seeds across %d batch(es)",
+        len(all_proposals), len(seeds), total_batches,
+    )
+    return all_proposals
 
 
 def _run_derivation_path(
