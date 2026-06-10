@@ -22,7 +22,7 @@ SYSENGAGE_DIR = Path(__file__).parent
 sys.path.insert(0, str(SYSENGAGE_DIR / "scripts"))
 import branch_manager as bm  # noqa: E402
 
-BRANCH_NAME    = "test_PMT_ph03_3e_R5_Launcher_20260610_151452"
+BRANCH_NAME    = "test_PMT_ph03_3e_R3-4-5_Launcher_20260610_191708"
 PROJECT_ID     = "PMT_E2E"
 PROJECT_CODE   = "PMT"
 PRACTITIONER_ID = "SH001"

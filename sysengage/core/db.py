@@ -112,7 +112,15 @@ engine = create_engine(
     pool_size=5,
     max_overflow=10,
     pool_recycle=240,
-    connect_args={"connect_timeout": 30},
+    connect_args={
+        "connect_timeout": 30,
+        # TCP keepalives — prevent Neon from silently dropping a long-held
+        # connection during multi-minute AI call phases.
+        "keepalives": 1,
+        "keepalives_idle": 30,
+        "keepalives_interval": 10,
+        "keepalives_count": 5,
+    },
 )
 
 SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False)

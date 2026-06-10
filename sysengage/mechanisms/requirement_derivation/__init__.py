@@ -302,6 +302,14 @@ def run_requirement_derivation(
         # Build pass_data dict for Stage 4 (mutable, passed in)
         pass_data: dict[str, Any] = {}
 
+        # Refresh the DB session before Stage 4 writes.  Stages 1–3 are
+        # read-only and their results are now entirely in-memory Python
+        # objects.  The connection may have been dropped by the server
+        # during the multi-minute AI call phases, so we close the current
+        # (potentially stale) session and open a fresh one here.
+        session.close()
+        session = get_session()
+
         # Stage 4 — Entity production and ledger commit
         stage4 = run_stage4(
             stage1=stage1,
