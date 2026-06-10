@@ -401,7 +401,13 @@ def run_requirement_derivation(
             pass_id = format_identifier("P", seq_val)
 
             # Final execution_status
-            if (
+            # CHK-3d-10 extinction is a hard failure (spec §4.3): seeds that
+            # produce no children are extinct — the design is silently incomplete.
+            # Stage 4 still runs (to commit any proposals that DID elaborate) but
+            # the pass is recorded as Failed and downstream rows must not proceed.
+            if stage3.extinction_failure:
+                execution_status = "Failed"
+            elif (
                 stage3.status == "ok_with_warnings"
                 or stage3.orphaned_ccis
                 or stage3.concern_entities
@@ -461,7 +467,7 @@ def run_requirement_derivation(
                             "requirement_count_retired": stage4.requirement_count_retired,
                             "requirement_type_distribution": stage4.requirement_type_distribution,
                             "requirements_produced": stage4.requirements_produced,
-                            "downstream_rerun_required": stage4.downstream_rerun_required,
+                            "downstream_rerun_required": stage4.downstream_rerun_required or stage3.extinction_failure,
                             "retirement_mapping": stage4.retirement_mapping,
                             "dd_binding": stage4.dd_binding,
                             "seed_coverage": stage3.seed_coverage,
@@ -498,7 +504,7 @@ def run_requirement_derivation(
             "requirement_count_retired": stage4.requirement_count_retired,
             "requirement_type_distribution": stage4.requirement_type_distribution,
             "orphaned_ccis": stage3.orphaned_ccis,
-            "downstream_rerun_required": stage4.downstream_rerun_required,
+            "downstream_rerun_required": stage4.downstream_rerun_required or stage3.extinction_failure,
         }
 
     except Exception as exc:

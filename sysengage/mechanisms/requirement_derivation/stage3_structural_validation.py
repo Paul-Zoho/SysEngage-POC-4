@@ -89,6 +89,7 @@ class Stage3Result:
     concern_entities: list[dict[str, Any]] = field(default_factory=list)
     elaboration_gaps: list[str] = field(default_factory=list)
     seed_coverage: dict[str, Any] = field(default_factory=dict)
+    extinction_failure: bool = False
     status: str = "ok"
     failure_reason: str | None = None
 
@@ -805,11 +806,13 @@ def run_stage3(
                     ref for p in proposals for ref in p.refines_refs
                 }
                 unrefined_seed_ids = all_seed_ids - refined_seed_ids_after
+                result.seed_coverage["refined_count"] = len(refined_seed_ids_after & all_seed_ids)
                 result.seed_coverage["unrefined_count"] = len(unrefined_seed_ids)
                 result.seed_coverage["unrefined_seed_ids"] = sorted(unrefined_seed_ids)
 
             if unrefined_seed_ids:
                 result.elaboration_gaps = sorted(unrefined_seed_ids)
+                result.extinction_failure = True
                 if result.status != "failed":
                     result.status = "ok_with_warnings"
                 result.execution_warnings.append(
