@@ -157,7 +157,7 @@ print(flush=True)
 from alembic import command as alembic_command       # noqa: E402
 from alembic.config import Config as AlembicConfig   # noqa: E402
 
-from core.db import get_session                      # noqa: E402
+from core.db import get_session, refresh_engine_pool  # noqa: E402
 from core.output_naming import generate_filename     # noqa: E402
 from mechanisms.ledger_export import run_ledger_export  # noqa: E402
 
@@ -300,6 +300,13 @@ for pass_code in PASSES:
     # ── 3d: Requirement Derivation ─────────────────────────────────────────
     elif pass_code == "3d":
         for row in ROWS:
+            # Purge the connection pool before each row.  The engine is shared
+            # across the entire dispatcher run; previous passes (or prior RD
+            # rows) may have left the pool holding connections that Neon has
+            # since suspended.  refresh_engine_pool() disposes them all and
+            # waits until the endpoint is ready before we proceed.
+            print(f"[dispatch] RD Row {row} — refreshing DB pool…", flush=True)
+            refresh_engine_pool()
             print(f"[dispatch] RD Row {row}…", flush=True)
             try:
                 r = rd.run_requirement_derivation(

@@ -1,0 +1,52 @@
+=================================================================
+[dispatch] ──── Pass 3d ────
+=================================================================
+[dispatch] RD Row 5…
+[stderr] [dispatch] RD Row 5 EXCEPTION: (psycopg2.OperationalError) SSL connection has been closed unexpectedly
+[stderr] 
+[stderr] (Background on this error at: https://sqlalche.me/e/20/e3q8)
+[stderr] Traceback (most recent call last):
+[stderr]   File "/home/runner/workspace/.pythonlibs/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1128, in _rollback_impl
+[stderr]     self.engine.dialect.do_rollback(self.connection)
+[stderr]   File "/home/runner/workspace/.pythonlibs/lib/python3.12/site-packages/sqlalchemy/engine/default.py", line 712, in do_rollback
+[stderr]     dbapi_connection.rollback()
+[stderr] psycopg2.OperationalError: SSL connection has been closed unexpectedly
+[stderr] 
+[stderr] 
+[stderr] The above exception was the direct cause of the following exception:
+[stderr] 
+[stderr] Traceback (most recent call last):
+[stderr]   File "/home/runner/workspace/sysengage/run_dispatch.py", line 305, in <module>
+[stderr]     r = rd.run_requirement_derivation(
+[stderr]         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[stderr]   File "/home/runner/workspace/sysengage/mechanisms/requirement_derivation/__init__.py", line 310, in run_requirement_derivation
+[stderr]     session.close()
+[stderr]   File "/home/runner/workspace/.pythonlibs/lib/python3.12/site-packages/sqlalchemy/orm/session.py", line 2507, in close
+[stderr]     self._close_impl(invalidate=False)
+[stderr]   File "/home/runner/workspace/.pythonlibs/lib/python3.12/site-packages/sqlalchemy/orm/session.py", line 2576, in _close_impl
+[stderr]     transaction.close(invalidate)
+[stderr]   File "<string>", line 2, in close
+[stderr]   File "/home/runner/workspace/.pythonlibs/lib/python3.12/site-packages/sqlalchemy/orm/state_changes.py", line 137, in _go
+[stderr]     ret_value = fn(self, *arg, **kw)
+[stderr]                 ^^^^^^^^^^^^^^^^^^^^
+[stderr]   File "/home/runner/workspace/.pythonlibs/lib/python3.12/site-packages/sqlalchemy/orm/session.py", line 1417, in close
+[stderr]     transaction.close()
+[stderr]   File "/home/runner/workspace/.pythonlibs/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 2597, in close
+[stderr]     self._do_close()
+[stderr]   File "/home/runner/workspace/.pythonlibs/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 2735, in _do_close
+[stderr]     self._close_impl()
+[stderr]   File "/home/runner/workspace/.pythonlibs/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 2721, in _close_impl
+[stderr]     self._connection_rollback_impl()
+[stderr]   File "/home/runner/workspace/.pythonlibs/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 2713, in _connection_rollback_impl
+[stderr]     self.connection._rollback_impl()
+[stderr]   File "/home/runner/workspace/.pythonlibs/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1130, in _rollback_impl
+[stderr]     self._handle_dbapi_exception(e, None, None, None, None)
+[stderr]   File "/home/runner/workspace/.pythonlibs/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 2363, in _handle_dbapi_exception
+[stderr]     raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+[stderr]   File "/home/runner/workspace/.pythonlibs/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1128, in _rollback_impl
+[stderr]     self.engine.dialect.do_rollback(self.connection)
+[stderr]   File "/home/runner/workspace/.pythonlibs/lib/python3.12/site-packages/sqlalchemy/engine/default.py", line 712, in do_rollback
+[stderr]     dbapi_connection.rollback()
+[stderr] sqlalchemy.exc.OperationalError: (psycopg2.OperationalError) SSL connection has been closed unexpectedly
+[stderr] 
+[stderr] (Background on this error at: https://sqlalche.me/e/20/e3q8)

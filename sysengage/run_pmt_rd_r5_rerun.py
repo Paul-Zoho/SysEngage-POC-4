@@ -105,7 +105,7 @@ sys.path.insert(0, str(SYSENGAGE_DIR))
 from alembic import command as alembic_command          # noqa: E402
 from alembic.config import Config as AlembicConfig      # noqa: E402
 import mechanisms.requirement_derivation as rd           # noqa: E402
-from core.db import get_session                          # noqa: E402
+from core.db import get_session, refresh_engine_pool      # noqa: E402
 from core.output_naming import generate_filename        # noqa: E402
 from mechanisms.ledger_export import run_ledger_export  # noqa: E402
 
@@ -121,6 +121,12 @@ print(flush=True)
 print(SEP, flush=True)
 print(f"[orchestrator] Pass 3d Requirement Derivation — {PROJECT_ID}  Row {ROW}", flush=True)
 print(SEP, flush=True)
+
+# Purge any stale pooled connections and wait for the endpoint to be ready.
+# Alembic migration (Step 4) may have left the pool holding connections that
+# Neon has since suspended during module import.
+print("[orchestrator] Refreshing DB pool before RD run…", flush=True)
+refresh_engine_pool()
 
 try:
     result = rd.run_requirement_derivation(

@@ -19,3 +19,4 @@
 - [Neon branch vs registry divergence](neon-branch-registry-divergence.md) — registry entry surviving after Neon branch deletion; _find_branch_by_name confirms live state; registry neon_status:"deleted" marks stale entries.
 - [run_dispatch execution_status guards](dispatch-status-guards.md) — all 5 mechanism status guards must accept both old ("Completed","CompletedWithWarnings") and new v2.15 ("Success","PartialSuccess") enum values.
 - [RD mechanism AI token limits](rd-token-limits.md) — stage2 Path R (8192) and stage3 CHK-3d-10 repair (8192) need headroom; Row 5 / 26 seeds blew the old 4096/2048 ceilings → parse failure.
+- [Neon SSL drop across AI call phases](neon-ssl-ai-phase.md) — RD mechanism holds one session across stage1→stage2+3 (AI, 3-5 min)→stage4; Neon suspends, tearing down pool SSL. Fix: session.invalidate() + refresh_engine_pool() (dispose+_wait_for_db) + get_session() before stage4; dispatcher also calls refresh_engine_pool() before each RD row.

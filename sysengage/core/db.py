@@ -131,6 +131,21 @@ def get_session() -> Session:
     return SessionLocal()
 
 
+def refresh_engine_pool() -> None:
+    """
+    Dispose all pooled connections and wait for Neon to be ready.
+
+    Call this before acquiring a fresh session after any long AI call phase.
+    Neon serverless endpoints auto-suspend after ~5 minutes of idle time.
+    engine.dispose() closes and discards ALL pooled connections without
+    attempting any network I/O (safe to call on a dead pool).  _wait_for_db()
+    then blocks until the endpoint has fully resumed before the caller
+    proceeds to get_session().
+    """
+    engine.dispose()
+    _wait_for_db(_database_url)
+
+
 def get_next_sequence_value(session: Session, sequence_name: str) -> int:
     """Fetch the next value from a named Postgres sequence."""
     result = session.execute(text(f"SELECT nextval('{sequence_name}')"))

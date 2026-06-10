@@ -24,7 +24,7 @@ from typing import Any
 
 from sqlalchemy import text
 
-from core.db import format_identifier, get_next_sequence_value, get_session
+from core.db import format_identifier, get_next_sequence_value, get_session, refresh_engine_pool
 from core.ledger import (
     ensure_project_committed,
     ensure_requirement_register_seeded,
@@ -302,12 +302,17 @@ def run_requirement_derivation(
         # Build pass_data dict for Stage 4 (mutable, passed in)
         pass_data: dict[str, Any] = {}
 
-        # Refresh the DB session before Stage 4 writes.  Stages 1–3 are
-        # read-only and their results are now entirely in-memory Python
-        # objects.  The connection may have been dropped by the server
-        # during the multi-minute AI call phases, so we close the current
-        # (potentially stale) session and open a fresh one here.
-        session.close()
+        # Refresh the DB pool before Stage 4 writes.  Stages 1–3 are
+        # read-only; their results are now entirely in-memory Python objects.
+        # The AI call phases (stage2 + stage3 repair) can run for 3-5+ minutes
+        # with no DB activity.  Neon serverless endpoints auto-suspend after
+        # ~5 minutes idle, tearing down all SSL sessions in the pool.
+        # session.invalidate() marks the connection dead without attempting a
+        # ROLLBACK (which would itself fail on a dead SSL connection).
+        # refresh_engine_pool() then disposes all pooled connections and waits
+        # until the endpoint has resumed before we acquire a fresh session.
+        session.invalidate()
+        refresh_engine_pool()
         session = get_session()
 
         # Stage 4 — Entity production and ledger commit
