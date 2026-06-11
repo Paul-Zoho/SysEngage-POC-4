@@ -9,9 +9,9 @@ v0.2 changes vs v0.1:
   Added source_count. assembly param removed — caller passes scalars directly.
 
 execution_status values per spec §8.1 AP-2:
-  "Completed"              — all stages succeeded, invariant holds, no warnings
-  "CompletedWithWarnings"  — stages succeeded, invariant holds, some RI/ME failures
-  "Failed"                 — invariant violation or stage-level failure
+  "Success"        — all stages succeeded, invariant holds, no warnings
+  "PartialSuccess" — stages succeeded, invariant holds, some RI/ME failures
+  "Failed"         — invariant violation or stage-level failure
 
 mode_active="IM"; declared_transformation_modes=["IM","DM","LPM"] per spec §6.1.
 """
@@ -62,11 +62,11 @@ def finalise_pass_completed(
     start_monotonic: float,
 ) -> None:
     """
-    Finalise pass_data for a fully successful run — execution_status = "Completed".
+    Finalise pass_data for a fully successful run — execution_status = "Success".
     Mutates pass_data in-place.
     """
     elapsed = time.monotonic() - start_monotonic
-    pass_data["execution_status"] = "Completed"
+    pass_data["execution_status"] = "Success"
     pass_data["pass_completed_at"] = datetime.now(timezone.utc)
     pass_data["elapsed_ms"] = int(elapsed * 1000)
     pass_data["mode_active"] = "IM"
@@ -85,12 +85,12 @@ def finalise_pass_completed_with_warnings(
     start_monotonic: float,
 ) -> None:
     """
-    Finalise pass_data for a run with RI/ME warnings — "CompletedWithWarnings".
+    Finalise pass_data for a run with RI/ME warnings — "PartialSuccess".
     Invariant holds but some items were excluded from commit set.
     Mutates pass_data in-place.
     """
     elapsed = time.monotonic() - start_monotonic
-    pass_data["execution_status"] = "CompletedWithWarnings"
+    pass_data["execution_status"] = "PartialSuccess"
     pass_data["pass_completed_at"] = datetime.now(timezone.utc)
     pass_data["elapsed_ms"] = int(elapsed * 1000)
     pass_data["mode_active"] = "IM"

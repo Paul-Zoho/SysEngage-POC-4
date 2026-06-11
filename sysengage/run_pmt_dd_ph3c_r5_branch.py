@@ -122,7 +122,7 @@ for row in [1, 2, 3, 4, 5]:
 
     md = result["mechanism_data"]
     status = result["execution_status"]
-    ok = status in ("Completed", "CompletedWithWarnings")
+    ok = status in ("Success", "PartialSuccess")
     if not ok:
         all_ok = False
 

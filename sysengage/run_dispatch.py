@@ -224,9 +224,7 @@ for pass_code in PASSES:
                     print(f"[dispatch]   SC status   = {sc_result.execution_status}", flush=True)
                     print(f"[dispatch]   sources     = {sc_result.source_count}", flush=True)
                     print(f"[dispatch]   segments    = {sc_result.segment_count}", flush=True)
-                    if sc_result.execution_status not in (
-                        "Completed", "CompletedWithWarnings", "Success", "PartialSuccess"
-                    ):
+                    if sc_result.execution_status not in ("Success", "PartialSuccess"):
                         print(f"[dispatch]   SC FAILED: {sc_result.failure_reason}", file=sys.stderr, flush=True)
                         all_ok = False
                 except Exception as exc:
@@ -247,9 +245,7 @@ for pass_code in PASSES:
                 rld = r.get("row_lens_data", {})
                 print(f"[dispatch]   status   = {r['execution_status']}", flush=True)
                 print(f"[dispatch]   signals  = {rld.get('signal_count','?')}", flush=True)
-                if r["execution_status"] not in (
-                    "Completed", "CompletedWithWarnings", "Success", "PartialSuccess"
-                ):
+                if r["execution_status"] not in ("Success", "PartialSuccess"):
                     all_ok = False
             except Exception as exc:
                 import traceback
@@ -268,9 +264,7 @@ for pass_code in PASSES:
                 print(f"[dispatch]   status       = {r['execution_status']}", flush=True)
                 print(f"[dispatch]   ccis_created = {cd['ccis_created']}", flush=True)
                 print(f"[dispatch]   ccis_merged  = {cd['ccis_merged']}", flush=True)
-                if r["execution_status"] not in (
-                    "Completed", "CompletedWithWarnings", "Success", "PartialSuccess"
-                ):
+                if r["execution_status"] not in ("Success", "PartialSuccess"):
                     all_ok = False
             except Exception as exc:
                 import traceback
@@ -287,9 +281,7 @@ for pass_code in PASSES:
                 md = r["mechanism_data"]
                 print(f"[dispatch]   status          = {r['execution_status']}", flush=True)
                 print(f"[dispatch]   domains_produced= {md.get('domain_count_produced','?')}", flush=True)
-                if r["execution_status"] not in (
-                    "Completed", "CompletedWithWarnings", "Success", "PartialSuccess"
-                ):
+                if r["execution_status"] not in ("Success", "PartialSuccess"):
                     all_ok = False
             except Exception as exc:
                 import traceback
@@ -313,9 +305,7 @@ for pass_code in PASSES:
                     project_id=PROJECT_ID, practitioner_id=PRACTITIONER_ID, row_ref=row)
                 print(f"[dispatch]   status                    = {r['execution_status']}", flush=True)
                 print(f"[dispatch]   requirement_count_produced= {r.get('requirement_count_produced','?')}", flush=True)
-                if r["execution_status"] not in (
-                    "Completed", "CompletedWithWarnings", "Success", "PartialSuccess"
-                ):
+                if r["execution_status"] not in ("Success", "PartialSuccess"):
                     all_ok = False
             except Exception as exc:
                 import traceback

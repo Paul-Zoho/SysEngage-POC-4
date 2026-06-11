@@ -1,27 +1,30 @@
 ---
 name: run_dispatch execution_status guards
-description: All 5 mechanism status guards in run_dispatch.py must accept both old and new v2.15 enum values to avoid false all_ok=False exits.
+description: Return-dict guards use ("Success","PartialSuccess") only; DB read guards include all 4 values for pre-migration rows.
 ---
 
 ## Rule
-`run_dispatch.py` checks each mechanism's `execution_status` return value to decide whether to set `all_ok = False`. The guard must accept **both** the old and new enum values:
 
+After the vocabulary unification, two categories of guard exist:
+
+**Return-dict guards** (mechanism call → return value):
 ```python
-if r["execution_status"] not in (
-    "Completed", "CompletedWithWarnings",   # old values (CCI, DD, RD, RLSRA)
-    "Success", "PartialSuccess"             # v2.15 values (SC, RM, future mechanisms)
-):
+if r["execution_status"] not in ("Success", "PartialSuccess"):
     all_ok = False
 ```
+Return dicts are always produced live by the mechanism, so they will always carry the new vocabulary after the migration. Two values only.
 
-**Why:** SC has always written `"Success"` (not `"Completed"`). RM provenance was updated to write `"Success"` / `"PartialSuccess"` per ledger spec v2.15. Any guard that only lists the old values will trigger a false failure whenever SC or RM runs.
+**DB read guards** (idempotency / prerequisite checks that query `analysis_pass`):
+```python
+AnalysisPassModel.execution_status.in_(
+    ["Completed", "CompletedWithWarnings", "Success", "PartialSuccess"]
+)
+```
+Existing rows in the DB were written before the migration and carry the old vocabulary. All 4 values must be listed until the DB is explicitly migrated.
+
+**Why:** The old and new vocabularies coexisted: old mechanisms wrote `"Completed"/"CompletedWithWarnings"` (spec vocabulary); Requirement Matching and later mechanisms used `"Success"/"PartialSuccess"` (build vocabulary). Unification retired the old write paths, but old DB rows remain.
 
 **How to apply:**
-- Any new mechanism added to run_dispatch.py should get this same four-value guard.
-- If a mechanism is updated to use new enum values, the guard already covers it — no change needed.
-- The 5 guards are for: SC (line ~230), RLSRA (line ~253), CCI (line ~274), DD (line ~293), RD (line ~312). Pass 3e (RM) has no status guard — it only catches exceptions.
-
-## Symptom of the bug
-- Pipeline exits with code 1 even though all AnalysisPasses show success in the ledger.
-- Run takes expected time for idempotent passes (fast) then exits with code 1.
-- Caused by SC returning `"Success"` while the guard only allowed `"Completed"`.
+- New mechanism added to `run_dispatch.py`: return-dict guard uses 2 values only.
+- New idempotency/prerequisite query: list all 4 values until DB migration is done.
+- Pass 3e (RM) has no return-dict status guard in run_dispatch — it only catches exceptions.

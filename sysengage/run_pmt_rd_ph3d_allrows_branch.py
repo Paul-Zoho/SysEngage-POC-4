@@ -115,7 +115,7 @@ for row in ROWS:
         continue
 
     status = result["execution_status"]
-    ok = status in ("Completed", "CompletedWithWarnings", "Skipped")
+    ok = status in ("Success", "PartialSuccess", "Skipped")
 
     print(f"  execution_status           = {status}", flush=True)
     print(f"  scenario                   = {result.get('scenario')}", flush=True)

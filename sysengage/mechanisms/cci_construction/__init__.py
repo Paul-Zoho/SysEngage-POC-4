@@ -303,7 +303,7 @@ def run(
         )
         pass_data["confidence"] = mean_confidence
 
-        if execution_status == "Completed":
+        if execution_status == "Success":
             finalise_cci_pass_completed(
                 pass_data,
                 cci_data=cci_data,

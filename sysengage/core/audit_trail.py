@@ -76,7 +76,7 @@ def finalise_pass_success(
     Called just before the commit transaction.
     """
     elapsed = time.monotonic() - pass_data.pop("_start_monotonic")
-    pass_data["execution_status"] = "Completed"
+    pass_data["execution_status"] = "Success"
     pass_data["pass_completed_at"] = datetime.now(timezone.utc)
     pass_data["elapsed_ms"] = int(elapsed * 1000)
     pass_data["outputs"] = {
@@ -99,7 +99,7 @@ def finalise_pass_partial_success(
     but some Sources were captured).
     """
     elapsed = time.monotonic() - pass_data.pop("_start_monotonic")
-    pass_data["execution_status"] = "CompletedWithWarnings"
+    pass_data["execution_status"] = "PartialSuccess"
     pass_data["pass_completed_at"] = datetime.now(timezone.utc)
     pass_data["elapsed_ms"] = int(elapsed * 1000)
     pass_data["outputs"] = {

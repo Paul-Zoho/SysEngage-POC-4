@@ -245,7 +245,7 @@ def _run_one_pipeline(project_id: str, run_label: int) -> None:
         print(f"{_sc_tag}   pass_id          = {sc_result.pass_id}", flush=True)
         print(f"{_sc_tag}   execution_status = {sc_result.execution_status}", flush=True)
         print(f"{_sc_tag}   sources          = {sc_result.source_count}", flush=True)
-        if sc_result.execution_status not in ("Completed", "CompletedWithWarnings", "Success"):
+        if sc_result.execution_status not in ("Success", "PartialSuccess"):
             print(f"{_sc_tag} FAILED: {sc_result.failure_reason}", file=sys.stderr)
             sys.exit(1)
 
@@ -271,7 +271,7 @@ def _run_one_pipeline(project_id: str, run_label: int) -> None:
         print(f"{_rlsra_tag}   execution_status = {status}", flush=True)
         print(f"{_rlsra_tag}   signals_produced = {rld.get('signal_count', '?')}", flush=True)
         print(f"{_rlsra_tag}   out_of_scope     = {rld.get('out_of_scope_count', '?')}", flush=True)
-        if status not in ("Completed", "CompletedWithWarnings"):
+        if status not in ("Success", "PartialSuccess"):
             print(f"{_rlsra_tag} FAILED with status {status!r}", file=sys.stderr)
             sys.exit(1)
 
@@ -297,7 +297,7 @@ def _run_one_pipeline(project_id: str, run_label: int) -> None:
         print(f"{_cci_tag}   execution_status = {cci_result['execution_status']}", flush=True)
         print(f"{_cci_tag}   ccis_created     = {cd['ccis_created']}", flush=True)
         print(f"{_cci_tag}   ccis_merged      = {cd['ccis_merged']}", flush=True)
-        if cci_result["execution_status"] not in ("Completed", "CompletedWithWarnings"):
+        if cci_result["execution_status"] not in ("Success", "PartialSuccess"):
             print(f"{_cci_tag} FAILED with status {cci_result['execution_status']!r}", file=sys.stderr)
             sys.exit(1)
 
@@ -327,7 +327,7 @@ def _run_one_pipeline(project_id: str, run_label: int) -> None:
                 f"{_dd_tag}     {d['domain_id']}  {d['name']!r}  {d.get('cci_ref_count','?')} CCIs",
                 flush=True,
             )
-        if status not in ("Completed", "CompletedWithWarnings"):
+        if status not in ("Success", "PartialSuccess"):
             print(f"{_dd_tag} FAILED with status {status!r}", file=sys.stderr)
             sys.exit(1)
 
@@ -360,7 +360,7 @@ def _run_one_pipeline(project_id: str, run_label: int) -> None:
         if type_dist:
             for rtype, count in sorted(type_dist.items()):
                 print(f"{_rd_tag}     {rtype}: {count}", flush=True)
-        if status not in ("Completed", "CompletedWithWarnings"):
+        if status not in ("Success", "PartialSuccess"):
             print(f"{_rd_tag} FAILED with status {status!r}", file=sys.stderr)
             sys.exit(1)
 

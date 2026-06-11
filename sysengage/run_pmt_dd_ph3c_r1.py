@@ -70,7 +70,7 @@ except Exception as exc:
 
 md = result["mechanism_data"]
 status = result["execution_status"]
-ok = status in ("Completed", "CompletedWithWarnings")
+ok = status in ("Success", "PartialSuccess")
 
 print(f"  pass_id               = {result['pass_id']}", flush=True)
 print(f"  execution_status      = {status}", flush=True)

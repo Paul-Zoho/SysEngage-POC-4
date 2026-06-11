@@ -141,7 +141,7 @@ except Exception as exc:
     sys.exit(1)
 
 status = result["execution_status"]
-ok = status in ("Completed", "CompletedWithWarnings")
+ok = status in ("Success", "PartialSuccess")
 
 print(f"  pass_id                     = {result.get('pass_id')}", flush=True)
 print(f"  execution_status            = {status}", flush=True)

@@ -45,7 +45,7 @@ def already_completed(project_id: str, row_ref: int) -> str | None:
                 WHERE project_id = :p
                   AND mechanism IN ('CCIConstruction', 'CellContentItemConstruction')
                   AND evaluated_scope = :scope
-                  AND execution_status IN ('Completed', 'CompletedWithWarnings')
+                  AND execution_status IN ('Completed', 'CompletedWithWarnings', 'Success', 'PartialSuccess')
                 ORDER BY created_at DESC
                 LIMIT 1
                 """

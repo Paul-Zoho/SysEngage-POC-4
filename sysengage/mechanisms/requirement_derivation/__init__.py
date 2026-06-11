@@ -147,7 +147,7 @@ def run_requirement_derivation(
                     confidence=1.0,
                     pass_started_at=pass_started_at,
                     pass_completed_at=now,
-                    execution_status="CompletedWithWarnings",
+                    execution_status="PartialSuccess",
                     mode_active="IM",
                     declared_transformation_modes=["IM", "DM"],
                     elapsed_ms=int((now - pass_started_at).total_seconds() * 1000),
@@ -167,7 +167,7 @@ def run_requirement_derivation(
             )
             session.commit()
             return {
-                "execution_status": "CompletedWithWarnings",
+                "execution_status": "PartialSuccess",
                 "pass_id": pass_id,
                 "scenario": "ZeroCCI",
                 "cci_count_input": 0,
@@ -211,7 +211,7 @@ def run_requirement_derivation(
                     confidence=1.0,
                     pass_started_at=pass_started_at,
                     pass_completed_at=now,
-                    execution_status="Completed",
+                    execution_status="Success",
                     mode_active="IM",
                     declared_transformation_modes=["IM", "DM"],
                     elapsed_ms=int((now - pass_started_at).total_seconds() * 1000),
@@ -237,7 +237,7 @@ def run_requirement_derivation(
             )
             session.commit()
             return {
-                "execution_status": "Completed",
+                "execution_status": "Success",
                 "pass_id": pass_id,
                 "scenario": "IdempotentRerun",
                 "cci_count_input": len(stage1.eligible_ccis),
@@ -425,9 +425,9 @@ def run_requirement_derivation(
                 or stage3.orphaned_ccis
                 or stage3.concern_entities
             ):
-                execution_status = "CompletedWithWarnings"
+                execution_status = "PartialSuccess"
             else:
-                execution_status = "Completed"
+                execution_status = "Success"
 
             all_warnings = (
                 stage1.execution_warnings

@@ -1,20 +1,32 @@
 ---
-name: Source Capture execution_status quirk
-description: SourceCapture writes "Success" to analysis_pass; all other mechanisms write "Completed"/"CompletedWithWarnings". Idempotency guards must include "Success".
+name: execution_status vocabulary — unified to build vocabulary
+description: All mechanisms now write "Success"/"PartialSuccess"/"Failed". The old spec vocabulary ("Completed"/"CompletedWithWarnings") was retired. DB read guards keep both for backward compatibility with pre-migration rows.
 ---
 
-## Rule (FIXED — no longer applies)
-`audit_trail.finalise_pass_success` previously wrote `execution_status = "Success"` and
-`finalise_pass_partial_success` wrote `"PartialSuccess"`.
+## Rule
 
-These were normalised to `"Completed"` and `"CompletedWithWarnings"` respectively to match
-all other mechanisms. The SC internal idempotency check was updated at the same time to use
-the new values.
+All mechanisms write `"Success"`, `"PartialSuccess"`, or `"Failed"` to
+`analysis_pass.execution_status`. The spec vocabulary (`"Completed"`,
+`"CompletedWithWarnings"`) was retired from all write paths.
 
-**Why:** Source Capture predated the standardised status vocabulary; its strings were
-inconsistent with Phase 3 mechanisms, causing idempotency guards that checked only
-`"Completed"/"CompletedWithWarnings"` to miss SC passes and re-run SC on every invocation.
+**Single source of truth:** `sysengage/core/audit_trail.py`
+— `finalise_pass_success` → `"Success"`
+— `finalise_pass_partial_success` → `"PartialSuccess"`
 
-**How to apply:** All mechanisms now use only `"Completed"`, `"CompletedWithWarnings"`,
-or `"Failed"`. Any idempotency guard checking `analysis_pass.execution_status` need only
-include those three values.
+**Why:** Two vocabularies coexisted in the DB: Phase 3a–3d mechanisms
+wrote `"Completed"/"CompletedWithWarnings"` (spec vocabulary); Requirement
+Matching wrote `"Success"/"PartialSuccess"` (build vocabulary). The ledger
+export normalised both via `json_builder._EXECUTION_STATUS_MAP`. After
+unification, the export normalisation layer is a no-op safety net; dispatch
+guards enumerate only two acceptance values; idempotency guards still include
+all four to match pre-migration rows in the DB.
+
+**How to apply:**
+- New mechanism writes: use `"Success"` / `"PartialSuccess"` / `"Failed"` only.
+- DB read guards (idempotency / prerequisite checks): include all four values
+  (`["Completed", "CompletedWithWarnings", "Success", "PartialSuccess"]`) to
+  match rows written before the migration.
+- Return-dict dispatch guards: `("Success", "PartialSuccess")` is sufficient
+  (return dicts are produced live, always use the new vocabulary after migration).
+- The `_EXECUTION_STATUS_MAP` in `json_builder.py` retains both sets as a safety
+  net; it requires no update.

@@ -172,12 +172,12 @@ def run(
                 read_witness=read_witness,
                 mechanism_data=mechanism_data,
             )
-            pass_data["execution_status"] = "CompletedWithWarnings"
+            pass_data["execution_status"] = "PartialSuccess"
             pass_data["outputs"]["execution_warnings"] = stage1.execution_warnings
             pass_id = _commit_pass(session, pass_data)
             return {
                 "pass_id": pass_id,
-                "execution_status": "CompletedWithWarnings",
+                "execution_status": "PartialSuccess",
                 "mechanism_data": mechanism_data,
             }
 
@@ -226,11 +226,11 @@ def run(
                 read_witness=read_witness,
                 mechanism_data=mechanism_data,
             )
-            pass_data["execution_status"] = "Completed"
+            pass_data["execution_status"] = "Success"
             pass_id = _commit_pass(session, pass_data)
             return {
                 "pass_id": pass_id,
-                "execution_status": "Completed",
+                "execution_status": "Success",
                 "mechanism_data": mechanism_data,
             }
 
@@ -394,7 +394,7 @@ def run(
             )
             or bool(mechanism_data.get("mode_violations"))
         )
-        execution_status = "CompletedWithWarnings" if has_status_warnings else "Completed"
+        execution_status = "PartialSuccess" if has_status_warnings else "Success"
         pass_data["execution_status"] = execution_status
         if all_warnings:
             pass_data["outputs"]["execution_warnings"] = all_warnings

@@ -125,7 +125,7 @@ def run_stage1(
             AnalysisPassModel.project_id == project_id,
             AnalysisPassModel.mechanism == "DomainDerivation",
             AnalysisPassModel.execution_status.in_(
-                ["Completed", "CompletedWithWarnings"]
+                ["Completed", "CompletedWithWarnings", "Success", "PartialSuccess"]
             ),
             AnalysisPassModel.outputs["mechanism_data"]["row_ref"].as_integer()
             == row_ref,

@@ -207,7 +207,7 @@ else:
     print(f"[E2E]   segments         = {sc_result.segment_count}", flush=True)
     print(f"[E2E]   source_atoms     = {sc_result.source_atom_count}", flush=True)
 
-    if sc_result.execution_status not in ("Completed", "CompletedWithWarnings"):
+    if sc_result.execution_status not in ("Success", "PartialSuccess"):
         print(f"[E2E] Source Capture failed: {sc_result.failure_reason}", file=sys.stderr)
         sys.exit(1)
 
@@ -245,7 +245,7 @@ else:
     print(f"[E2E]   concerns_raised  = {rld.get('concern_count', '?')}", flush=True)
     print(f"[E2E]   out_of_scope     = {rld.get('out_of_scope_count', '?')}", flush=True)
 
-    if status not in ("Completed", "CompletedWithWarnings"):
+    if status not in ("Success", "PartialSuccess"):
         print(f"[E2E] RLSRA failed with status {status!r}", file=sys.stderr)
         sys.exit(1)
 
@@ -284,7 +284,7 @@ else:
     print(f"[E2E]   batches_processed= {cd['batches_processed']}", flush=True)
     print(f"[E2E]   batches_failed   = {cd['batches_failed']}", flush=True)
 
-    if cci_result["execution_status"] not in ("Completed", "CompletedWithWarnings"):
+    if cci_result["execution_status"] not in ("Success", "PartialSuccess"):
         print(f"[E2E] CCI ended with status {cci_result['execution_status']!r}", file=sys.stderr)
         sys.exit(1)
 
@@ -327,7 +327,7 @@ else:
             flush=True,
         )
 
-    if status not in ("Completed", "CompletedWithWarnings"):
+    if status not in ("Success", "PartialSuccess"):
         print(f"[E2E] DD ended with status {status!r}", file=sys.stderr)
         sys.exit(1)
 
@@ -374,7 +374,7 @@ else:
         for rtype, count in sorted(type_dist.items()):
             print(f"[E2E]     {rtype}: {count}", flush=True)
 
-    if status not in ("Completed", "CompletedWithWarnings"):
+    if status not in ("Success", "PartialSuccess"):
         print(f"[E2E] RD ended with status {status!r}", file=sys.stderr)
         sys.exit(1)
 

@@ -116,7 +116,7 @@ def _run_rows(project_id: str, practitioner_id: str) -> bool:
 
         md = result["mechanism_data"]
         status = result["execution_status"]
-        ok = status in ("Completed", "CompletedWithWarnings")
+        ok = status in ("Success", "PartialSuccess")
         if not ok:
             all_ok = False
 

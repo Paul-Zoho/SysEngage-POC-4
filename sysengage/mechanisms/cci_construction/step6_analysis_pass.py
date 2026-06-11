@@ -9,11 +9,11 @@ Per CCI Construction Mechanism Spec v0.2 §4.6:
   rather than null or omitted (a missing field is a schema conformance failure).
 
 execution_status:
-  Completed            — all batches processed; zero AI failures; zero step5 rejections.
-  CompletedWithWarnings — some AI failures or rejections; at least one batch succeeded
-                          with CCIs; OR integrity_violations present; OR consolidation flags.
-  Failed               — all batches failed (AI + retries exhausted for every batch);
-                         OR Step 5 transaction rolled back (handled by caller).
+  Success         — all batches processed; zero AI failures; zero step5 rejections.
+  PartialSuccess  — some AI failures or rejections; at least one batch succeeded
+                    with CCIs; OR integrity_violations present; OR consolidation flags.
+  Failed          — all batches failed (AI + retries exhausted for every batch);
+                    OR Step 5 transaction rolled back (handled by caller).
 """
 
 from __future__ import annotations
@@ -109,7 +109,7 @@ def finalise_cci_pass_completed(
 ) -> None:
     """Finalise pass_data for a fully successful run. Mutates pass_data in-place."""
     elapsed = time.monotonic() - start_monotonic
-    pass_data["execution_status"] = "Completed"
+    pass_data["execution_status"] = "Success"
     pass_data["pass_completed_at"] = datetime.now(timezone.utc)
     pass_data["elapsed_ms"] = int(elapsed * 1000)
     pass_data["mode_active"] = "DM"
@@ -129,7 +129,7 @@ def finalise_cci_pass_completed_with_warnings(
 ) -> None:
     """Finalise pass_data for a run with warnings. Mutates pass_data in-place."""
     elapsed = time.monotonic() - start_monotonic
-    pass_data["execution_status"] = "CompletedWithWarnings"
+    pass_data["execution_status"] = "PartialSuccess"
     pass_data["pass_completed_at"] = datetime.now(timezone.utc)
     pass_data["elapsed_ms"] = int(elapsed * 1000)
     pass_data["mode_active"] = "DM"
@@ -203,6 +203,6 @@ def compute_execution_status(
         )
 
     if warning_reasons:
-        return "CompletedWithWarnings", warning_reasons
+        return "PartialSuccess", warning_reasons
 
-    return "Completed", []
+    return "Success", []
