@@ -1,7 +1,7 @@
 """
 Stage 4 — Entity Production and Ledger Commit (DM + IM for §4.4.3a).
 
-Per Requirement Derivation Mechanism Spec v0.8 §4.4:
+Per Requirement Derivation Mechanism Spec v0.20 §4.4:
   4.4.1  requirement_id allocation (global per-project R###, includes retired).
   4.4.2  domain_refs DM-derivation (MD-2): intersect cci_refs with active Domain
          memberships; assert ≥1 domain_ref. Fail-closed if empty.
@@ -555,7 +555,7 @@ def _check_downstream_rerun_required(
             "SELECT pass_id FROM analysis_pass "
             "WHERE project_id = :pid "
             "  AND mechanism IN ('CellQuality', 'CoverageAnalysis', 'CoverageAnalysis8') "
-            "  AND execution_status IN ('Completed', 'CompletedWithWarnings') "
+            "  AND execution_status IN ('Completed', 'CompletedWithWarnings', 'Success', 'PartialSuccess') "
             "  AND outputs->'mechanism_data'->>'row_ref' = :row "
             "LIMIT 1"
         ),

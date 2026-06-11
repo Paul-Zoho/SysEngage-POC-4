@@ -1,11 +1,12 @@
 """
 Stage 1 — Pre-flight, CCI/Domain Assembly, Re-run Scenario Detection (DM).
 
-Per Requirement Derivation Mechanism Spec v0.1 §4.1:
-  1. Precondition: Pass 3c (DomainDerivation) must be Completed/CompletedWithWarnings.
+Per Requirement Derivation Mechanism Spec v0.20 §4.1:
+  1. Precondition: Pass 3c (DomainDerivation) must be Success/PartialSuccess
+     (or the legacy Completed/CompletedWithWarnings for backward compat).
   2. CCI assembly: eligible CCIs from cell_content_item JOIN zachman_cell.
   3. Domain assembly: active Domains for this row/project from domain table.
-  4. Zero-CCI early exit: CompletedWithWarnings; RequirementRegister preserves
+  4. Zero-CCI early exit: PartialSuccess; RequirementRegister preserves
      project-wide active members (not []).
   5. Pass 3c invariant guard: CCIs exist but no Domains → Failed.
   6. Large-set advisory: row CCI count vs threshold.

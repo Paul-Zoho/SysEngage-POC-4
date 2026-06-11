@@ -1,6 +1,6 @@
 ---
 name: run_dispatch execution_status guards
-description: Return-dict guards use ("Success","PartialSuccess") only; DB read guards include all 4 values for pre-migration rows.
+description: Return-dict guards use ("Success","PartialSuccess") only; ALL DB read guards that query execution_status must include all 4 values for pre-migration rows.
 ---
 
 ## Rule
@@ -26,5 +26,5 @@ Existing rows in the DB were written before the migration and carry the old voca
 
 **How to apply:**
 - New mechanism added to `run_dispatch.py`: return-dict guard uses 2 values only.
-- New idempotency/prerequisite query: list all 4 values until DB migration is done.
+- New idempotency/prerequisite query anywhere in the codebase: list all 4 values until DB migration is done. This includes inline SQL strings, not just SQLAlchemy ORM expressions — e.g. `_check_downstream_rerun_required` in `stage4_entity_production.py` uses a raw SQL `IN (...)` clause that also needs all 4 values.
 - Pass 3e (RM) has no return-dict status guard in run_dispatch — it only catches exceptions.

@@ -1,7 +1,7 @@
 """
 Stage 2 — Per-Domain AI Derivation Act (IM).
 
-Per Requirement Derivation Mechanism Spec v0.17 §4.2:
+Per Requirement Derivation Mechanism Spec v0.20 §4.2:
   Path R (rows >= 2, FirstRun/FullRerun only): interrogative elaboration of
     row n-1 seeds BEFORE Path N. One AI call for all seeds; each returned
     proposal has refines_refs=[seed_id] set at derivation. cci_refs may be
@@ -15,7 +15,10 @@ Per Requirement Derivation Mechanism Spec v0.17 §4.2:
 
   IncrementalRerun path: per-Domain loop for Domains owning ≥1 new CCI only.
     Uses IncrementalRequirementProposal schema (DISTINCT class).
-    Persistent parse failure → falls back to FullRerun for the whole row.
+    Persistent parse failure (any domain after retry) → falls back to FullRerun
+    for the whole row. This is more conservative than the spec's "persistent
+    parse failure" language, which implies an all-domain threshold; the
+    any-domain policy errs on the side of completeness.
     Path R is NOT run for IncrementalRerun.
 
 AI model fingerprints recorded per IM call: "stage2_domain_{domain_id}",

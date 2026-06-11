@@ -1,7 +1,7 @@
 """
 Stage 3 — Structural Validation (DM, with conditional IM repair).
 
-Per Requirement Derivation Mechanism Spec v0.6 §4.3:
+Per Requirement Derivation Mechanism Spec v0.20 §4.3:
   All checks run in sequence on the accumulated proposal set. Pure in-memory
   operations except the Non-Loss repair prompt (IM conditional sub-act).
 
@@ -94,7 +94,7 @@ class Stage3Result:
     failure_reason: str | None = None
 
 
-def _call_repair_ai(prompt: str, *, max_tokens: int = 4096) -> tuple[Any, dict[str, Any]]:
+def _call_repair_ai(prompt: str, *, max_tokens: int = 8192) -> tuple[Any, dict[str, Any]]:
     client = get_ai_client()
     msg = client.messages.create(
         model=MODEL,

@@ -1,13 +1,13 @@
 """
 Pass 3d — Requirement Derivation mechanism orchestrator.
 
-Per Requirement Derivation Mechanism Spec v0.7 §3 and §4:
+Per Requirement Derivation Mechanism Spec v0.20 §3 and §4:
   Stateful multi-stage mechanism:
     Stage 1  — Pre-flight, CCI/Domain assembly, re-run scenario detection (DM)
     Stage 2  — Per-Domain AI derivation loop (IM)
     Stage 3  — Structural validation and Non-Loss repair (DM + IM conditional)
     Stage 4  — Entity production, domain_refs derivation, DD Object-slot binding
-               (§4.4.3a, v0.7 — active), ledger commit (DM)
+               (§4.4.3a — active), ledger commit (DM)
 
 mode_active = "IM", declared_transformation_modes = ["IM", "DM"]
 
@@ -220,16 +220,47 @@ def run_requirement_derivation(
                     outputs={
                         "mechanism_data": {
                             "row_ref": row_ref,
-                            "scenario": "IdempotentRerun",
-                            "cci_count_input": len(stage1.eligible_ccis),
-                            "domain_count": len(stage1.active_domains),
-                            "requirement_count_produced": prior_md.get(
-                                "requirement_count_produced", 0
-                            ),
+                            "run_scenario": "IdempotentRerun",
                             "requirement_input_hash": stage1.current_hash,
                             "domain_id_set": sorted(
                                 d.domain_id for d in stage1.active_domains
                             ),
+                            "cci_count_input": len(stage1.eligible_ccis),
+                            "domain_count_input": len(stage1.active_domains),
+                            "large_cci_set_advisory": stage1.large_cci_set_advisory,
+                            "idempotent": True,
+                            "repair_prompt_issued": False,
+                            "orphaned_ccis": [],
+                            "validation_failures": [],
+                            "duplicate_requirements_collapsed": [],
+                            "subject_vocabulary_flags": [],
+                            "concern_atomicity_flags": [],
+                            "requirement_count_produced": prior_md.get(
+                                "requirement_count_produced", 0
+                            ),
+                            "requirement_count_retired": 0,
+                            "requirement_type_distribution": prior_md.get(
+                                "requirement_type_distribution", {}
+                            ),
+                            "requirements_produced": prior_md.get(
+                                "requirements_produced", []
+                            ),
+                            "downstream_rerun_required": False,
+                            "retirement_mapping": [],
+                            "dd_binding": {
+                                "terms_presented": 0,
+                                "resolved": 0,
+                                "new_canonical": 0,
+                                "synonyms_recorded": 0,
+                                "relationships_recorded": 0,
+                                "values_recorded": 0,
+                                "dd_unresolved": [],
+                                "dd_zero_term": [],
+                            },
+                            "seed_coverage": {},
+                            "elaboration_gaps": [],
+                            "path_r_count": 0,
+                            "mode_violations": [],
                         },
                         "execution_warnings": stage1.execution_warnings,
                     },
