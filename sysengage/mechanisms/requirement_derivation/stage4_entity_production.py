@@ -116,7 +116,10 @@ def _raw_slot_description(slots: dict, requirement_type: str) -> str:
             return f"{entity} / {assertion}"
         return entity or assertion
     elif requirement_type == "Constraint":
-        return slots.get("subject") or ""
+        # F99 (v0.24): pass the Constraint-Rule (post-shall predicate), not the Subject.
+        # A Constraint has no Object slot; the DD entity terms are the domain concepts
+        # the Rule governs, extracted from the rule predicate text.
+        return slots.get("rule") or ""
     return ""
 
 
@@ -258,34 +261,52 @@ def _build_dd_ops_from_terms(
     req_ids: list[str],
     entity_terms: dict[str, list[str]],
     state_qualifier_map: dict[str, list[StateQualifier]] | None = None,
-) -> tuple[list[dict[str, Any]], list[dict[str, Any]], list[dict[str, Any]]]:
+) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
     """
-    Build DD service operation list from AI-extracted entity terms (v0.8).
+    Build DD service operation list from AI-extracted entity terms (v0.8 / F99 v0.24).
 
     Returns:
       ops                  — list of DD service op dicts
-      zero_term_unresolved — dd_unresolved entries for Functional/Structural
-                             with zero extracted terms (O-3 guard from review)
-      ver19_violations     — VER-3d-19 entity-grade heuristic violations
+      zero_term_unresolved — dd_zero_term entries: extraction-empty OR VER-3d-19
+                             pre-presentation rejects (F99 v0.24).
+                             Distinguished by reason prefix:
+                               "entity_extraction_empty" — no terms from AI
+                               "ver_3d_19_rejected:<reason>" — clause-grade term
+                             Entries also carry warning_type="ver_3d_19_term_rejected"
+                             for the VER-3d-19 rejects.
+
+    VER-3d-19 (F99 v0.24): promoted from post-commit warn to enforcing pre-presentation
+    reject. Clause-grade terms (exceeds word-count heuristic or sentence punctuation)
+    are skipped here — they never reach the DD service. The standalone _check_ver19
+    predicate is unchanged; this is a routing change.
     """
     ops: list[dict[str, Any]] = []
     zero_term_unresolved: list[dict[str, Any]] = []
-    ver19_violations: list[dict[str, Any]] = []
 
     for proposal, req_id in zip(proposals, req_ids):
         rtype = proposal.requirement_type
         terms = entity_terms.get(req_id, [])
         stmt = proposal.statement
 
-        # VER-3d-19: check each term
+        # VER-3d-19 pre-presentation reject (F99 v0.24): filter clause-grade terms
+        # before building ops. Rejected terms → dd_zero_term; NOT presented to DD.
+        clean_terms: list[str] = []
         for term in terms:
             violation = _check_ver19(term, req_id)
             if violation:
-                ver19_violations.append(violation)
+                zero_term_unresolved.append({
+                    "requirement_id": req_id,
+                    "term": term,
+                    "reason": f"ver_3d_19_rejected:{violation['reason']}",
+                    "warning_type": "ver_3d_19_term_rejected",
+                })
+            else:
+                clean_terms.append(term)
+        terms = clean_terms
 
         if rtype in ("Functional", "Structural"):
             if not terms:
-                # O-3 guard: zero-term for a type that should have an entity
+                # Zero-term for a type that should have an entity
                 zero_term_unresolved.append({
                     "requirement_id": req_id,
                     "term": None,
@@ -334,6 +355,16 @@ def _build_dd_ops_from_terms(
                         })
 
         elif rtype == "Constraint":
+            if not terms:
+                # F99 (v0.24): no stmt[:60] fallback — empty Constraint extraction
+                # → dd_zero_term; no DD term presented. Non-Loss preserved by the
+                # produced Requirement; the DD simply gains no entry.
+                zero_term_unresolved.append({
+                    "requirement_id": req_id,
+                    "term": None,
+                    "reason": "entity_extraction_empty",
+                })
+                continue
             for term in terms:
                 if len(term) > _MIN_TERM_LEN:
                     ops.append({
@@ -342,12 +373,11 @@ def _build_dd_ops_from_terms(
                         "context": stmt,
                         "provenance_ref": req_id,
                     })
-            # Named value from fit_criteria (unchanged from v0.7 — not AI-extracted)
+            # Named value from fit_criteria; terms is guaranteed non-empty here.
             if proposal.fit_criteria and proposal.fit_criteria.strip():
-                canonical_term = terms[0] if terms else stmt[:60]
                 ops.append({
                     "op": "value",
-                    "canonical_term": canonical_term,
+                    "canonical_term": terms[0],
                     "attr_name": "constraint_value",
                     "value": proposal.fit_criteria.strip(),
                     "provenance_ref": req_id,
@@ -367,7 +397,7 @@ def _build_dd_ops_from_terms(
                         "provenance_ref": req_id,
                     })
 
-    return ops, zero_term_unresolved, ver19_violations
+    return ops, zero_term_unresolved
 
 
 # ---------------------------------------------------------------------------
@@ -402,8 +432,8 @@ def _run_dd_binding(
         proposals, req_ids, pass_data, row_ref
     )
 
-    # Step 2: Build ops from AI-extracted entity terms
-    ops, zero_term_entries, ver19_violations = _build_dd_ops_from_terms(
+    # Step 2: Build ops from AI-extracted entity terms (VER-3d-19 reject is inside)
+    ops, zero_term_entries = _build_dd_ops_from_terms(
         proposals, req_ids, entity_terms, state_qualifier_map
     )
 
@@ -478,11 +508,11 @@ def _run_dd_binding(
         "values_recorded": values_recorded,
         # DD service flagged entries — counted in terms_presented (VER-3d-17 scope)
         "dd_unresolved": dd_unresolved,
-        # Zero-term extraction failures — NOT in terms_presented (no resolve call made)
+        # Zero-term and VER-3d-19 pre-presentation rejects — NOT in terms_presented.
+        # Entries with warning_type="ver_3d_19_term_rejected" are the F99 rejects;
+        # entries with reason="entity_extraction_empty" are empty-extraction cases.
         "dd_zero_term": zero_term_entries,
     }
-    if ver19_violations:
-        audit["ver_3d_19_violations"] = ver19_violations
 
     return audit, fingerprints
 

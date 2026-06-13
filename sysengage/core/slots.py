@@ -12,28 +12,34 @@ exactly the same thing at creation (hard reject) and at scoring (graded penalty)
 Do NOT fork a local copy into either mechanism package — that would reintroduce
 the drift risk VER-q-06 exists to prevent.
 
-Slot patterns (Row 4 Requirement Derivation v0.6 §4.3 / CHK-3d-09):
+Slot patterns (Row 4 Requirement Derivation v0.24 §4.3 / CHK-3d-09):
 
   Functional   : [Condition,] Subject shall Action Object
                  Required slots: Subject, Action, Object
-                 Hard violations: compound condition, compound object (two+
-                 independent objects), multiple obligations (two+ "shall"),
-                 missing required slot.
+                 Hard violations: compound condition, conjoined predicate (two
+                 distinct finite verb phrases — F98), compound object (two+
+                 objects under one verb — F98 promoted to hard), multiple
+                 obligations (two+ "shall"), missing required slot.
 
   Constraint   : Subject shall <constraint-verb> Constraint-Rule
                  [under Condition] [to Criteria]
                  Required slots: Subject, Constraint Rule
-                 Hard violations: multiple constraint rules (two+ "shall"),
-                 missing required slot.
+                 Hard violations: conjoined predicate (F98), compound constraint
+                 rule (F98 promoted to hard), multiple constraint rules (two+
+                 "shall"), missing required slot.
 
   Structural   : Entity <structural-verb> Structural-element
                  Required slots: Entity, structural assertion
                  Hard violations: missing structural verb, missing entity,
                  missing structural element, multiple obligations.
 
-The inseparable-single-concept exception (a conjunction that joins an
-effectively-single concept such as "load and save" → single workflow) is
-flagged with is_hard=False for Practitioner review, never auto-rejected.
+F98 (v0.24) — conjoined-predicate hard branch: after isolating the predicate,
+apply a verb-phrase test on both sides of any and/or conjunction:
+  - Both conjuncts carry a distinct finite action verb → conjoined_predicate,
+    is_hard=True (CHK-3d-09 in-place decompose repair in Stage 3).
+  - Single verb with conjoined nouns/objects → compound_object_possible_exception
+    or compound_constraint_rule_possible_exception, is_hard=True (previously soft).
+  - Relative clause continuation (and which/that…, no second finite verb) → no flag.
 
 See also: Row 4 Requirement Quality Analysis v0.1 D-q-2, VER-q-06.
 """
@@ -62,6 +68,25 @@ _CONDITION_OPENER = re.compile(
 )
 
 _AND_OR = re.compile(r"\b(?:and|or)\b", re.IGNORECASE)
+
+# F98 (v0.24) — relative clause and action-verb patterns for conjoined-predicate test
+_RELATIVE_CLAUSE = re.compile(r"\b(?:and|or)\s+(?:which|that)\b", re.IGNORECASE)
+
+_ACTION_VERB = re.compile(
+    r"\b(?:provide|ensure|allow|enable|create|update|delete|manage|track|record|"
+    r"maintain|calculate|notify|send|receive|store|retrieve|process|validate|"
+    r"confirm|reject|assign|allocate|report|generate|support|handle|monitor|"
+    r"enforce|prevent|restrict|permit|perform|execute|complete|cancel|approve|"
+    r"deny|submit|publish|display|show|sort|filter|group|merge|split|convert|"
+    r"import|export|archive|schedule|trigger|alert|audit|verify|check|capture|"
+    r"collect|aggregate|derive|produce|accept|limit|access|control|govern|"
+    r"comply|adhere|conform|contain|hold|apply|define|register|activate|"
+    r"deactivate|start|stop|pause|resume|suspend|present|require|include|exclude|"
+    r"log|flag|mark|link|bind|route|redirect|authenticate|authorise|authorize|"
+    r"encrypt|decrypt|refresh|expire|revoke|enforce|notify|propagate|invoke|"
+    r"validate|index|cache|queue|dispatch|emit|consume|publish|subscribe)\b",
+    re.IGNORECASE,
+)
 
 _STRUCTURAL_VERB = re.compile(
     r"\b(?:comprises?|is\s+composed\s+of|consists?\s+of|has|contains?|"
@@ -168,18 +193,37 @@ def _check_functional(statement: str) -> list[AtomicityViolation]:
             is_hard=True,
         ))
 
-    # Compound object: conjunction in the predicate may indicate two independent objects
+    # Compound / conjoined predicate: conjunction in the predicate (F98 v0.24)
+    # Three-way branch after isolating the predicate:
+    #   1. Relative clause continuation (and/or which/that) — no flag.
+    #   2. Right conjunct has its own finite action verb → conjoined_predicate (hard).
+    #   3. Single verb with conjoined nouns/objects → compound_object (hard, promoted from soft).
     and_or_in_pred = list(_AND_OR.finditer(predicate_part))
     if and_or_in_pred:
-        violations.append(AtomicityViolation(
-            rule="compound_object_possible_exception",
-            detail=(
-                f"Conjunction '{and_or_in_pred[0].group()}' in predicate may indicate "
-                "a compound object. If the two elements form a single inseparable concept, "
-                "this is a permitted exception (Practitioner review)."
-            ),
-            is_hard=False,
-        ))
+        if _RELATIVE_CLAUSE.search(predicate_part):
+            pass  # relative clause continuation — one obligation, no violation
+        else:
+            right_conjunct = predicate_part[and_or_in_pred[0].end():].strip()
+            if _ACTION_VERB.search(right_conjunct):
+                violations.append(AtomicityViolation(
+                    rule="conjoined_predicate",
+                    detail=(
+                        f"Conjunction '{and_or_in_pred[0].group()}' in predicate separates "
+                        "two distinct finite verb phrases — each half is a separate obligation "
+                        "(F98). Decompose into two atomic single-verb statements."
+                    ),
+                    is_hard=True,
+                ))
+            else:
+                violations.append(AtomicityViolation(
+                    rule="compound_object_possible_exception",
+                    detail=(
+                        f"Conjunction '{and_or_in_pred[0].group()}' in predicate joins "
+                        "multiple objects under one verb — compound object (F98). "
+                        "Split into separate single-object statements."
+                    ),
+                    is_hard=True,
+                ))
 
     return violations
 
@@ -231,18 +275,37 @@ def _check_constraint(statement: str) -> list[AtomicityViolation]:
         ))
         return violations
 
-    # Conjunction in predicate may indicate compound rule — soft (could be a range)
+    # Compound / conjoined constraint predicate: conjunction test (F98 v0.24)
+    # Same three-way branch as _check_functional:
+    #   1. Relative clause continuation — no flag.
+    #   2. Right conjunct has its own finite action verb → conjoined_predicate (hard).
+    #   3. Conjoined nouns under one constraint verb → compound_constraint_rule (hard).
     and_or_in_pred = list(_AND_OR.finditer(predicate_part))
     if and_or_in_pred:
-        violations.append(AtomicityViolation(
-            rule="compound_constraint_rule_possible_exception",
-            detail=(
-                f"Conjunction '{and_or_in_pred[0].group()}' in constraint predicate may indicate "
-                "multiple rules or criteria. If elements form a single inseparable constraint "
-                "(e.g. a numeric range), this is a permitted exception."
-            ),
-            is_hard=False,
-        ))
+        if _RELATIVE_CLAUSE.search(predicate_part):
+            pass  # relative clause continuation — one obligation, no violation
+        else:
+            right_conjunct = predicate_part[and_or_in_pred[0].end():].strip()
+            if _ACTION_VERB.search(right_conjunct):
+                violations.append(AtomicityViolation(
+                    rule="conjoined_predicate",
+                    detail=(
+                        f"Conjunction '{and_or_in_pred[0].group()}' in constraint predicate "
+                        "separates two distinct finite verb phrases — two Constraint Rules in "
+                        "one statement (F98). Decompose into two atomic Constraint statements."
+                    ),
+                    is_hard=True,
+                ))
+            else:
+                violations.append(AtomicityViolation(
+                    rule="compound_constraint_rule_possible_exception",
+                    detail=(
+                        f"Conjunction '{and_or_in_pred[0].group()}' in constraint predicate "
+                        "joins multiple rule elements under one constraint verb — compound "
+                        "Constraint Rule (F98). Split into separate single-rule Constraints."
+                    ),
+                    is_hard=True,
+                ))
 
     return violations
 
@@ -266,7 +329,10 @@ def extract_slot_terms(statement: str, requirement_type: str) -> dict:
       Functional  → {"object": str | None}
       Structural  → {"entity": str | None, "assertion": str | None,
                      "is_relationship": bool}
-      Constraint  → {"subject": str | None}
+      Constraint  → {"subject": str | None, "rule": str | None}
+                    subject = pre-shall noun phrase; rule = post-shall predicate.
+                    Use "rule" for DD entity extraction (§4.4.3a F99): entities
+                    are the domain concepts the Rule governs, not the Subject.
     Any value may be None if the slot is absent or unparseable.
     """
     rtype = requirement_type.strip()
@@ -309,12 +375,22 @@ def _extract_structural_slots(statement: str) -> dict:
 
 
 def _extract_constraint_slots(statement: str) -> dict:
-    """Extract Subject from Constraint: Subject shall <constraint-verb> Rule."""
+    """Extract Subject and Constraint-Rule from Constraint: Subject shall <constraint-verb> Rule.
+
+    Returns both slots:
+      subject — pre-shall noun phrase (the entity bearing the obligation)
+      rule    — post-shall predicate (the domain concept(s) the rule governs)
+
+    For DD entity extraction (§4.4.3a F99), use "rule" not "subject":
+    a Constraint has no Object slot, so entity terms come from the rule
+    predicate — the noun(s) the rule bounds — not from the thin Subject.
+    """
     m = _SHALL.search(statement)
     if not m:
-        return {"subject": None}
+        return {"subject": None, "rule": None}
     subject = statement[:m.start()].strip(" .,;") or None
-    return {"subject": subject}
+    rule = statement[m.end():].strip() or None
+    return {"subject": subject, "rule": rule}
 
 
 def _check_structural(statement: str) -> list[AtomicityViolation]:

@@ -30,8 +30,11 @@ def build_dd_extraction_prompt(items: list[dict[str, Any]]) -> str:
       idx            — integer index for round-trip matching
       statement      — full requirement statement
       requirement_type — 'Functional' | 'Structural' | 'Constraint'
-      raw_slot       — the slot text the parser located (Object / Entity+Assertion
-                       / Subject); may be '' if unparseable
+      raw_slot       — the slot text the parser located:
+                         Functional  → Object (post-shall predicate minus action verb)
+                         Structural  → Entity + Assertion text
+                         Constraint  → Constraint-Rule (post-shall predicate, F99 v0.24)
+                       May be '' if the slot is absent or unparseable.
 
     Returns a prompt string whose expected AI response is a JSON array of
     {idx, terms, state_qualifiers}, same length and order as items.
@@ -51,9 +54,18 @@ For each requirement, identify the **domain entities** that the requirement's ke
 - **Structural** — return the bare entity being described and any composition element as separate terms.
   Example: "Task comprises status, assignee, and deadline"
   → terms: ["task", "task status", "task assignee"]
-- **Constraint** — return the subject entity (the thing being constrained), reduced to its bare noun head.
-  Example: Subject = "The settlement amount"
-  → terms: ["settlement amount"]
+- **Constraint** — return the named domain concept(s) the Constraint-Rule **governs** — the noun(s)
+  the rule bounds — taken from the rule predicate (post-shall), NOT the Subject. A Constraint
+  has no Object slot, so entity terms come from what the rule applies to, not from "the system"
+  or other thin Subject nouns.
+  Example: "The system shall enforce retention of task-completion records"
+  → terms: ["task completion record"]
+  Example: "The enterprise shall comply with ISO-27001"
+  → terms: ["ISO-27001"]
+  Example: "The system shall limit task assignment to verified carers"
+  → terms: ["task assignment", "carer"]
+  The rule's threshold / bound / value is an **attribute** on the governed entity (never a
+  clause-named canonical). Return [] if no meaningful domain entity can be identified from the rule.
 
 ## Rules
 1. Each term must be an entity-grade noun phrase — typically 1–5 words, no trailing sentence punctuation.

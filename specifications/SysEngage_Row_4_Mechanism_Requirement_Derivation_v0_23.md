@@ -2,11 +2,17 @@
 
 **Implementation specification — physical / builder tier**
 
-Filename: SysEngage_Row_4_Mechanism_Requirement_Derivation_v0_20.md
+Filename: SysEngage_Row_4_Mechanism_Requirement_Derivation_v0_23.md
 
 Version: 0.12 (Supersedes v0.11 — concern-atomicity + non-redundancy authoring guidance. Realises Row 3 Requirement Derivation v0.9 §4.1.1. Adds a shared §5.4 cross-row block ("Concern-atomicity and non-redundancy") instructing the AI to (1) author one obligation per requirement at the CONCERN level — a requirement whose grouped CCIs span distinct concerns (different classification types across different Zachman columns) that it does not all voice must be split per obligation, so every concern is *voiced*, not merely referenced (the unvoiced-but-referenced concern is a silent Non-Loss failure and makes the requirement a downstream merge-magnet); and (2) not voice the same concern twice (no near-duplicate restatements, even from overlapping CCI sets — CHK-3d-07 collapses only exact duplicates). New soft diagnostic **ADVC-3d-03** records, decidably, requirements whose `cci_refs` span ≥2 classification types across ≥2 columns (`concern_atomicity_flags`) so over-bundling is measurable across runs. Motivated by PMT R2 Run11: a 4-concern requirement (R025: How/Process + How/Rule + What/Attribute + Why/Constraint) acted as a merge-magnet, and ~40% of a one-paragraph source's Row 2 requirements were near-duplicates — both upstream over-generation that inflate the downstream merge load. The complementary automatic Non-Loss guard on the merge itself is a Requirement Matching concern (deferred pending a re-run under this guidance). No hard reject added (concern-atomicity is an IM judgement, not decidable — guidance shapes generation, ADVC-3d-03 only instruments). CHK-3d-07/09, subject taxonomy, entity/state extraction, schema unchanged.)
 
 Version: 0.11 (Supersedes v0.10 — entity-vs-state reduction. Realises Row 3 Requirement Derivation v0.8 §4.1.1(c). Confirmed against the PMT source, which uses one noun — "task" — in states ("available", "completed", "claimed"): §4.4.3a entity extraction now reduces a STATE/lifecycle-qualified phrase to the BARE entity + state as an attribute ("available tasks"/"completed tasks" → entity `task`, status available/completed), never a compound canonical; and §5.4 Row 1 entity-vocabulary gains the bare-noun clause (the entity is the bare source noun; states and roles are attributes, NOT separate entities — do not coin "task opportunity", "completed achievement", "economic activity", "household economy" for `task`). Fixes the Row 1 Run2 relapse where v0.10 stopped wholesale abstraction ("work unit") but the model coined state-qualified entities, fragmenting one `task` into separate canonicals and re-opening the cross-row resolution gap. Option A (entity flat; state is an attribute value, recorded via the existing DataDictionaryEntry.attributes) — no DD schema or matching change. Rows 2–6 §5.4 unchanged; §4.4.3a state-reduction applies to all rows.)
+
+Version: 0.23 (Supersedes v0.22 — SC-6: `ai_model_fingerprints` placement corrected in the §7 example to match the implementation (align-to-implementation). The §7 JSON nested `ai_model_fingerprints` inside `mechanism_data`; the build emits it as a **top-level `outputs` key**, a sibling of `mechanism_data` / `execution_warnings` / `concern_entities` (`__init__.py`). The §7 prose already declares `execution_warnings` top-level but said nothing for `ai_model_fingerprints`; the example is corrected to place both at top level, and the line-809 callout now names `ai_model_fingerprints` alongside `execution_warnings`. Example-structure fix, no logic change. (VER-3d-08 validates mechanism_data completeness against §7, so the example must show the true nesting.))
+
+Version: 0.22 (Supersedes v0.21 — single targeted §7 correction: the `dd_binding` field in the §7 mechanism_data example used wrong/short-form keys (`presented`/`resolved`/`flagged`) that I introduced in the v0.19 A2 edit, inconsistent with the authoritative §4.4.3b audit block and VER-3d-17 — both of which already use the correct keys (`terms_presented`/`resolved`/`new_canonical`/`synonyms_recorded`/`relationships_recorded`/`values_recorded`/`dd_zero_term`/`dd_unresolved`). The spec, VER-3d-17, and the implementation already agreed on the correct shape; only the §7 example line was wrong. Replaced it with the actual 8-key shape stage4 emits (matching §4.4.3b). No logic change — example-key correction only.)
+
+Version: 0.21 (Supersedes v0.20 — five spec-silence points resolved to align with the validated implementation, per SW-agent review. No model change. **SC-1 (§4.2 IncrementalRerun fallback):** "persistent parse failure" = **ANY** Domain's parse failure (after its retry) during an IncrementalRerun → fall back to FullRerun for the whole row. This is any-domain, not all-domain — an IncrementalRerun is an optimisation; any failure abandons it for a clean full regeneration (consistent with the full-faithful-regeneration policy; the FullRerun loses nothing). Distinct from the FirstRun/FullRerun per-Domain path where a single-Domain failure skips that Domain (§10 edge case) — that path is not optimising and degrades gracefully; the incremental path restarts clean. **SC-2/SC-5 (§7 / §4.1 IdempotentRerun mechanism_data):** an IdempotentRerun writes the **full mechanism_data block** (not a minimal one); `requirements_produced` and `requirement_type_distribution` are sourced from the prior producing pass's `mechanism_data` (`prior_md.get(...)`, defaulting to `[]`/`{}` if absent). **SC-3 (§4.4.5 downstream_rerun_required):** `False` unconditionally on IdempotentRerun (no re-check) — an idempotent pass changed nothing, so it raises no downstream obligation; newly added/removed downstream passes are the orchestrator's concern, not this flag's. **SC-4 (§4.3 repair token budgets):** added an AI-call output-budget table covering all three repair/AI call sites (Path-R §4.2, CHK-3d-05, CHK-3d-09 — and the CHK-3d-10 Path-R repair) so a prompt change cannot silently truncate, the same failure class as the Path-R truncation (A1). Version-stamp quadruple swept.)
 
 Version: 0.20 (Supersedes v0.19 — execution_status vocabulary standardised to the canonical ledger set per SW-agent investigation: `Completed`→`Success`, `CompletedWithWarnings`→`PartialSuccess`, and the IdempotentRerun status is `Success` with `idempotent=true`/`run_scenario="IdempotentRerun"` as the distinguisher (there is no `Skipped` status — the DB never wrote one; the spec word was retired). Background: the ledger always emitted the canonical set via a single export normalisation (`json_builder._map_execution_status`); the DB held a dual vocabulary (spec `Completed`/`CompletedWithWarnings` for SC/CCI/DD/RD, build `Success`/`PartialSuccess` for Matching). The build is being standardised to one vocabulary at source (`core/audit_trail.py`); this spec adopts the same so spec and ledger agree directly. `Failed` is unchanged (it was never transformed). Confirmed in the same investigation: the R5_Run2 Row 5 `Failed` was genuine CHK-3d-10 enforcement (token-overflow → parse failure → 0 Path-R proposals → 26 extinct seeds → extinction_failure branch), validating both the enforcement and the batching diagnosis. Version-stamp quadruple swept. No model/logic change — status-label rename only.)
 
@@ -153,7 +159,7 @@ Realises Row 3 §4 Stage 1 and §6.
     - `new_cci_count = len(eligible_ci_ids - covered)`.
     - If `new_cci_count / prior_cci_count >= requirement_rerun_threshold` → `FullRerun`; else `IncrementalRerun`.
 
-**IdempotentRerun exit:** AnalysisPass `execution_status="Success"`, `mechanism_data.run_scenario="IdempotentRerun"`, `idempotent=true`, `requirement_input_hash=current_hash`, `ai_model_fingerprints=[]`. Existing Requirements and register unchanged. Exit.
+**IdempotentRerun exit:** AnalysisPass `execution_status="Success"`, `mechanism_data.run_scenario="IdempotentRerun"`, `idempotent=true`, `requirement_input_hash=current_hash`, `ai_model_fingerprints=[]`. Existing Requirements and register unchanged. **mechanism_data is the FULL block (SC-2), not a minimal one** — `requirement_count_produced=0` (this run produced nothing), and `requirements_produced` / `requirement_type_distribution` are **sourced from the prior producing pass's `mechanism_data`** (`prior_md.get(...)`; default `[]` / `{}` if no prior pass exists, SC-5). `downstream_rerun_required=false` (SC-3, §4.4.5). Exit.
 
 **Error cases:** DB failure during assembly → `Failed`. CCI referencing a non-existent ZachmanCell → `execution_warnings += cci_referential_integrity_violation`; exclude; continue.
 
@@ -171,7 +177,7 @@ Realises Row 3 §4 Stage 2 (v0.12). **At rows ≥ 2 both paths run; at Row 1, on
 - Claude Sonnet (model per Row 4 Applied §4.5). Parse against `requirement_derivation_response_schema.py`. Parse failure → one retry, identical prompt. Second failure → log `domain_derivation_parse_failure` in `validation_failures`; skip Domain (its CCIs become orphans for CHK-3d-05). **All** Domains fail → `execution_status="Failed"`, `failure_reason="AI derivation parse failure for all Domains after retry"`.
 - Tag each proposal with in-memory `source_domain_id` (not a Requirement attribute).
 
-**IncrementalRerun:** reachable only when Domain set unchanged. For each Domain owning ≥1 new CCI: assemble existing Requirement summaries `{requirement_id, statement, requirement_type}` for that Domain and `new_domain_ccis` (the Domain's not-yet-covered CCIs). Invoke `requirement_incremental_prompt.py`. Parse against the incremental schema. One retry. Persistent failure → `execution_warnings += incremental_fallback_to_fullrerun`; re-invoke Stage 2 FullRerun path for the whole row.
+**IncrementalRerun:** reachable only when Domain set unchanged. For each Domain owning ≥1 new CCI: assemble existing Requirement summaries `{requirement_id, statement, requirement_type}` for that Domain and `new_domain_ccis` (the Domain's not-yet-covered CCIs). Invoke `requirement_incremental_prompt.py`. Parse against the incremental schema. One retry. **Persistent failure on ANY Domain (SC-1)** — not only all Domains — → `execution_warnings += incremental_fallback_to_fullrerun`; re-invoke Stage 2 FullRerun path for the whole row. Rationale: IncrementalRerun is an optimisation; any per-Domain failure abandons it for a clean full regeneration (full-faithful-regeneration policy — the FullRerun discards and regenerates the whole row, losing nothing). This is deliberately distinct from the FirstRun/FullRerun per-Domain path (§10), where a single-Domain parse failure skips that Domain (its CCIs → CHK-3d-05) and the run continues — that path is not optimising and degrades gracefully in place.
 
 **Fingerprinting:** one `ai_model_fingerprints` entry per call: `{stage:"stage2_domain_<domain_id>", model, input_tokens, output_tokens}`. Repair fingerprinted separately (`stage3_repair`).
 
@@ -190,6 +196,18 @@ Realises Row 3 §4 Stage 3. All in-memory except the repair prompt.
 **CHK-3d-04 — fit_criteria integrity.** Present-but-empty → strip, log `fit_criteria_empty_stripped`. `verification_method=="Measurement"` and fit_criteria absent → log `measurement_missing_fit_criteria` (informational; PLB-3d-05).
 
 **CHK-3d-05 — Non-Loss.** `orphaned = eligible_ci_ids - {ref for p in proposals for ref in p.cci_refs}`. If non-empty: invoke repair (IM sub-act). For each orphan resolve owning Domain(s) (non-empty by Pass 3c Non-Loss). Assemble `requirement_repair_prompt.py` with `orphaned_ccis=[{ci_id,column,classification_type,description,owning_domain_id,owning_domain_name}]` + REQUIREMENT_ROW_GUIDANCE. Parse against repair schema; one attempt (no retry). Tag repair proposals `source_domain_id=owning_domain_id`. Merge; recompute `orphaned`. Persistent orphan → record in `mechanism_data.orphaned_ccis`; `execution_status="PartialSuccess"`; raise Concern (CN-NNN). `execution_warnings += chk3d05_repair_performed` / `chk3d05_repair_failed` as applicable.
+
+**AI-call output budgets (SC-4).** Every IM call site must keep expected output under the model `max_tokens` ceiling, or risk truncated JSON (the Path-R truncation class, A1/§4.2). Budgets for all repair/derivation IM calls:
+
+| Call site | Prompt | Output-size control |
+|---|---|---|
+| Stage 2 per-Domain derivation | `requirement_derivation_prompt.py` | One Domain's CCIs per call — bounded by Domain CCI count |
+| Stage 2 Path-R elaboration (§4.2) | `requirement_refinement_prompt.py` | **Batched ≤ `_PATH_R_BATCH_SIZE` (15) seeds** — keeps output < `max_tokens` (8,192) |
+| Stage 3 CHK-3d-05 Non-Loss repair | `requirement_repair_prompt.py` | Scoped to the orphaned CCI set (typically small); if the orphan set could exceed the ceiling, batch as Path-R does |
+| Stage 3 CHK-3d-10 Path-R repair | `requirement_refinement_prompt.py` (scoped to unrefined seeds) | Inherits the §4.2 ≤15-seed batching |
+| Stage 3 CHK-3d-09 atomicity (re-formulation, where applicable) | repair path | Scoped to the flagged statement(s); per-statement, inherently small |
+
+The governing rule is the token-ceiling constraint (§4.2); batch sizes are calibrated constants in `stage2_ai_derivation.py` / repair modules, recalibrated if the model ceiling or per-item output size changes. A new or widened repair prompt MUST re-check its budget against this table.
 
 **CHK-3d-10 — Downward Non-Loss (rows ≥ 2; the seed-coverage assertion, realises Row 3 §CHK-3d-10).** `unrefined = {seed_id for seed in seed_set} - {p for child in proposals for p in child.refines_refs}`. If non-empty: invoke Path-R repair (IM sub-act) — re-prompt elaboration of each unrefined seed (`requirement_refinement_prompt.py` scoped to the unrefined seeds); one attempt. Recompute `unrefined`. Persistent unrefined seed → record in `mechanism_data.elaboration_gaps`; `execution_status` escalates and a **hard failure is recorded** for Practitioner attention (`execution_warnings += chk3d10_seed_extinct`) — an unrefined seed is dropped from the design (extinction), the downward analogue of CHK-3d-05. Record `mechanism_data.seed_coverage = {seeds, covered, ratio}`. (Non-Loss is two-dimensional: CHK-3d-05 = row-native CCI coverage; CHK-3d-10 = downward seed coverage.)
 
@@ -245,13 +263,14 @@ Realises Row 3 §4 Stage 4.
 "dd_binding": {
   "terms_presented": 18, "resolved": 16, "new_canonical": 7,
   "synonyms_recorded": 9, "relationships_recorded": 2, "values_recorded": 1,
+  "dd_zero_term": [],
   "dd_unresolved": [ { "requirement_id": "R019", "term": "pocket money allocation", "reason": "flagged_ambiguous" } ]
 }
 ```
 
 **4.4.4 FullRerun retirement (resolves Row 3 OQ-3d-04).** On FullRerun: set `retired_at=now()` on all active Requirements for the row before inserting the new set (soft-retire, not delete — preserves referential integrity for any downstream refs, consistent with the sibling OQ-3c-03 soft-delete). `query_max_requirement_id` includes retired; new ids continue forward. Build `retirement_mapping` (one per retired Requirement; `inferred_successor_requirement_id` populated if statement similarity ≥ 0.50 against a new Requirement).
 
-**4.4.5 downstream_rerun_required.** If Phase 5/6/8 AnalysisPasses exist for this row and this run committed a non-trivial change (FullRerun, or Incremental that added/retired): `mechanism_data.downstream_rerun_required=true`. Orchestrator surfaces advisory; downstream NOT auto-triggered.
+**4.4.5 downstream_rerun_required.** If Phase 5/6/8 AnalysisPasses exist for this row and this run committed a non-trivial change (FullRerun, or Incremental that added/retired): `mechanism_data.downstream_rerun_required=true`. Orchestrator surfaces advisory; downstream NOT auto-triggered. **On IdempotentRerun: `false` unconditionally (SC-3)** — no re-check; an idempotent pass changed nothing, so it raises no downstream obligation. (A downstream pass added or removed since the prior producing run is the orchestrator's concern — it runs because it has not yet run, not because Pass 3d flags it — so a stale `false` here is correct by design, not an omission.)
 
 **4.4.6 Transaction.** Single transaction: insert (and on FullRerun retire) Requirements; replace `RequirementRegister.member_ids` with `query_all_active_requirement_ids(project_id)` (project-wide, all rows, active); write the AnalysisPass. On rollback: `execution_status="Failed"`; pre-run state preserved.
 
@@ -789,7 +808,7 @@ Mode-discipline decorator pattern (Row 4 Applied §4.7), identical structure to 
 
 ## 7. Audit Trail Population
 
-AnalysisPass `outputs` for `mechanism="RequirementDerivation"`. All fields required; zero-value arrays `[]`. **`mechanism_data` naming (resolves Row 3 OQ-3d-02): this spec adopts the sibling's `mechanism_data` convention** — not `requirement_data` — for consistency with the Domain Derivation spec and with the existing production run files, which already emit `mechanism_data`. `execution_warnings` is a **standard top-level AnalysisPass field**, not nested in `mechanism_data` (same as the sibling §7).
+AnalysisPass `outputs` for `mechanism="RequirementDerivation"`. All fields required; zero-value arrays `[]`. **`mechanism_data` naming (resolves Row 3 OQ-3d-02): this spec adopts the sibling's `mechanism_data` convention** — not `requirement_data` — for consistency with the Domain Derivation spec and with the existing production run files, which already emit `mechanism_data`. `execution_warnings`, `ai_model_fingerprints`, and `concern_entities` are **standard top-level `outputs` fields**, siblings of `mechanism_data`, NOT nested inside it (same as the sibling §7; matches `__init__.py`).
 
 `execution_warnings` types: `no_cci_input` (§4.1 → PartialSuccess); `cci_referential_integrity_violation` (info); `incremental_fallback_to_fullrerun` (→ PartialSuccess); `fit_criteria_empty_stripped`, `performance_missing_fit_criteria`, `duplicate_requirement_collapsed`, `requirement_count_advisory`, `incremental_ref_outside_new_set`, `chk3d05_repair_performed`, `chk3d05_repair_failed`, `subject_vocabulary_mismatch` (info); `path_r_parse_failure`, `path_r_ai_error`, `path_r_invalid_refines_refs` (Path-R batch failures, §4.2); `empty_seed_set_upstream_gap` (GAP-2, rows ≥ 2 with no surviving parent); `chk3d10_seed_extinct` (hard — persistent unrefined seed, §CHK-3d-10), `chk3d10_repair_performed`, `chk3d10_repair_failed`; `atomicity_possible_exception` (CHK-3d-09 edge); `ver_3d_17_fail`, `ver_3d_18_fail`, `ver_3d_19_entity_grade_violations` (DD-binding VER gates).
 
@@ -815,7 +834,7 @@ AnalysisPass `outputs` for `mechanism="RequirementDerivation"`. All fields requi
     "duplicate_requirements_collapsed": [],         // [{kept_statement, collapsed_count}]
     "subject_vocabulary_flags":  [],                // [{requirement_id, row, detected_subject}] — CHK-3d-08
     "concern_atomicity_flags":   [],                // [{requirement_id, cci_refs, classification_types, columns}] — ADVC-3d-03
-    "dd_binding":                { "presented": 0, "resolved": 0, "flagged": [] }, // v0.7: §4.4.3b DD resolve-and-record audit
+    "dd_binding":                { "terms_presented": 18, "resolved": 16, "new_canonical": 7, "synonyms_recorded": 9, "relationships_recorded": 2, "values_recorded": 1, "dd_zero_term": [], "dd_unresolved": [] }, // v0.7: §4.4.3b DD resolve-and-record audit (keys per §4.4.3b / VER-3d-17)
 
     // --- Stage 4 ---
     "requirement_count_produced": 5,
@@ -831,14 +850,16 @@ AnalysisPass `outputs` for `mechanism="RequirementDerivation"`. All fields requi
     "retirement_mapping":        [],                // [{old_requirement_id, inferred_successor_requirement_id}]
 
     // --- Mode discipline ---
-    "mode_violations":           [],
+    "mode_violations":           []
+  },
 
-    // --- AI fingerprints (all IM calls this run) ---
-    "ai_model_fingerprints": [
-      { "stage": "stage2_domain_D001", "model": "claude-sonnet-4-20250514",
-        "input_tokens": 0, "output_tokens": 0 }
-    ]
-  }
+  // --- top-level outputs siblings of mechanism_data (NOT nested; per §7 prose / __init__.py) ---
+  "execution_warnings":  [],
+  "ai_model_fingerprints": [                          // all IM calls this run
+    { "stage": "stage2_domain_D001", "model": "claude-sonnet-4-20250514",
+      "input_tokens": 0, "output_tokens": 0 }
+  ],
+  "concern_entities":    []
 }
 ```
 
@@ -1012,7 +1033,7 @@ v0.1 was implemented and is the version behind the PMT Row 1 and NQPS Row 1 prod
 ### 12.5 Replit Agent task structure
 
 **Primary inputs:**
-- This spec (Row 4 Requirement Derivation v0.20) — implementation authority (DDL §5.1, schemas §5.2, guidance §5.4)
+- This spec (Row 4 Requirement Derivation v0.23) — implementation authority (DDL §5.1, schemas §5.2, guidance §5.4)
 - Row 3 Requirement Derivation v0.1 — logical authority (stage logic, VER/PLB intent)
 - Row 4 Domain Derivation v0.24 — structural sibling (four-stage pattern, audit/fingerprint conventions)
 - Row 4 Understanding §14 — framework (module structure, ProjectProfile params, VER→pytest, fixtures)
@@ -1092,7 +1113,7 @@ v0.6 adds the interrogative-elaboration guidance that v0.5 explicitly deferred (
 
 ## Document End
 
-End of SysEngage Row 4 Mechanism: Requirement Derivation v0.20. (v0.20: execution_status vocabulary standardised — Completed→Success, CompletedWithWarnings→PartialSuccess, Skipped retired (IdempotentRerun = Success + idempotent flag); Failed unchanged. Label rename, no logic change.) (v0.19: Path-R batching reconciled — token-ceiling-driven ≤15-seed batches, not one call; §7 audit example + warning types completed; version stamps swept. v0.18: Stage 4 connection-lifecycle conformance to Common Implementation Reference §1 — invalidate → refresh_engine_pool → fresh session across the IM boundary, validated PMT rows 1–5.)
+End of SysEngage Row 4 Mechanism: Requirement Derivation v0.23. (v0.23: SC-6 — §7 example places ai_model_fingerprints (and execution_warnings, concern_entities) at top-level outputs, siblings of mechanism_data, matching the implementation; example-structure fix.) (v0.22: §7 dd_binding example keys corrected to the canonical §4.4.3b / VER-3d-17 shape; example-key fix, no logic change.) (v0.21: five spec-silence points aligned to implementation — SC-1 any-domain IncrementalRerun fallback; SC-2/5 full IdempotentRerun mechanism_data sourced from prior pass; SC-3 downstream_rerun_required=false on IdempotentRerun; SC-4 repair AI-call output-budget table §4.3.) (v0.20: execution_status vocabulary standardised — Completed→Success, CompletedWithWarnings→PartialSuccess, Skipped retired (IdempotentRerun = Success + idempotent flag); Failed unchanged. Label rename, no logic change.) (v0.19: Path-R batching reconciled — token-ceiling-driven ≤15-seed batches, not one call; §7 audit example + warning types completed; version stamps swept. v0.18: Stage 4 connection-lifecycle conformance to Common Implementation Reference §1 — invalidate → refresh_engine_pool → fresh session across the IM boundary, validated PMT rows 1–5.)
 
 Physical realisation of the Row 3 (logical) Requirement Derivation spec v0.7, against ledger v2.15. Reconciled type/atomicity/schema (v0.5) + interrogative elaboration (v0.6) + DD Object-slot binding (v0.7) + DD entity-reduction extraction (v0.8) + Row 2 subject taxonomy / boundary test (v0.9) + **Row 1 domain-entity vocabulary preservation (v0.10)**: §5.4 REQUIREMENT_ROW_GUIDANCE["1"] gains a source-entity-preservation rule — Row 1 abstraction lives in subject and verb, not in renaming domain entities; keep the source's domain nouns (task, reward, earnings), do not coin abstract paraphrases. Fixes the empty-Row-1-DD / zero-cross-row-recall failure at its root (entity-paraphrase left no entity to extract). The fix also removes the need for cross-abstraction DD synonymy: one entity, one name, all rows. §5.4 four-class Row 2 subjects; CHK-3d-08 widened taxonomy; CHK-3d-09 hard atomicity; ADVC-3d-02 advisory; DD binding §4.4.3a (entity reduction); VER-3d-17/18/19. `refines_refs` populated by Requirement Matching (Row 3/4 v0.3). F80 Open; F81 Open; F82/F87/F88/F89/F90 derivation portions realised here; Row 2 subject taxonomy realises R2-AMEND-9 / OD-R2-30.
 

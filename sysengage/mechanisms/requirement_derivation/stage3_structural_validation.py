@@ -1,7 +1,7 @@
 """
 Stage 3 — Structural Validation (DM, with conditional IM repair).
 
-Per Requirement Derivation Mechanism Spec v0.20 §4.3:
+Per Requirement Derivation Mechanism Spec v0.24 §4.3:
   All checks run in sequence on the accumulated proposal set. Pure in-memory
   operations except the Non-Loss repair prompt (IM conditional sub-act).
 
@@ -22,11 +22,16 @@ Per Requirement Derivation Mechanism Spec v0.20 §4.3:
              at Row 2 is now legitimate. Mismatch logs subject_vocabulary_mismatch in
              execution_warnings and records the flag in subject_vocabulary_flags.
              Does NOT reject the Requirement or block production.
-  CHK-3d-09  Typed-slot atomicity check (decidable, HARD; realises F88).
-             Calls core.slots.check_atomicity per proposal. Hard violations reject
-             the proposal; its CCIs return to orphan pool and are re-covered via a
-             second CHK-3d-05 repair attempt (repair prompt instructs atomic
-             single-obligation statements). Soft violations log advisory.
+  CHK-3d-09  Typed-slot atomicity check (decidable, HARD; realises F88 + F98 v0.24).
+             Calls core.slots.check_atomicity per proposal. Hard violations:
+               conjoined_predicate (F98): two distinct finite verb phrases under one
+                 'shall' → in-place decompose repair via _run_conjoined_decompose
+                 (NOT the orphan-pool path, which risks dropping one half). If
+                 decompose succeeds, the atomic children replace the compound in
+                 surviving proposals. execution_warnings: conjoined_predicate_hard_reject
+                 (at detection), chk3d09_decompose_performed (on success).
+               All other hard violations: CCIs return to orphan pool → second
+                 CHK-3d-05 repair attempt. Soft violations log advisory.
   ADVC-3d-01 Requirement-per-Domain soft bounds advisory.
   ADVC-3d-02 Interrogative slot-completeness advisory (v0.6). Warns when a surviving
              proposal may be missing a type-required slot (Functional: Subject/Action/
@@ -49,6 +54,9 @@ from typing import Any
 
 from core.ai_client import MODEL, get_ai_client
 from core.slots import check_atomicity, violation_summary
+from mechanisms.requirement_derivation.prompts.requirement_conjoined_decompose_prompt import (
+    build_conjoined_decompose_prompt,
+)
 from mechanisms.requirement_derivation.prompts.requirement_refinement_prompt import (
     build_requirement_refinement_prompt,
 )
@@ -204,6 +212,82 @@ def _run_repair(
             )
         )
     return repair_proposals
+
+
+def _run_conjoined_decompose(
+    proposal: TaggedProposal,
+    *,
+    result: Stage3Result,
+    row_ref: int,
+) -> list[TaggedProposal]:
+    """
+    F98 CHK-3d-09 in-place decompose repair for conjoined-predicate violations (v0.24).
+
+    Re-expresses one compound statement (two distinct finite verb phrases under one
+    'shall') as N≥2 atomic statements, each carrying a single obligation. Any
+    inter-half dependency is expressed as a Condition slot on the dependent statement.
+
+    This is NOT the orphan-pool / CHK-3d-05 path — the decompose replaces the
+    compound in-place so no CCI is dropped. The existing CCIs are distributed (or
+    duplicated as needed) across the atomic children by the AI.
+
+    Returns TaggedProposal list (may be empty on AI failure; caller then falls through
+    to the standard orphan-pool detection for the unrecovered CCIs).
+    Mutates result.ai_model_fingerprints and result.execution_warnings.
+    """
+    decompose_prompt = build_conjoined_decompose_prompt(
+        row_ref=row_ref,
+        compound_statement=proposal.statement,
+        requirement_type=proposal.requirement_type,
+        cci_refs=proposal.cci_refs,
+        rationale=proposal.rationale,
+        fit_criteria=proposal.fit_criteria,
+        verification_method=proposal.verification_method,
+        priority=proposal.priority,
+        confidence=proposal.confidence,
+    )
+
+    parsed_decompose: list[RepairRequirementProposal] | None = None
+    try:
+        msg, fp = _call_repair_ai(decompose_prompt, max_tokens=4096)
+        fp["stage"] = "stage3_chk3d09_decompose"
+        result.ai_model_fingerprints.append(fp)
+        parsed_decompose = _parse_repair_response(msg.content[0].text)
+    except Exception as exc:
+        _log.warning("CHK-3d-09 decompose AI call failed: %s", exc)
+        result.execution_warnings.append({
+            "type": "conjoined_predicate_decompose_failed",
+            "source_domain_id": proposal.source_domain_id,
+            "detail": str(exc),
+        })
+
+    if not parsed_decompose:
+        if not any(
+            w.get("type") == "conjoined_predicate_decompose_failed"
+            and w.get("source_domain_id") == proposal.source_domain_id
+            for w in result.execution_warnings
+        ):
+            result.execution_warnings.append({
+                "type": "conjoined_predicate_decompose_failed",
+                "source_domain_id": proposal.source_domain_id,
+            })
+        return []
+
+    return [
+        TaggedProposal(
+            source_domain_id=proposal.source_domain_id,
+            statement=rp.statement,
+            requirement_type=rp.requirement_type,
+            cci_refs=list(rp.cci_refs),
+            refines_refs=list(proposal.refines_refs),
+            rationale=rp.rationale,
+            fit_criteria=rp.fit_criteria,
+            verification_method=rp.verification_method,
+            priority=rp.priority,
+            confidence=rp.confidence,
+        )
+        for rp in parsed_decompose
+    ]
 
 
 def run_stage3(
@@ -474,7 +558,18 @@ def run_stage3(
             )
 
     # -------------------------------------------------------------------------
-    # CHK-3d-09 — Typed-slot atomicity (decidable, HARD; realises F88)
+    # CHK-3d-09 — Typed-slot atomicity (decidable, HARD; realises F88 + F98)
+    #
+    # F98 (v0.24) conjoined-predicate branch: when the ONLY hard violation is
+    # conjoined_predicate (two distinct finite verb phrases under one 'shall'),
+    # attempt in-place decompose repair via _run_conjoined_decompose instead of
+    # routing to the orphan pool. If decompose succeeds the atomic children
+    # replace the compound in surviving_09. If decompose fails, the proposal is
+    # absent from surviving_09 and its CCIs are detected as new_orphans_09 by
+    # the post-loop computation, which then falls back to the standard
+    # _run_repair path.
+    #
+    # All other hard violations still route to the orphan pool as before.
     # -------------------------------------------------------------------------
     pre_09_count = len(proposals)
     surviving_09: list[TaggedProposal] = []
@@ -491,6 +586,25 @@ def run_stage3(
                     "statement_preview": p.statement[:80],
                 }
             )
+            conjoined_only = all(v.rule == "conjoined_predicate" for v in hard_viols)
+            if conjoined_only:
+                # F98: in-place decompose repair — NOT the orphan-pool path.
+                result.execution_warnings.append({
+                    "type": "conjoined_predicate_hard_reject",
+                    "source_domain_id": p.source_domain_id,
+                    "statement_preview": p.statement[:80],
+                })
+                decomposed = _run_conjoined_decompose(p, result=result, row_ref=row_ref)
+                if decomposed:
+                    result.execution_warnings.append({
+                        "type": "chk3d09_decompose_performed",
+                        "source_domain_id": p.source_domain_id,
+                        "original_statement_preview": p.statement[:80],
+                        "decomposed_count": len(decomposed),
+                    })
+                    surviving_09.extend(decomposed)
+                # If decomposed is empty (AI failure), proposal absent from
+                # surviving_09 → CCIs detected as new_orphans_09 below.
         else:
             for sv in soft_viols:
                 result.execution_warnings.append(

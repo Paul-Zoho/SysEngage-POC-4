@@ -1,0 +1,33 @@
+CONTEXT: Investigating OPEN-ATOM-3 (CHK-3d-09 passing conjoined-predicate compounds)
+and OPEN-DD-1 (Data Dictionary registering whole Constraint clauses as terms), now
+diagnosed as a shared root: the slot machinery is Functional-Object-centric and doesn't
+handle the Constraint-Rule slot or multi-predicate statements. R5_Run9 evidence: all 30
+malformed DD terms trace to requirement_type=Constraint; 7 are canonicals with
+description "attribute record: <clause>" and an attributes.constraint_value.value_set.
+7 conjoined-predicate compounds ("shall <verb X> and <verb Y>") passed CHK-3d-09
+(R013/R070/R075/R092/R148/R159/R172).
+
+Please report, against the CURRENT build (file + function names, not from memory):
+
+1. CHK-3d-09 atomicity detector (Row 4 RD §4.3): show the actual compound-detection
+   logic. Specifically — does it tokenise/parse for conjoined OBJECTS only, or is there
+   any branch that would catch two conjoined PREDICATES ("shall filter X and provide Y")?
+   What exactly does it split on, and where would a conjoined-predicate test slot in?
+
+2. VER-3d-19 (entity-grade term guard): is it implemented as a REJECT (blocks the term /
+   fails the pass) or a WARN-only (logs ver_3d_19_entity_grade_violations and proceeds)?
+   Show the code path. If warn-only, what's the lift to make it reject at presentation time?
+
+3. §4.4.3a entity extraction (stage4_dd_entity_extraction): show the branch that handles a
+   Constraint requirement. Confirm whether there is an explicit "no Object slot → register
+   the Constraint-Rule clause as a canonical with description 'attribute record:' and a
+   constraint_value attribute" fallback, and where it lives. Does the extraction
+   prompt/function receive requirement_type, and does it carry any Constraint-specific
+   instruction today?
+
+4. For the entity-extraction step: is it one model call per requirement, or batched? What
+   does it receive (Object slot only, or full statement + type)? This determines whether a
+   Constraint branch is a prompt change, a code branch, or both.
+
+Do NOT change anything yet — this is a diagnosis pass to confirm implementation facts
+before the spec edit. Report findings only.
