@@ -24,14 +24,18 @@ Per Requirement Derivation Mechanism Spec v0.24 §4.3:
              Does NOT reject the Requirement or block production.
   CHK-3d-09  Typed-slot atomicity check (decidable, HARD; realises F88 + F98 v0.24).
              Calls core.slots.check_atomicity per proposal. Hard violations:
-               conjoined_predicate (F98): two distinct finite verb phrases under one
-                 'shall' → in-place decompose repair via _run_conjoined_decompose
-                 (NOT the orphan-pool path, which risks dropping one half). If
-                 decompose succeeds, the atomic children replace the compound in
-                 surviving proposals. execution_warnings: conjoined_predicate_hard_reject
-                 (at detection), chk3d09_decompose_performed (on success).
-               All other hard violations: CCIs return to orphan pool → second
-                 CHK-3d-05 repair attempt. Soft violations log advisory.
+               decompose_eligible set — conjoined_predicate, compound_object,
+                 compound_constraint_rule (F98 option A): all are separable by the
+                 detector's own logic (inseparable-single-concept is the soft PLB-3d-01
+                 edge, never reaches hard). → in-place decompose repair via
+                 _run_conjoined_decompose. If decompose succeeds, atomic children
+                 replace the compound in surviving proposals. execution_warnings:
+                 conjoined_predicate_hard_reject (at detection), chk3d09_decompose_performed
+                 (on success). compound_condition excluded — condition complexity is not
+                 obligation duplication; orphan pool → _run_repair is correct there.
+               All other hard violations (e.g. compound_condition, missing_shall):
+                 CCIs return to orphan pool → second CHK-3d-05 repair attempt.
+               Soft violations log advisory.
   ADVC-3d-01 Requirement-per-Domain soft bounds advisory.
   ADVC-3d-02 Interrogative slot-completeness advisory (v0.6). Warns when a surviving
              proposal may be missing a type-required slot (Functional: Subject/Action/
@@ -586,9 +590,15 @@ def run_stage3(
                     "statement_preview": p.statement[:80],
                 }
             )
-            conjoined_only = all(v.rule == "conjoined_predicate" for v in hard_viols)
-            if conjoined_only:
-                # F98: in-place decompose repair — NOT the orphan-pool path.
+            decompose_eligible = all(
+                v.rule in {"conjoined_predicate", "compound_object", "compound_constraint_rule"}
+                for v in hard_viols
+            )
+            if decompose_eligible:
+                # F98 (A): in-place decompose repair for any hard compound form
+                # (conjoined_predicate, compound_object, compound_constraint_rule).
+                # compound_condition stays on orphan path — it's condition complexity,
+                # not obligation duplication, so a split of the action side is wrong.
                 result.execution_warnings.append({
                     "type": "conjoined_predicate_hard_reject",
                     "source_domain_id": p.source_domain_id,
