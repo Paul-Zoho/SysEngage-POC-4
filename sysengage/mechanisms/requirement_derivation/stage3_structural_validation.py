@@ -264,17 +264,14 @@ def _run_conjoined_decompose(
             "source_domain_id": proposal.source_domain_id,
             "detail": str(exc),
         })
+        return []  # early return — avoids double-emit and cross-call suppression below
 
     if not parsed_decompose:
-        if not any(
-            w.get("type") == "conjoined_predicate_decompose_failed"
-            and w.get("source_domain_id") == proposal.source_domain_id
-            for w in result.execution_warnings
-        ):
-            result.execution_warnings.append({
-                "type": "conjoined_predicate_decompose_failed",
-                "source_domain_id": proposal.source_domain_id,
-            })
+        # Empty parse (no exception) — emit once per call, no guard needed.
+        result.execution_warnings.append({
+            "type": "conjoined_predicate_decompose_failed",
+            "source_domain_id": proposal.source_domain_id,
+        })
         return []
 
     return [
