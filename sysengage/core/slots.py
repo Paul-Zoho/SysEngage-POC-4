@@ -37,8 +37,8 @@ F98 (v0.24) — conjoined-predicate hard branch: after isolating the predicate,
 apply a verb-phrase test on both sides of any and/or conjunction:
   - Both conjuncts carry a distinct finite action verb → conjoined_predicate,
     is_hard=True (CHK-3d-09 in-place decompose repair in Stage 3).
-  - Single verb with conjoined nouns/objects → compound_object_possible_exception
-    or compound_constraint_rule_possible_exception, is_hard=True (previously soft).
+  - Single verb with conjoined nouns/objects → compound_object (Functional) or
+    compound_constraint_rule (Constraint), is_hard=True (previously soft).
   - Relative clause continuation (and which/that…, no second finite verb) → no flag.
 
 See also: Row 4 Requirement Quality Analysis v0.1 D-q-2, VER-q-06.
@@ -216,7 +216,7 @@ def _check_functional(statement: str) -> list[AtomicityViolation]:
                 ))
             else:
                 violations.append(AtomicityViolation(
-                    rule="compound_object_possible_exception",
+                    rule="compound_object",
                     detail=(
                         f"Conjunction '{and_or_in_pred[0].group()}' in predicate joins "
                         "multiple objects under one verb — compound object (F98). "
@@ -298,7 +298,7 @@ def _check_constraint(statement: str) -> list[AtomicityViolation]:
                 ))
             else:
                 violations.append(AtomicityViolation(
-                    rule="compound_constraint_rule_possible_exception",
+                    rule="compound_constraint_rule",
                     detail=(
                         f"Conjunction '{and_or_in_pred[0].group()}' in constraint predicate "
                         "joins multiple rule elements under one constraint verb — compound "
