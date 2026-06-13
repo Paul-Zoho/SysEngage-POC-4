@@ -124,8 +124,18 @@ def _raw_slot_description(slots: dict, requirement_type: str) -> str:
 
 
 # ---------------------------------------------------------------------------
-# §4.4.3a Step 1 — IM entity extraction (v0.11)
+# §4.4.3a Step 1 — IM entity extraction (v0.25 / F101 batched)
 # ---------------------------------------------------------------------------
+
+# F101 (v0.25): extraction is batched and ceiling-bounded like Stage 2 Path-R.
+# Each item's JSON output is ~15-25 tokens ({idx, terms:[...], state_qualifiers:[...]}).
+# At 40 items/batch × 25 tokens/item ≈ 1 000 output tokens — 8× headroom under the
+# 8 192 ceiling. Previously one unbatched call for the whole row overflowed the old
+# 2 048 ceiling when decompose enlarged the batch (R3_Run8: output_tokens == 2 048
+# exactly → truncated JSON → all proposals → dd_zero_term, silently).
+_EXTRACTION_BATCH_SIZE = 40
+_EXTRACTION_MAX_TOKENS = 8192
+
 
 def _extract_entity_terms_ai(
     proposals: list[TaggedProposal],
@@ -134,34 +144,57 @@ def _extract_entity_terms_ai(
     row_ref: int,
 ) -> tuple[dict[str, list[str]], dict[str, list[StateQualifier]], list[dict[str, Any]]]:
     """
-    Batch IM entity extraction for §4.4.3a Step 1 (v0.11).
+    Batched IM entity extraction for §4.4.3a Step 1 (v0.25 / F101).
 
-    Replaces the v0.7 verbatim DM slot copy. One AI call for all surviving
-    proposals; the model reduces each Object/Entity/Subject slot to its
-    bare entity-grade noun head(s) and returns any lifecycle state qualifiers
-    for attribute recording (v0.11 state-reduction rule).
+    Replaces the single-call architecture (v0.11) that could overflow the token
+    ceiling when decompose enlarged the proposal set. Proposals are processed in
+    batches of _EXTRACTION_BATCH_SIZE; each batch produces one fingerprint named
+    'stage4_dd_entity_extraction_batch<N>'.
+
+    Per-item slot-parse guard: extract_slot_terms exceptions degrade that proposal
+    to raw_slot='' (slot_parse_failed warning) rather than crashing the stage.
+
+    Truncation is a loud hard failure: if a batch's output_tokens hits the ceiling,
+    dd_extraction_batch_truncated is recorded — never swallowed silently.
 
     Returns:
-      entity_terms       — dict mapping req_id → list of bare entity-grade term strings
+      entity_terms        — dict mapping req_id → list of bare entity-grade term strings
       state_qualifier_map — dict mapping req_id → list of StateQualifier (entity, state)
-      fingerprints       — list containing one fingerprint dict (stage4_dd_entity_extraction)
-
-    On AI or parse failure, falls back to empty terms for all proposals and
-    logs a warning; does not abort the run.
+      fingerprints        — list of per-batch fingerprint dicts
     """
-    # max_tokens: sized for the full output array — each item serialises to ~15-25 tokens
-    # in the JSON response ({idx, terms:[...], state_qualifiers:[...]}). A row of ~150
-    # proposals post-decompose needs ~3 000 output tokens; 8 192 gives a 2.5× headroom
-    # consistent with the ceiling raised for Stage 2/3 calls (F98 token budget spec).
-    # Previously 2 048 — overflowed on R3_Run8 when decompose added atomic children
-    # (output_tokens hit exactly 2 048, JSON truncated, all proposals → dd_zero_term).
-    _MAX_EXTRACTION_TOKENS = 8192
+    entity_terms: dict[str, list[str]] = {req_id: [] for req_id in req_ids}
+    state_qualifier_map: dict[str, list[StateQualifier]] = {req_id: [] for req_id in req_ids}
+    fingerprints: list[dict[str, Any]] = []
 
-    try:
-        items = []
-        for i, (proposal, req_id) in enumerate(zip(proposals, req_ids)):
-            slots = extract_slot_terms(proposal.statement, proposal.requirement_type)
-            raw_slot = _raw_slot_description(slots, proposal.requirement_type)
+    batches = [
+        (proposals[i: i + _EXTRACTION_BATCH_SIZE], req_ids[i: i + _EXTRACTION_BATCH_SIZE])
+        for i in range(0, len(proposals), _EXTRACTION_BATCH_SIZE)
+    ]
+    total_batches = len(batches)
+    _log.info(
+        "Stage 4 DD extraction: %d proposals in %d batch(es) of ≤%d (row %s)",
+        len(proposals), total_batches, _EXTRACTION_BATCH_SIZE, row_ref,
+    )
+
+    for batch_num, (batch_proposals, batch_req_ids) in enumerate(batches, start=1):
+        # --- per-item slot-parse guard ---
+        items: list[dict[str, Any]] = []
+        for i, (proposal, req_id) in enumerate(zip(batch_proposals, batch_req_ids)):
+            try:
+                slots = extract_slot_terms(proposal.statement, proposal.requirement_type)
+                raw_slot = _raw_slot_description(slots, proposal.requirement_type)
+            except Exception as slot_exc:
+                _log.warning(
+                    "Slot parse failed for req %s in batch %d: %s",
+                    req_id, batch_num, slot_exc,
+                )
+                pass_data.setdefault("execution_warnings_stage4", []).append({
+                    "type": "slot_parse_failed",
+                    "batch": batch_num,
+                    "requirement_id": req_id,
+                    "error": str(slot_exc),
+                })
+                raw_slot = ""  # degrade gracefully — AI returns empty terms; lands in dd_zero_term
             items.append({
                 "idx": i,
                 "statement": proposal.statement,
@@ -171,60 +204,76 @@ def _extract_entity_terms_ai(
 
         prompt = build_dd_extraction_prompt(items)
 
-        client = get_ai_client()
-        msg = client.messages.create(
-            model=MODEL,
-            max_tokens=_MAX_EXTRACTION_TOKENS,
-            messages=[{"role": "user", "content": prompt}],
-        )
-        fingerprint = {
-            "stage": "stage4_dd_entity_extraction",
-            "model": msg.model,
-            "input_tokens": msg.usage.input_tokens,
-            "output_tokens": msg.usage.output_tokens,
-        }
-        raw_text = msg.content[0].text if msg.content else ""
+        # --- AI call ---
+        try:
+            client = get_ai_client()
+            msg = client.messages.create(
+                model=MODEL,
+                max_tokens=_EXTRACTION_MAX_TOKENS,
+                messages=[{"role": "user", "content": prompt}],
+            )
+            fp: dict[str, Any] = {
+                "stage": f"stage4_dd_entity_extraction_batch{batch_num}",
+                "model": msg.model,
+                "input_tokens": msg.usage.input_tokens,
+                "output_tokens": msg.usage.output_tokens,
+                "batch_size": len(items),
+            }
+            raw_text = msg.content[0].text if msg.content else ""
 
-        # Detect token-ceiling overflow before attempting parse — truncated JSON
-        # produces a silent all-empty result that is hard to diagnose post hoc.
-        if msg.usage.output_tokens >= _MAX_EXTRACTION_TOKENS:
+            # --- truncation detection (loud hard failure, never silent) ---
+            if msg.usage.output_tokens >= _EXTRACTION_MAX_TOKENS:
+                _log.warning(
+                    "DD extraction batch %d/%d hit token ceiling (%d); "
+                    "batch proposals recorded as empty (dd_extraction_batch_truncated)",
+                    batch_num, total_batches, _EXTRACTION_MAX_TOKENS,
+                )
+                pass_data.setdefault("execution_warnings_stage4", []).append({
+                    "type": "dd_extraction_batch_truncated",
+                    "batch": batch_num,
+                    "batch_size": len(items),
+                    "output_tokens": msg.usage.output_tokens,
+                    "max_tokens": _EXTRACTION_MAX_TOKENS,
+                    "detail": "output_tokens == max_tokens; JSON likely truncated; batch proposals → empty",
+                })
+                fp["token_ceiling_hit"] = True
+                fingerprints.append(fp)
+                continue  # batch_req_ids already initialised to [] in entity_terms
+
+        except Exception as exc:
             _log.warning(
-                "DD entity extraction hit max_tokens ceiling (%d) — response may be "
-                "truncated; falling back to empty terms for all proposals",
-                _MAX_EXTRACTION_TOKENS,
+                "DD extraction batch %d/%d AI call failed: %s — batch proposals → empty",
+                batch_num, total_batches, exc,
             )
             pass_data.setdefault("execution_warnings_stage4", []).append({
-                "type": "dd_entity_extraction_token_ceiling",
-                "output_tokens": msg.usage.output_tokens,
-                "max_tokens": _MAX_EXTRACTION_TOKENS,
-                "detail": "output_tokens == max_tokens; response likely truncated",
+                "type": "dd_entity_extraction_ai_error",
+                "batch": batch_num,
+                "error": str(exc),
             })
-            fingerprint["token_ceiling_hit"] = True
-            return {req_id: [] for req_id in req_ids}, {req_id: [] for req_id in req_ids}, [fingerprint]
+            fingerprints.append({
+                "stage": f"stage4_dd_entity_extraction_batch{batch_num}",
+                "model": MODEL,
+                "input_tokens": 0,
+                "output_tokens": 0,
+                "batch_size": len(items),
+                "error": str(exc),
+            })
+            continue
 
-    except Exception as exc:
-        _log.warning("DD entity extraction AI call failed: %s — using empty terms", exc)
-        pass_data.setdefault("execution_warnings_stage4", []).append({
-            "type": "dd_entity_extraction_ai_error",
-            "error": str(exc),
-        })
-        fingerprint = {
-            "stage": "stage4_dd_entity_extraction",
-            "model": MODEL,
-            "input_tokens": 0,
-            "output_tokens": 0,
-            "error": str(exc),
-        }
-        return {req_id: [] for req_id in req_ids}, {req_id: [] for req_id in req_ids}, [fingerprint]
+        # --- parse response (idx within batch → batch_req_ids) ---
+        batch_terms, batch_sq = _parse_extraction_response(raw_text, batch_req_ids, pass_data)
+        for req_id in batch_req_ids:
+            entity_terms[req_id] = batch_terms.get(req_id, [])
+            state_qualifier_map[req_id] = batch_sq.get(req_id, [])
+        fingerprints.append(fp)
 
-    entity_terms, state_qualifier_map = _parse_extraction_response(raw_text, req_ids, pass_data)
     if not any(entity_terms.values()):
         pass_data.setdefault("execution_warnings_stage4", []).append({
             "type": "dd_entity_extraction_all_empty",
-            "detail": "AI entity extraction returned no terms for any proposal",
+            "detail": "AI entity extraction returned no terms for any proposal across all batches",
         })
 
-    return entity_terms, state_qualifier_map, [fingerprint]
+    return entity_terms, state_qualifier_map, fingerprints
 
 
 def _parse_extraction_response(
