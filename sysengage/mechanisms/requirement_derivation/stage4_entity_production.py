@@ -149,24 +149,32 @@ def _extract_entity_terms_ai(
     On AI or parse failure, falls back to empty terms for all proposals and
     logs a warning; does not abort the run.
     """
-    items = []
-    for i, (proposal, req_id) in enumerate(zip(proposals, req_ids)):
-        slots = extract_slot_terms(proposal.statement, proposal.requirement_type)
-        raw_slot = _raw_slot_description(slots, proposal.requirement_type)
-        items.append({
-            "idx": i,
-            "statement": proposal.statement,
-            "requirement_type": proposal.requirement_type,
-            "raw_slot": raw_slot,
-        })
-
-    prompt = build_dd_extraction_prompt(items)
+    # max_tokens: sized for the full output array — each item serialises to ~15-25 tokens
+    # in the JSON response ({idx, terms:[...], state_qualifiers:[...]}). A row of ~150
+    # proposals post-decompose needs ~3 000 output tokens; 8 192 gives a 2.5× headroom
+    # consistent with the ceiling raised for Stage 2/3 calls (F98 token budget spec).
+    # Previously 2 048 — overflowed on R3_Run8 when decompose added atomic children
+    # (output_tokens hit exactly 2 048, JSON truncated, all proposals → dd_zero_term).
+    _MAX_EXTRACTION_TOKENS = 8192
 
     try:
+        items = []
+        for i, (proposal, req_id) in enumerate(zip(proposals, req_ids)):
+            slots = extract_slot_terms(proposal.statement, proposal.requirement_type)
+            raw_slot = _raw_slot_description(slots, proposal.requirement_type)
+            items.append({
+                "idx": i,
+                "statement": proposal.statement,
+                "requirement_type": proposal.requirement_type,
+                "raw_slot": raw_slot,
+            })
+
+        prompt = build_dd_extraction_prompt(items)
+
         client = get_ai_client()
         msg = client.messages.create(
             model=MODEL,
-            max_tokens=2048,
+            max_tokens=_MAX_EXTRACTION_TOKENS,
             messages=[{"role": "user", "content": prompt}],
         )
         fingerprint = {
@@ -176,6 +184,24 @@ def _extract_entity_terms_ai(
             "output_tokens": msg.usage.output_tokens,
         }
         raw_text = msg.content[0].text if msg.content else ""
+
+        # Detect token-ceiling overflow before attempting parse — truncated JSON
+        # produces a silent all-empty result that is hard to diagnose post hoc.
+        if msg.usage.output_tokens >= _MAX_EXTRACTION_TOKENS:
+            _log.warning(
+                "DD entity extraction hit max_tokens ceiling (%d) — response may be "
+                "truncated; falling back to empty terms for all proposals",
+                _MAX_EXTRACTION_TOKENS,
+            )
+            pass_data.setdefault("execution_warnings_stage4", []).append({
+                "type": "dd_entity_extraction_token_ceiling",
+                "output_tokens": msg.usage.output_tokens,
+                "max_tokens": _MAX_EXTRACTION_TOKENS,
+                "detail": "output_tokens == max_tokens; response likely truncated",
+            })
+            fingerprint["token_ceiling_hit"] = True
+            return {req_id: [] for req_id in req_ids}, {req_id: [] for req_id in req_ids}, [fingerprint]
+
     except Exception as exc:
         _log.warning("DD entity extraction AI call failed: %s — using empty terms", exc)
         pass_data.setdefault("execution_warnings_stage4", []).append({
@@ -191,7 +217,7 @@ def _extract_entity_terms_ai(
         }
         return {req_id: [] for req_id in req_ids}, {req_id: [] for req_id in req_ids}, [fingerprint]
 
-    entity_terms, state_qualifier_map = _parse_extraction_response(raw_text, req_ids)
+    entity_terms, state_qualifier_map = _parse_extraction_response(raw_text, req_ids, pass_data)
     if not any(entity_terms.values()):
         pass_data.setdefault("execution_warnings_stage4", []).append({
             "type": "dd_entity_extraction_all_empty",
@@ -204,11 +230,15 @@ def _extract_entity_terms_ai(
 def _parse_extraction_response(
     raw_text: str,
     req_ids: list[str],
+    pass_data: dict[str, Any] | None = None,
 ) -> tuple[dict[str, list[str]], dict[str, list[StateQualifier]]]:
     """
     Parse AI extraction response into a req_id → terms mapping and a
     req_id → state_qualifiers mapping (v0.11 §4.4.3a state-reduction).
     Falls back to empty dicts on parse failure.
+
+    pass_data: if provided, parse failures emit a 'dd_entity_extraction_parse_error'
+    execution_warning so the failure is visible in the output record (not only in logs).
     """
     try:
         data = json.loads(_strip_code_fence(raw_text))
@@ -227,6 +257,12 @@ def _parse_extraction_response(
             "DD entity extraction response parse failed: %s — falling back to empty terms",
             exc,
         )
+        if pass_data is not None:
+            pass_data.setdefault("execution_warnings_stage4", []).append({
+                "type": "dd_entity_extraction_parse_error",
+                "error": str(exc),
+                "detail": "JSON parse of AI extraction response failed; all proposals → empty terms",
+            })
         empty_sq: dict[str, list[StateQualifier]] = {req_id: [] for req_id in req_ids}
         return {req_id: [] for req_id in req_ids}, empty_sq
 
