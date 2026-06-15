@@ -530,11 +530,14 @@ def _run_dd_binding(
     values_recorded: int = 0
     # dd_unresolved: DD service flagged entries only (VER-3d-17 scope)
     dd_unresolved: list[dict[str, Any]] = []
+    # VER-3d-23 clause 1: track which req_ids contributed ≥1 resolve-presented term
+    reqs_with_terms: set[str] = set()
 
     for op in ops:
         try:
             if op["op"] == "resolve":
                 terms_presented += 1
+                reqs_with_terms.add(op["provenance_ref"])
                 result = resolve_and_record(op["term"], op["context"], op["provenance_ref"])
                 outcome = result.get("outcome", "flagged")
                 if outcome == "flagged":
@@ -583,6 +586,55 @@ def _run_dd_binding(
                 "provenance_ref": op.get("provenance_ref", "?"),
                 "error": str(exc),
             })
+
+    # --- VER-3d-23: three-clause completeness invariant (v0.25 corrected) -------
+    # Clause 1 — requirement-level completeness:
+    #   |reqs contributing ≥1 presented term| + |dd_zero_term| == row req count
+    #   dd_zero_term may contain multiple entries per req_id (one per VER-3d-19
+    #   rejected term); use unique req_ids.
+    zero_term_req_ids: set[str] = {e["requirement_id"] for e in zero_term_entries}
+    reqs_accounted: int = len(reqs_with_terms) + len(zero_term_req_ids)
+    row_req_count: int = len(req_ids)
+    ver23_c1_ok: bool = reqs_accounted == row_req_count
+
+    # Clause 2 — term-level consistency:
+    #   terms_presented == resolved + |dd_unresolved|
+    ver23_c2_ok: bool = terms_presented == resolved + len(dd_unresolved)
+
+    # Clause 3 — no swallowed truncation:
+    #   no dd_extraction_batch_truncated warning recorded
+    truncation_batches = [
+        w for w in pass_data.get("execution_warnings_stage4", [])
+        if w.get("type") == "dd_extraction_batch_truncated"
+    ]
+    ver23_c3_ok: bool = len(truncation_batches) == 0
+
+    if not (ver23_c1_ok and ver23_c2_ok and ver23_c3_ok):
+        ver23_detail: dict[str, Any] = {}
+        if not ver23_c1_ok:
+            ver23_detail["clause1_req_completeness"] = {
+                "reqs_with_terms": len(reqs_with_terms),
+                "dd_zero_term_unique_reqs": len(zero_term_req_ids),
+                "accounted": reqs_accounted,
+                "row_req_count": row_req_count,
+                "gap": row_req_count - reqs_accounted,
+            }
+        if not ver23_c2_ok:
+            ver23_detail["clause2_term_consistency"] = {
+                "terms_presented": terms_presented,
+                "resolved": resolved,
+                "dd_unresolved_count": len(dd_unresolved),
+                "delta": terms_presented - (resolved + len(dd_unresolved)),
+            }
+        if not ver23_c3_ok:
+            ver23_detail["clause3_no_truncation"] = {
+                "truncated_batch_count": len(truncation_batches),
+            }
+        _log.warning("VER-3d-23 failed: %s", ver23_detail)
+        pass_data.setdefault("execution_warnings_stage4", []).append({
+            "type": "ver_3d_23_fail",
+            "detail": ver23_detail,
+        })
 
     audit: dict[str, Any] = {
         "terms_presented": terms_presented,

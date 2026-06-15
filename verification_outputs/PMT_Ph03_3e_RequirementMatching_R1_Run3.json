@@ -1,0 +1,1951 @@
+{
+  "sysengage_ledger_version": "2.15",
+  "schema_id": "sysengage.ledger.instance.v2_15",
+  "row_target": "1",
+  "run_id": "b873f1cf-3590-4dbf-a588-9cd8acb7c2b3",
+  "created_utc": "2026-06-15T17:09:18.149120+00:00",
+  "generator": {
+    "name": "sysengage-ledger-export",
+    "version": "1.0"
+  },
+  "elements": [
+    {
+      "element_type": "Source",
+      "element_id": "S4689",
+      "payload": {
+        "source_id": "S4689",
+        "source_text": "High Level Description",
+        "segmentation_context": "heading",
+        "input_material_ref": "/home/runner/workspace/verification_inputs/The Pocket Money Tracker System v1.docx",
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_type": "Source",
+      "element_id": "S4690",
+      "payload": {
+        "source_id": "S4690",
+        "source_text": "The pocket money tracker system allows children to claim pocket money tasks as they are completed throughout the week.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "/home/runner/workspace/verification_inputs/The Pocket Money Tracker System v1.docx",
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_type": "Source",
+      "element_id": "S4691",
+      "payload": {
+        "source_id": "S4691",
+        "source_text": " Parents can detail tasks that should be completed and the monetary amount earned for that task.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "/home/runner/workspace/verification_inputs/The Pocket Money Tracker System v1.docx",
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_type": "Source",
+      "element_id": "S4692",
+      "payload": {
+        "source_id": "S4692",
+        "source_text": " As a task is completed it is linked to the child that completed it.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "/home/runner/workspace/verification_inputs/The Pocket Money Tracker System v1.docx",
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_type": "Source",
+      "element_id": "S4693",
+      "payload": {
+        "source_id": "S4693",
+        "source_text": " The children should be able to see the available tasks and the tasks they have completed that week.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "/home/runner/workspace/verification_inputs/The Pocket Money Tracker System v1.docx",
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_type": "Source",
+      "element_id": "S4694",
+      "payload": {
+        "source_id": "S4694",
+        "source_text": " At the end of each week the children can see the total amount they have earned that week.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "/home/runner/workspace/verification_inputs/The Pocket Money Tracker System v1.docx",
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_type": "Source",
+      "element_id": "S4695",
+      "payload": {
+        "source_id": "S4695",
+        "source_text": " The Parents can also see a report of how much each child has earned and the tasks they completed so that they can provide the pocket money earned to each child.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "/home/runner/workspace/verification_inputs/The Pocket Money Tracker System v1.docx",
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_type": "Source",
+      "element_id": "S4696",
+      "payload": {
+        "source_id": "S4696",
+        "source_text": " At the start of the next week all tasks become available again to be claimed.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "/home/runner/workspace/verification_inputs/The Pocket Money Tracker System v1.docx",
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_type": "Source",
+      "element_id": "S4697",
+      "payload": {
+        "source_id": "S4697",
+        "source_text": " Historical task data shall be available.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "/home/runner/workspace/verification_inputs/The Pocket Money Tracker System v1.docx",
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_type": "Source",
+      "element_id": "S4698",
+      "payload": {
+        "source_id": "S4698",
+        "source_text": " The resulting system shall be able to operate on iOS 16, Android 9 and Windows 11 or later.",
+        "segmentation_context": "sentence in prose",
+        "input_material_ref": "/home/runner/workspace/verification_inputs/The Pocket Money Tracker System v1.docx",
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_type": "SourceRegister",
+      "element_id": "SOURCE_REG001",
+      "payload": {
+        "register_id": "SOURCE_REG001",
+        "register_type": "Source",
+        "member_ids": [
+          "S4689",
+          "S4690",
+          "S4691",
+          "S4692",
+          "S4693",
+          "S4694",
+          "S4695",
+          "S4696",
+          "S4697",
+          "S4698"
+        ],
+        "completeness_rule": "This register SHALL contain the identifiers of ALL Source elements present in the ledger.",
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_type": "AnalysisPass",
+      "element_id": "P1686",
+      "payload": {
+        "pass_id": "P1686",
+        "pass_type": "Universal",
+        "mechanism": "SourceCapture",
+        "evaluated_scope": "All input material in this project",
+        "execution_status": "Success",
+        "mode_active": "LPM",
+        "declared_transformation_modes": [
+          "LPM"
+        ],
+        "outputs": {
+          "read_witness": {
+            "file_path": "/home/runner/workspace/verification_inputs/The Pocket Money Tracker System v1.docx",
+            "read_mode": "Full",
+            "byte_count": 13803,
+            "input_hash": "5d66954e4d33dda146d247e09c75a371789b83e04396eb7f4d9b69f6996e35a0",
+            "character_count": 902,
+            "format_detected": "docx",
+            "partial_failure_detail": null,
+            "read_completion_status": true
+          },
+          "mechanism_data": {
+            "source_ids": [
+              "S4689",
+              "S4690",
+              "S4691",
+              "S4692",
+              "S4693",
+              "S4694",
+              "S4695",
+              "S4696",
+              "S4697",
+              "S4698"
+            ],
+            "source_count": 10,
+            "segment_count": 1,
+            "source_atom_count": 0,
+            "non_text_source_ids": [],
+            "cross_source_ordering": [],
+            "source_with_decoding_issues_ids": []
+          },
+          "mode_violations": []
+        },
+        "pass_started_at": "2026-06-15T17:05:31.011582+00:00",
+        "confidence": 1.0,
+        "pass_completed_at": "2026-06-15T17:05:36.338399+00:00",
+        "elapsed_ms": 5326
+      }
+    },
+    {
+      "element_type": "AnalysisPass",
+      "element_id": "P1687",
+      "payload": {
+        "pass_id": "P1687",
+        "pass_type": "Per-row",
+        "mechanism": "RowLensSourceReanalysis",
+        "evaluated_scope": "All Sources (Row 1)",
+        "execution_status": "Success",
+        "mode_active": "IM",
+        "declared_transformation_modes": [
+          "IM",
+          "DM",
+          "LPM"
+        ],
+        "outputs": {
+          "row_lens_data": {
+            "row_ref": 1,
+            "source_count": 10,
+            "out_of_scope_refs": [
+              "S4689",
+              "S4692",
+              "S4696",
+              "S4698"
+            ],
+            "out_of_scope_count": 4,
+            "ai_model_fingerprints": [
+              "claude-sonnet-4-5-20250929 (source batch 1)"
+            ],
+            "signal_count_produced": 6,
+            "concern_count_produced": 0,
+            "concern_threshold_used": 0.65
+          },
+          "mode_violations": []
+        },
+        "pass_started_at": "2026-06-15T17:05:37.781283+00:00",
+        "confidence": 0.42400000000000004,
+        "pass_completed_at": "2026-06-15T17:05:51.116466+00:00",
+        "elapsed_ms": 14372
+      }
+    },
+    {
+      "element_type": "AnalysisPass",
+      "element_id": "P1688",
+      "payload": {
+        "pass_id": "P1688",
+        "pass_type": "Per-row",
+        "mechanism": "CellContentItemConstruction",
+        "evaluated_scope": "All Row 1 Signals",
+        "execution_status": "Success",
+        "mode_active": "DM",
+        "declared_transformation_modes": [
+          "IM",
+          "DM"
+        ],
+        "outputs": {
+          "cci_data": {
+            "merges": [
+              {
+                "surviving_ci_id": "CCI-ROW1-C-What-001",
+                "merged_signal_refs": [
+                  "SG915",
+                  "SG916",
+                  "SG918",
+                  "SG919"
+                ],
+                "original_descriptions": [
+                  "Task as compensated activity unit claimable by children",
+                  "Pocket money as earnings allocated to children"
+                ]
+              },
+              {
+                "surviving_ci_id": "CCI-ROW1-C-Why-002",
+                "merged_signal_refs": [
+                  "SG917",
+                  "SG918"
+                ],
+                "original_descriptions": [
+                  "Provide children with visibility into available and completed work",
+                  "Provide weekly earnings transparency to children"
+                ]
+              }
+            ],
+            "row_ref": 1,
+            "ccis_merged": 0,
+            "cells_empty": 1,
+            "ccis_created": 15,
+            "batches_failed": 0,
+            "cells_populated": 5,
+            "batches_processed": 1,
+            "enumeration_splits": [],
+            "execution_warnings": [],
+            "candidates_rejected": 0,
+            "consolidation_flags": [],
+            "integrity_violations": []
+          },
+          "mode_violations": []
+        },
+        "pass_started_at": "2026-06-15T17:05:52.690861+00:00",
+        "confidence": 0.7776470588235295,
+        "pass_completed_at": "2026-06-15T17:06:46.240915+00:00",
+        "elapsed_ms": 54588
+      }
+    },
+    {
+      "element_type": "AnalysisPass",
+      "element_id": "P1689",
+      "payload": {
+        "pass_id": "P1689",
+        "pass_type": "Universal",
+        "mechanism": "DomainDerivation",
+        "evaluated_scope": "Row 1 CCIs for project PMT_E2E",
+        "execution_status": "Success",
+        "mode_active": "IM",
+        "declared_transformation_modes": [
+          "IM",
+          "DM"
+        ],
+        "outputs": {
+          "read_witness": {
+            "row_ref": 1,
+            "cci_count": 15,
+            "project_id": "PMT_E2E"
+          },
+          "mechanism_data": {
+            "splits": [],
+            "row_ref": 1,
+            "scenario": "FirstRun",
+            "absorptions": [
+              {
+                "ci_id": "CCI-ROW1-C-When-001",
+                "absorbed_from_domain_name": "Temporal Rhythm Governance",
+                "absorbed_into_domain_name": "Work-for-Compensation Stewardship"
+              }
+            ],
+            "cci_set_hash": "cca181c08245f69ce613adf3feeefe426ab526ed0ad0ad060b17169be5688824",
+            "orphaned_ccis": [],
+            "cci_count_input": 15,
+            "mode_violations": [],
+            "domains_produced": [
+              {
+                "name": "Family Participation",
+                "domain_id": "D001",
+                "cci_ref_count": 2,
+                "cross_cutting_cci_count": 0
+              },
+              {
+                "name": "Work-for-Compensation Stewardship",
+                "domain_id": "D002",
+                "cci_ref_count": 7,
+                "cross_cutting_cci_count": 0
+              },
+              {
+                "name": "Financial Transparency Governance",
+                "domain_id": "D003",
+                "cci_ref_count": 6,
+                "cross_cutting_cci_count": 0
+              }
+            ],
+            "retirement_mapping": [],
+            "domain_split_issued": false,
+            "validation_failures": [],
+            "domain_count_retired": 0,
+            "repair_prompt_issued": false,
+            "ai_model_fingerprints": [
+              {
+                "model": "claude-sonnet-4-5-20250929",
+                "stage": "stage2_primary",
+                "input_tokens": 1683,
+                "output_tokens": 554
+              },
+              {
+                "model": "claude-sonnet-4-5-20250929",
+                "stage": "stage3_chk3c07_repair",
+                "input_tokens": 1365,
+                "output_tokens": 132
+              }
+            ],
+            "domain_count_produced": 3,
+            "large_cci_set_advisory": false,
+            "cross_cutting_advisories": [],
+            "downstream_rerun_required": false,
+            "single_cci_absorption_issued": true
+          },
+          "mode_violations": [],
+          "execution_warnings": [
+            {
+              "type": "chk3c07_absorption_performed",
+              "count": 1
+            }
+          ]
+        },
+        "pass_started_at": "2026-06-15T17:06:48.476403+00:00",
+        "confidence": 1.0,
+        "pass_completed_at": "2026-06-15T17:07:04.083577+00:00",
+        "elapsed_ms": 15607
+      }
+    },
+    {
+      "element_type": "AnalysisPass",
+      "element_id": "P1690",
+      "payload": {
+        "pass_id": "P1690",
+        "pass_type": "Universal",
+        "mechanism": "RequirementDerivation",
+        "evaluated_scope": "Row 1 for PMT_E2E",
+        "execution_status": "Success",
+        "mode_active": "IM",
+        "declared_transformation_modes": [
+          "IM",
+          "DM"
+        ],
+        "outputs": {
+          "mechanism_data": {
+            "row_ref": 1,
+            "dd_binding": {
+              "resolved": 29,
+              "dd_zero_term": [],
+              "dd_unresolved": [],
+              "new_canonical": 9,
+              "terms_presented": 29,
+              "values_recorded": 8,
+              "synonyms_recorded": 1,
+              "relationships_recorded": 0
+            },
+            "idempotent": false,
+            "path_r_count": 0,
+            "run_scenario": "FirstRun",
+            "domain_id_set": [
+              "D001",
+              "D002",
+              "D003"
+            ],
+            "orphaned_ccis": [],
+            "seed_coverage": {},
+            "cci_count_input": 15,
+            "mode_violations": [],
+            "elaboration_gaps": [],
+            "domain_count_input": 3,
+            "retirement_mapping": [],
+            "validation_failures": [
+              {
+                "check_id": "CHK-3d-09",
+                "violation": "conjoined_predicate(hard)",
+                "source_domain_id": "D001",
+                "statement_preview": "The enterprise shall enable children to claim and complete tasks."
+              },
+              {
+                "check_id": "CHK-3d-09",
+                "violation": "compound_object(hard)",
+                "source_domain_id": "D001",
+                "statement_preview": "The enterprise shall enable parents to define tasks and distribute pocket money."
+              },
+              {
+                "check_id": "CHK-3d-09",
+                "violation": "compound_constraint_rule(hard)",
+                "source_domain_id": "D002",
+                "statement_preview": "The enterprise shall govern task claiming and earnings calculation on a weekly c"
+              },
+              {
+                "check_id": "CHK-3d-09",
+                "violation": "compound_object(hard)",
+                "source_domain_id": "D003",
+                "statement_preview": "The enterprise shall provide children with visibility into available and complet"
+              }
+            ],
+            "repair_prompt_issued": false,
+            "requirements_produced": [
+              {
+                "domain_refs": [
+                  "D001"
+                ],
+                "cci_ref_count": 1,
+                "requirement_id": "R001",
+                "requirement_type": "Functional"
+              },
+              {
+                "domain_refs": [
+                  "D001"
+                ],
+                "cci_ref_count": 1,
+                "requirement_id": "R002",
+                "requirement_type": "Functional"
+              },
+              {
+                "domain_refs": [
+                  "D001"
+                ],
+                "cci_ref_count": 1,
+                "requirement_id": "R003",
+                "requirement_type": "Functional"
+              },
+              {
+                "domain_refs": [
+                  "D001"
+                ],
+                "cci_ref_count": 1,
+                "requirement_id": "R004",
+                "requirement_type": "Functional"
+              },
+              {
+                "domain_refs": [
+                  "D002"
+                ],
+                "cci_ref_count": 1,
+                "requirement_id": "R005",
+                "requirement_type": "Structural"
+              },
+              {
+                "domain_refs": [
+                  "D002"
+                ],
+                "cci_ref_count": 1,
+                "requirement_id": "R006",
+                "requirement_type": "Structural"
+              },
+              {
+                "domain_refs": [
+                  "D002"
+                ],
+                "cci_ref_count": 1,
+                "requirement_id": "R007",
+                "requirement_type": "Structural"
+              },
+              {
+                "domain_refs": [
+                  "D002"
+                ],
+                "cci_ref_count": 2,
+                "requirement_id": "R008",
+                "requirement_type": "Functional"
+              },
+              {
+                "domain_refs": [
+                  "D002"
+                ],
+                "cci_ref_count": 1,
+                "requirement_id": "R009",
+                "requirement_type": "Functional"
+              },
+              {
+                "domain_refs": [
+                  "D002"
+                ],
+                "cci_ref_count": 1,
+                "requirement_id": "R010",
+                "requirement_type": "Constraint"
+              },
+              {
+                "domain_refs": [
+                  "D002"
+                ],
+                "cci_ref_count": 1,
+                "requirement_id": "R011",
+                "requirement_type": "Constraint"
+              },
+              {
+                "domain_refs": [
+                  "D003"
+                ],
+                "cci_ref_count": 1,
+                "requirement_id": "R012",
+                "requirement_type": "Functional"
+              },
+              {
+                "domain_refs": [
+                  "D003"
+                ],
+                "cci_ref_count": 1,
+                "requirement_id": "R013",
+                "requirement_type": "Functional"
+              },
+              {
+                "domain_refs": [
+                  "D003"
+                ],
+                "cci_ref_count": 2,
+                "requirement_id": "R014",
+                "requirement_type": "Functional"
+              },
+              {
+                "domain_refs": [
+                  "D003"
+                ],
+                "cci_ref_count": 2,
+                "requirement_id": "R015",
+                "requirement_type": "Functional"
+              },
+              {
+                "domain_refs": [
+                  "D003"
+                ],
+                "cci_ref_count": 2,
+                "requirement_id": "R016",
+                "requirement_type": "Functional"
+              }
+            ],
+            "large_cci_set_advisory": false,
+            "requirement_input_hash": "2fb3ad7c864fb4f81246caf0e5e5c8edc10f7445e93b661e46ed6bd80df172a1",
+            "concern_atomicity_flags": [
+              {
+                "columns": [
+                  "How",
+                  "Why"
+                ],
+                "cci_refs": [
+                  "CCI-ROW1-C-How-001",
+                  "CCI-ROW1-C-Why-001"
+                ],
+                "classification_types": [
+                  "Goal",
+                  "Process"
+                ],
+                "requirement_id_placeholder": "proposal_8:The enterprise shall enable children to"
+              },
+              {
+                "columns": [
+                  "What",
+                  "Why"
+                ],
+                "cci_refs": [
+                  "CCI-ROW1-C-Why-002",
+                  "CCI-ROW1-C-What-003"
+                ],
+                "classification_types": [
+                  "Attribute",
+                  "Goal"
+                ],
+                "requirement_id_placeholder": "proposal_14:The enterprise shall provide children wi"
+              },
+              {
+                "columns": [
+                  "How",
+                  "Why"
+                ],
+                "cci_refs": [
+                  "CCI-ROW1-C-Why-003",
+                  "CCI-ROW1-C-How-003"
+                ],
+                "classification_types": [
+                  "Goal",
+                  "Process"
+                ],
+                "requirement_id_placeholder": "proposal_15:The enterprise shall enable accurate poc"
+              },
+              {
+                "columns": [
+                  "How",
+                  "Why"
+                ],
+                "cci_refs": [
+                  "CCI-ROW1-C-Why-004",
+                  "CCI-ROW1-C-How-004"
+                ],
+                "classification_types": [
+                  "Goal",
+                  "Process"
+                ],
+                "requirement_id_placeholder": "proposal_16:The enterprise shall maintain historical"
+              }
+            ],
+            "subject_vocabulary_flags": [],
+            "downstream_rerun_required": false,
+            "requirement_count_retired": 0,
+            "requirement_count_produced": 16,
+            "requirement_type_distribution": {
+              "Constraint": 2,
+              "Functional": 11,
+              "Structural": 3
+            },
+            "duplicate_requirements_collapsed": []
+          },
+          "concern_entities": [],
+          "execution_warnings": [
+            {
+              "type": "conjoined_predicate_hard_reject",
+              "source_domain_id": "D001",
+              "statement_preview": "The enterprise shall enable children to claim and complete tasks."
+            },
+            {
+              "type": "chk3d09_decompose_performed",
+              "decomposed_count": 2,
+              "source_domain_id": "D001",
+              "original_statement_preview": "The enterprise shall enable children to claim and complete tasks."
+            },
+            {
+              "type": "conjoined_predicate_hard_reject",
+              "source_domain_id": "D001",
+              "statement_preview": "The enterprise shall enable parents to define tasks and distribute pocket money."
+            },
+            {
+              "type": "chk3d09_decompose_performed",
+              "decomposed_count": 2,
+              "source_domain_id": "D001",
+              "original_statement_preview": "The enterprise shall enable parents to define tasks and distribute pocket money."
+            },
+            {
+              "type": "conjoined_predicate_hard_reject",
+              "source_domain_id": "D002",
+              "statement_preview": "The enterprise shall govern task claiming and earnings calculation on a weekly c"
+            },
+            {
+              "type": "chk3d09_decompose_performed",
+              "decomposed_count": 2,
+              "source_domain_id": "D002",
+              "original_statement_preview": "The enterprise shall govern task claiming and earnings calculation on a weekly c"
+            },
+            {
+              "type": "conjoined_predicate_hard_reject",
+              "source_domain_id": "D003",
+              "statement_preview": "The enterprise shall provide children with visibility into available and complet"
+            },
+            {
+              "type": "chk3d09_decompose_performed",
+              "decomposed_count": 2,
+              "source_domain_id": "D003",
+              "original_statement_preview": "The enterprise shall provide children with visibility into available and complet"
+            },
+            {
+              "type": "requirement_count_advisory",
+              "cci_count": 2,
+              "domain_id": "D001",
+              "requirement_count": 4
+            }
+          ],
+          "ai_model_fingerprints": [
+            {
+              "model": "claude-sonnet-4-5-20250929",
+              "stage": "stage2_domain_D001",
+              "input_tokens": 3350,
+              "output_tokens": 240
+            },
+            {
+              "model": "claude-sonnet-4-5-20250929",
+              "stage": "stage2_domain_D002",
+              "input_tokens": 3566,
+              "output_tokens": 719
+            },
+            {
+              "model": "claude-sonnet-4-5-20250929",
+              "stage": "stage2_domain_D003",
+              "input_tokens": 3506,
+              "output_tokens": 512
+            },
+            {
+              "model": "claude-sonnet-4-5-20250929",
+              "stage": "stage3_chk3d09_decompose",
+              "input_tokens": 3495,
+              "output_tokens": 247
+            },
+            {
+              "model": "claude-sonnet-4-5-20250929",
+              "stage": "stage3_chk3d09_decompose",
+              "input_tokens": 3498,
+              "output_tokens": 240
+            },
+            {
+              "model": "claude-sonnet-4-5-20250929",
+              "stage": "stage3_chk3d09_decompose",
+              "input_tokens": 3514,
+              "output_tokens": 260
+            },
+            {
+              "model": "claude-sonnet-4-5-20250929",
+              "stage": "stage3_chk3d09_decompose",
+              "input_tokens": 3495,
+              "output_tokens": 241
+            },
+            {
+              "model": "claude-sonnet-4-5-20250929",
+              "stage": "stage4_dd_entity_extraction_batch1",
+              "batch_size": 16,
+              "input_tokens": 1861,
+              "output_tokens": 638
+            }
+          ]
+        },
+        "pass_started_at": "2026-06-15T17:07:07.055398+00:00",
+        "confidence": 1.0,
+        "pass_completed_at": "2026-06-15T17:09:15.238673+00:00",
+        "elapsed_ms": 128183
+      }
+    },
+    {
+      "element_type": "ZachmanCell",
+      "element_id": "ZC-R1-C-How",
+      "payload": {
+        "cell_id": "ZC-R1-C-How",
+        "row_target": "1",
+        "column": "How",
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_type": "ZachmanCell",
+      "element_id": "ZC-R1-C-What",
+      "payload": {
+        "cell_id": "ZC-R1-C-What",
+        "row_target": "1",
+        "column": "What",
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_type": "ZachmanCell",
+      "element_id": "ZC-R1-C-When",
+      "payload": {
+        "cell_id": "ZC-R1-C-When",
+        "row_target": "1",
+        "column": "When",
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_type": "ZachmanCell",
+      "element_id": "ZC-R1-C-Where",
+      "payload": {
+        "cell_id": "ZC-R1-C-Where",
+        "row_target": "1",
+        "column": "Where",
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_type": "ZachmanCell",
+      "element_id": "ZC-R1-C-Who",
+      "payload": {
+        "cell_id": "ZC-R1-C-Who",
+        "row_target": "1",
+        "column": "Who",
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_type": "ZachmanCell",
+      "element_id": "ZC-R1-C-Why",
+      "payload": {
+        "cell_id": "ZC-R1-C-Why",
+        "row_target": "1",
+        "column": "Why",
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_type": "ZachmanCellRegister",
+      "element_id": "ZACHMANCELL_REG001",
+      "payload": {
+        "register_id": "ZACHMANCELL_REG001",
+        "register_type": "ZachmanCell",
+        "member_ids": [
+          "ZC-R1-C-How",
+          "ZC-R1-C-What",
+          "ZC-R1-C-When",
+          "ZC-R1-C-Where",
+          "ZC-R1-C-Who",
+          "ZC-R1-C-Why"
+        ],
+        "completeness_rule": "This register SHALL contain the identifiers of ALL ZachmanCell elements present in the ledger.",
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW1-C-How-001",
+      "payload": {
+        "ci_id": "CCI-ROW1-C-How-001",
+        "cell_id": "ZC-R1-C-How",
+        "classification_type": "Process",
+        "signal_refs": [
+          "SG915"
+        ],
+        "description": "Task claiming process enabling children to select work",
+        "confidence": 0.77,
+        "justification": "SG915 establishes claiming as a strategic process performed by children throughout the week."
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW1-C-How-002",
+      "payload": {
+        "ci_id": "CCI-ROW1-C-How-002",
+        "cell_id": "ZC-R1-C-How",
+        "classification_type": "Process",
+        "signal_refs": [
+          "SG916"
+        ],
+        "description": "Task definition process for establishing compensated activities",
+        "confidence": 0.71,
+        "justification": "SG916 identifies parental task definition as a strategically motivated process."
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW1-C-How-003",
+      "payload": {
+        "ci_id": "CCI-ROW1-C-How-003",
+        "cell_id": "ZC-R1-C-How",
+        "classification_type": "Process",
+        "signal_refs": [
+          "SG919"
+        ],
+        "description": "Reporting process enabling pocket money distribution accuracy",
+        "confidence": 0.74,
+        "justification": "SG919 identifies reporting as a strategic need for enabling accurate distribution."
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW1-C-How-004",
+      "payload": {
+        "ci_id": "CCI-ROW1-C-How-004",
+        "cell_id": "ZC-R1-C-How",
+        "classification_type": "Process",
+        "signal_refs": [
+          "SG920"
+        ],
+        "description": "Historical tracking process for past activity visibility",
+        "confidence": 0.68,
+        "justification": "SG920 establishes historical tracking as a strategic requirement, implying a process capability."
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW1-C-What-001",
+      "payload": {
+        "ci_id": "CCI-ROW1-C-What-001",
+        "cell_id": "ZC-R1-C-What",
+        "classification_type": "Entity",
+        "signal_refs": [
+          "SG915",
+          "SG916",
+          "SG918",
+          "SG919"
+        ],
+        "description": "Pocket money system comprising compensated task units claimable by children and earnings allocated to them",
+        "confidence": 0.82,
+        "justification": "SG915 and SG916 establish tasks as core strategic entities that children claim and parents define with compensation. | SG915 establishes pocket money as the core purpose; SG918 and SG919 reinforce it as a strategic entity requiring transparency and distribution."
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW1-C-What-002",
+      "payload": {
+        "ci_id": "CCI-ROW1-C-What-002",
+        "cell_id": "ZC-R1-C-What",
+        "classification_type": "Attribute",
+        "signal_refs": [
+          "SG917"
+        ],
+        "description": "Task completion status relevant to earnings calculation",
+        "confidence": 0.72,
+        "justification": "SG917 identifies completed work visibility as strategically important, implying completion status as a key attribute."
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW1-C-What-003",
+      "payload": {
+        "ci_id": "CCI-ROW1-C-What-003",
+        "cell_id": "ZC-R1-C-What",
+        "classification_type": "Attribute",
+        "signal_refs": [
+          "SG918"
+        ],
+        "description": "Weekly earnings amount for transparency reporting",
+        "confidence": 0.74,
+        "justification": "SG918 explicitly identifies weekly earnings as requiring transparency, making the amount a strategic attribute."
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW1-C-What-004",
+      "payload": {
+        "ci_id": "CCI-ROW1-C-What-004",
+        "cell_id": "ZC-R1-C-What",
+        "classification_type": "Relationship",
+        "signal_refs": [
+          "SG915"
+        ],
+        "description": "Child claims Task relationship enabling work allocation",
+        "confidence": 0.76,
+        "justification": "SG915 describes children claiming tasks as a core strategic relationship."
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW1-C-When-001",
+      "payload": {
+        "ci_id": "CCI-ROW1-C-When-001",
+        "cell_id": "ZC-R1-C-When",
+        "classification_type": "Cycle",
+        "signal_refs": [
+          "SG915",
+          "SG918"
+        ],
+        "description": "Weekly cycle governing task claiming and earnings calculation",
+        "confidence": 0.78,
+        "justification": "SG915 mentions tasks throughout the week; SG918 specifies weekly earnings, establishing a weekly strategic cycle."
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW1-C-Who-001",
+      "payload": {
+        "ci_id": "CCI-ROW1-C-Who-001",
+        "cell_id": "ZC-R1-C-Who",
+        "classification_type": "Actor",
+        "signal_refs": [
+          "SG915",
+          "SG917",
+          "SG918"
+        ],
+        "description": "Child actor claiming and completing tasks",
+        "confidence": 0.84,
+        "justification": "SG915, SG917, and SG918 identify children as primary actors claiming tasks and requiring visibility and earnings transparency."
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW1-C-Who-002",
+      "payload": {
+        "ci_id": "CCI-ROW1-C-Who-002",
+        "cell_id": "ZC-R1-C-Who",
+        "classification_type": "Actor",
+        "signal_refs": [
+          "SG916",
+          "SG919"
+        ],
+        "description": "Parent actor defining tasks and distributing pocket money",
+        "confidence": 0.79,
+        "justification": "SG916 and SG919 identify parents as actors defining tasks and using reporting for distribution."
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW1-C-Why-001",
+      "payload": {
+        "ci_id": "CCI-ROW1-C-Why-001",
+        "cell_id": "ZC-R1-C-Why",
+        "classification_type": "Goal",
+        "signal_refs": [
+          "SG915"
+        ],
+        "description": "Enable children to claim tasks for pocket money",
+        "confidence": 0.78,
+        "justification": "SG915 explicitly establishes this as the core strategic purpose."
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW1-C-Why-002",
+      "payload": {
+        "ci_id": "CCI-ROW1-C-Why-002",
+        "cell_id": "ZC-R1-C-Why",
+        "classification_type": "Goal",
+        "signal_refs": [
+          "SG917",
+          "SG918"
+        ],
+        "description": "Provide children with visibility into available and completed work, including weekly earnings transparency",
+        "confidence": 0.83,
+        "justification": "SG917 articulates motivational intent for work visibility as a strategic goal. | SG918 explicitly articulates transparency of weekly earnings as a strategic purpose."
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW1-C-Why-003",
+      "payload": {
+        "ci_id": "CCI-ROW1-C-Why-003",
+        "cell_id": "ZC-R1-C-Why",
+        "classification_type": "Goal",
+        "signal_refs": [
+          "SG919"
+        ],
+        "description": "Enable accurate pocket money distribution through reporting",
+        "confidence": 0.71,
+        "justification": "SG919 identifies the parental need for reporting to enable accurate distribution as a strategic goal."
+      }
+    },
+    {
+      "element_type": "CellContentItem",
+      "element_id": "CCI-ROW1-C-Why-004",
+      "payload": {
+        "ci_id": "CCI-ROW1-C-Why-004",
+        "cell_id": "ZC-R1-C-Why",
+        "classification_type": "Goal",
+        "signal_refs": [
+          "SG920"
+        ],
+        "description": "Maintain historical tracking capability for past activities",
+        "confidence": 0.75,
+        "justification": "SG920 expresses historical tracking as a strategic requirement, representing a goal for system capability."
+      }
+    },
+    {
+      "element_type": "CellContentItemRegister",
+      "element_id": "CELLCONTENTITEM_REG001",
+      "payload": {
+        "register_id": "CELLCONTENTITEM_REG001",
+        "register_type": "CellContentItem",
+        "member_ids": [
+          "CCI-ROW1-C-How-001",
+          "CCI-ROW1-C-How-002",
+          "CCI-ROW1-C-How-003",
+          "CCI-ROW1-C-How-004",
+          "CCI-ROW1-C-What-001",
+          "CCI-ROW1-C-What-002",
+          "CCI-ROW1-C-What-003",
+          "CCI-ROW1-C-What-004",
+          "CCI-ROW1-C-When-001",
+          "CCI-ROW1-C-Who-001",
+          "CCI-ROW1-C-Who-002",
+          "CCI-ROW1-C-Why-001",
+          "CCI-ROW1-C-Why-002",
+          "CCI-ROW1-C-Why-003",
+          "CCI-ROW1-C-Why-004"
+        ],
+        "completeness_rule": "This register SHALL contain the identifiers of ALL CellContentItem elements present in the ledger.",
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_type": "Domain",
+      "element_id": "D001",
+      "payload": {
+        "domain_id": "D001",
+        "name": "Family Participation",
+        "description": "Defines who participates in the household economy and their respective accountabilities—children as work claimants and performers, parents as work definers and compensation distributors.",
+        "row_target": "1",
+        "cell_content_item_refs": [
+          "CCI-ROW1-C-Who-001",
+          "CCI-ROW1-C-Who-002"
+        ],
+        "classification_type": "Stakeholder Accountability"
+      }
+    },
+    {
+      "element_type": "Domain",
+      "element_id": "D002",
+      "payload": {
+        "domain_id": "D002",
+        "name": "Work-for-Compensation Stewardship",
+        "description": "Enterprise commitment to maintaining a bounded system of compensated work units that children may select, perform, and receive earnings for—establishing the foundational accountability for task availability and completion-based entitlement.",
+        "row_target": "1",
+        "cell_content_item_refs": [
+          "CCI-ROW1-C-How-001",
+          "CCI-ROW1-C-How-002",
+          "CCI-ROW1-C-What-001",
+          "CCI-ROW1-C-What-002",
+          "CCI-ROW1-C-What-004",
+          "CCI-ROW1-C-When-001",
+          "CCI-ROW1-C-Why-001"
+        ],
+        "classification_type": "Core Enterprise Obligation"
+      }
+    },
+    {
+      "element_type": "Domain",
+      "element_id": "D003",
+      "payload": {
+        "domain_id": "D003",
+        "name": "Financial Transparency Governance",
+        "description": "Enterprise responsibility to provide clear visibility into earnings accrual and work history, ensuring all participants can verify compensation accuracy and trace past economic activity within the household.",
+        "row_target": "1",
+        "cell_content_item_refs": [
+          "CCI-ROW1-C-How-003",
+          "CCI-ROW1-C-How-004",
+          "CCI-ROW1-C-What-003",
+          "CCI-ROW1-C-Why-002",
+          "CCI-ROW1-C-Why-003",
+          "CCI-ROW1-C-Why-004"
+        ],
+        "classification_type": "Transparency and Accountability"
+      }
+    },
+    {
+      "element_type": "DomainRegister",
+      "element_id": "DOMAIN_REG001",
+      "payload": {
+        "register_id": "DOMAIN_REG001",
+        "register_type": "Domain",
+        "member_ids": [
+          "D001",
+          "D002",
+          "D003"
+        ],
+        "completeness_rule": "This register SHALL contain the identifiers of ALL Domain elements present in the ledger.",
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_type": "Requirement",
+      "element_id": "R001",
+      "payload": {
+        "requirement_id": "R001",
+        "statement": "The enterprise shall enable children to claim tasks.",
+        "requirement_type": "Functional",
+        "row_target": "1",
+        "confidence": 0.95,
+        "cci_refs": [
+          "CCI-ROW1-C-Who-001"
+        ],
+        "domain_refs": [
+          "D001"
+        ],
+        "answer_refs": [],
+        "refines_refs": [],
+        "rationale": "Establishes the enterprise commitment to provide capability for child participation in the household economy through task claiming.",
+        "verification_method": "Demonstration",
+        "priority": "High"
+      }
+    },
+    {
+      "element_type": "Requirement",
+      "element_id": "R002",
+      "payload": {
+        "requirement_id": "R002",
+        "statement": "The enterprise shall enable children to complete tasks.",
+        "requirement_type": "Functional",
+        "row_target": "1",
+        "confidence": 0.95,
+        "cci_refs": [
+          "CCI-ROW1-C-Who-001"
+        ],
+        "domain_refs": [
+          "D001"
+        ],
+        "answer_refs": [],
+        "refines_refs": [],
+        "rationale": "Establishes the enterprise commitment to provide capability for child participation in the household economy through task completion.",
+        "verification_method": "Demonstration",
+        "priority": "High"
+      }
+    },
+    {
+      "element_type": "Requirement",
+      "element_id": "R003",
+      "payload": {
+        "requirement_id": "R003",
+        "statement": "The enterprise shall enable parents to define tasks.",
+        "requirement_type": "Functional",
+        "row_target": "1",
+        "confidence": 0.9,
+        "cci_refs": [
+          "CCI-ROW1-C-Who-002"
+        ],
+        "domain_refs": [
+          "D001"
+        ],
+        "answer_refs": [],
+        "refines_refs": [],
+        "rationale": "Establishes the enterprise commitment to provide capability for parent participation in task definition.",
+        "verification_method": "Demonstration",
+        "priority": "High"
+      }
+    },
+    {
+      "element_type": "Requirement",
+      "element_id": "R004",
+      "payload": {
+        "requirement_id": "R004",
+        "statement": "The enterprise shall enable parents to distribute pocket money.",
+        "requirement_type": "Functional",
+        "row_target": "1",
+        "confidence": 0.9,
+        "cci_refs": [
+          "CCI-ROW1-C-Who-002"
+        ],
+        "domain_refs": [
+          "D001"
+        ],
+        "answer_refs": [],
+        "refines_refs": [],
+        "rationale": "Establishes the enterprise commitment to provide capability for parent participation in compensation distribution.",
+        "verification_method": "Demonstration",
+        "priority": "High"
+      }
+    },
+    {
+      "element_type": "Requirement",
+      "element_id": "R005",
+      "payload": {
+        "requirement_id": "R005",
+        "statement": "The enterprise shall maintain a pocket money system comprising compensated tasks claimable by children and earnings allocated to them.",
+        "requirement_type": "Structural",
+        "row_target": "1",
+        "confidence": 0.95,
+        "cci_refs": [
+          "CCI-ROW1-C-What-001"
+        ],
+        "domain_refs": [
+          "D002"
+        ],
+        "answer_refs": [],
+        "refines_refs": [],
+        "rationale": "Enterprise commitment to maintain the fundamental structural composition of the pocket money system—tasks, children, and earnings—as identified entities.",
+        "verification_method": "Inspection",
+        "priority": "High"
+      }
+    },
+    {
+      "element_type": "Requirement",
+      "element_id": "R006",
+      "payload": {
+        "requirement_id": "R006",
+        "statement": "The enterprise shall maintain task completion status for purposes of earnings calculation.",
+        "requirement_type": "Structural",
+        "row_target": "1",
+        "confidence": 0.92,
+        "cci_refs": [
+          "CCI-ROW1-C-What-002"
+        ],
+        "domain_refs": [
+          "D002"
+        ],
+        "answer_refs": [],
+        "refines_refs": [],
+        "rationale": "Enterprise accountability for the structural attribute of tasks that determines earnings entitlement.",
+        "verification_method": "Inspection",
+        "priority": "High"
+      }
+    },
+    {
+      "element_type": "Requirement",
+      "element_id": "R007",
+      "payload": {
+        "requirement_id": "R007",
+        "statement": "The enterprise shall establish the relationship between children and tasks that enables work allocation.",
+        "requirement_type": "Structural",
+        "row_target": "1",
+        "confidence": 0.93,
+        "cci_refs": [
+          "CCI-ROW1-C-What-004"
+        ],
+        "domain_refs": [
+          "D002"
+        ],
+        "answer_refs": [],
+        "refines_refs": [],
+        "rationale": "Enterprise commitment to the structural relationship enabling children to claim tasks.",
+        "verification_method": "Inspection",
+        "priority": "High"
+      }
+    },
+    {
+      "element_type": "Requirement",
+      "element_id": "R008",
+      "payload": {
+        "requirement_id": "R008",
+        "statement": "The enterprise shall enable children to claim tasks.",
+        "requirement_type": "Functional",
+        "row_target": "1",
+        "confidence": 0.94,
+        "cci_refs": [
+          "CCI-ROW1-C-How-001",
+          "CCI-ROW1-C-Why-001"
+        ],
+        "domain_refs": [
+          "D002"
+        ],
+        "answer_refs": [],
+        "refines_refs": [],
+        "rationale": "Enterprise commitment to provide the capability for children to select work, satisfying both the process obligation and the motivational goal.",
+        "verification_method": "Demonstration",
+        "priority": "High"
+      }
+    },
+    {
+      "element_type": "Requirement",
+      "element_id": "R009",
+      "payload": {
+        "requirement_id": "R009",
+        "statement": "The enterprise shall establish compensated tasks.",
+        "requirement_type": "Functional",
+        "row_target": "1",
+        "confidence": 0.91,
+        "cci_refs": [
+          "CCI-ROW1-C-How-002"
+        ],
+        "domain_refs": [
+          "D002"
+        ],
+        "answer_refs": [],
+        "refines_refs": [],
+        "rationale": "Enterprise accountability for defining the work units that constitute the compensated activities children may perform.",
+        "verification_method": "Demonstration",
+        "priority": "High"
+      }
+    },
+    {
+      "element_type": "Requirement",
+      "element_id": "R010",
+      "payload": {
+        "requirement_id": "R010",
+        "statement": "The enterprise shall govern task claiming on a weekly cycle.",
+        "requirement_type": "Constraint",
+        "row_target": "1",
+        "confidence": 0.89,
+        "cci_refs": [
+          "CCI-ROW1-C-When-001"
+        ],
+        "domain_refs": [
+          "D002"
+        ],
+        "answer_refs": [],
+        "refines_refs": [],
+        "rationale": "Enterprise commitment to a temporal governance rule bounding when task claiming occurs.",
+        "fit_criteria": "Task claiming shall recur at seven-day intervals.",
+        "verification_method": "Measurement",
+        "priority": "Medium"
+      }
+    },
+    {
+      "element_type": "Requirement",
+      "element_id": "R011",
+      "payload": {
+        "requirement_id": "R011",
+        "statement": "The enterprise shall govern earnings calculation on a weekly cycle.",
+        "requirement_type": "Constraint",
+        "row_target": "1",
+        "confidence": 0.89,
+        "cci_refs": [
+          "CCI-ROW1-C-When-001"
+        ],
+        "domain_refs": [
+          "D002"
+        ],
+        "answer_refs": [],
+        "refines_refs": [],
+        "rationale": "Enterprise commitment to a temporal governance rule bounding when earnings calculation occurs.",
+        "fit_criteria": "Earnings calculation shall recur at seven-day intervals.",
+        "verification_method": "Measurement",
+        "priority": "Medium"
+      }
+    },
+    {
+      "element_type": "Requirement",
+      "element_id": "R012",
+      "payload": {
+        "requirement_id": "R012",
+        "statement": "The enterprise shall provide children with visibility into available tasks.",
+        "requirement_type": "Functional",
+        "row_target": "1",
+        "confidence": 0.92,
+        "cci_refs": [
+          "CCI-ROW1-C-Why-002"
+        ],
+        "domain_refs": [
+          "D003"
+        ],
+        "answer_refs": [],
+        "refines_refs": [],
+        "rationale": "Enterprise commitment to enable children to view available tasks as a foundation for transparency.",
+        "verification_method": "Demonstration",
+        "priority": "High"
+      }
+    },
+    {
+      "element_type": "Requirement",
+      "element_id": "R013",
+      "payload": {
+        "requirement_id": "R013",
+        "statement": "The enterprise shall provide children with visibility into completed tasks.",
+        "requirement_type": "Functional",
+        "row_target": "1",
+        "confidence": 0.92,
+        "cci_refs": [
+          "CCI-ROW1-C-Why-002"
+        ],
+        "domain_refs": [
+          "D003"
+        ],
+        "answer_refs": [],
+        "refines_refs": [],
+        "rationale": "Enterprise commitment to enable children to view completed tasks as a foundation for transparency.",
+        "verification_method": "Demonstration",
+        "priority": "High"
+      }
+    },
+    {
+      "element_type": "Requirement",
+      "element_id": "R014",
+      "payload": {
+        "requirement_id": "R014",
+        "statement": "The enterprise shall provide children with visibility into weekly earnings.",
+        "requirement_type": "Functional",
+        "row_target": "1",
+        "confidence": 0.93,
+        "cci_refs": [
+          "CCI-ROW1-C-What-003",
+          "CCI-ROW1-C-Why-002"
+        ],
+        "domain_refs": [
+          "D003"
+        ],
+        "answer_refs": [],
+        "refines_refs": [],
+        "rationale": "Enterprise commitment to transparency regarding compensation accrual; the What/Attribute CCI identifies the earnings amount as the object of visibility.",
+        "verification_method": "Demonstration",
+        "priority": "High"
+      }
+    },
+    {
+      "element_type": "Requirement",
+      "element_id": "R015",
+      "payload": {
+        "requirement_id": "R015",
+        "statement": "The enterprise shall enable accurate pocket money distribution.",
+        "requirement_type": "Functional",
+        "row_target": "1",
+        "confidence": 0.9,
+        "cci_refs": [
+          "CCI-ROW1-C-How-003",
+          "CCI-ROW1-C-Why-003"
+        ],
+        "domain_refs": [
+          "D003"
+        ],
+        "answer_refs": [],
+        "refines_refs": [],
+        "rationale": "Enterprise obligation to support distribution accuracy through reporting capability; How/Process CCI identifies the reporting mechanism supporting this goal.",
+        "verification_method": "Test",
+        "priority": "High"
+      }
+    },
+    {
+      "element_type": "Requirement",
+      "element_id": "R016",
+      "payload": {
+        "requirement_id": "R016",
+        "statement": "The enterprise shall maintain historical records of past tasks.",
+        "requirement_type": "Functional",
+        "row_target": "1",
+        "confidence": 0.88,
+        "cci_refs": [
+          "CCI-ROW1-C-How-004",
+          "CCI-ROW1-C-Why-004"
+        ],
+        "domain_refs": [
+          "D003"
+        ],
+        "answer_refs": [],
+        "refines_refs": [],
+        "rationale": "Enterprise accountability for preserving task history to support traceability of past economic activity; How/Process CCI identifies the tracking mechanism.",
+        "verification_method": "Inspection",
+        "priority": "Medium"
+      }
+    },
+    {
+      "element_type": "RequirementRegister",
+      "element_id": "REQUIREMENT_REG001",
+      "payload": {
+        "register_id": "REQUIREMENT_REG001",
+        "register_type": "Requirement",
+        "member_ids": [
+          "R001",
+          "R002",
+          "R003",
+          "R004",
+          "R005",
+          "R006",
+          "R007",
+          "R008",
+          "R009",
+          "R010",
+          "R011",
+          "R012",
+          "R013",
+          "R014",
+          "R015",
+          "R016"
+        ],
+        "completeness_rule": "This register SHALL contain the identifiers of ALL Requirement elements present in the ledger.",
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_type": "DataDictionaryEntry",
+      "element_id": "DD001",
+      "payload": {
+        "dd_id": "DD001",
+        "entry_kind": "canonical",
+        "provenance_ref": "R001",
+        "confidence": 1.0,
+        "name": "child",
+        "description": "The enterprise shall enable children to claim tasks.",
+        "attributes": []
+      }
+    },
+    {
+      "element_type": "DataDictionaryEntry",
+      "element_id": "DD002",
+      "payload": {
+        "dd_id": "DD002",
+        "entry_kind": "canonical",
+        "provenance_ref": "R001",
+        "confidence": 0.95,
+        "name": "task",
+        "description": "The enterprise shall enable children to claim tasks.",
+        "attributes": [
+          {
+            "attr_name": "lifecycle_state",
+            "value_set": [
+              "compensated",
+              "claimable",
+              "available",
+              "completed",
+              "past"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "element_type": "DataDictionaryEntry",
+      "element_id": "DD003",
+      "payload": {
+        "dd_id": "DD003",
+        "entry_kind": "canonical",
+        "provenance_ref": "R003",
+        "confidence": 0.95,
+        "name": "parent",
+        "description": "The enterprise shall enable parents to define tasks.",
+        "attributes": []
+      }
+    },
+    {
+      "element_type": "DataDictionaryEntry",
+      "element_id": "DD004",
+      "payload": {
+        "dd_id": "DD004",
+        "entry_kind": "canonical",
+        "provenance_ref": "R004",
+        "confidence": 0.95,
+        "name": "pocket money",
+        "description": "The enterprise shall enable parents to distribute pocket money.",
+        "attributes": []
+      }
+    },
+    {
+      "element_type": "DataDictionaryEntry",
+      "element_id": "DD005",
+      "payload": {
+        "dd_id": "DD005",
+        "entry_kind": "canonical",
+        "provenance_ref": "R005",
+        "confidence": 0.92,
+        "name": "pocket money system",
+        "description": "The enterprise shall maintain a pocket money system comprising compensated tasks claimable by children and earnings allocated to them.",
+        "attributes": []
+      }
+    },
+    {
+      "element_type": "DataDictionaryEntry",
+      "element_id": "DD006",
+      "payload": {
+        "dd_id": "DD006",
+        "entry_kind": "canonical",
+        "provenance_ref": "R005",
+        "confidence": 0.92,
+        "name": "earnings",
+        "description": "The enterprise shall maintain a pocket money system comprising compensated tasks claimable by children and earnings allocated to them.",
+        "attributes": []
+      }
+    },
+    {
+      "element_type": "DataDictionaryEntry",
+      "element_id": "DD007",
+      "payload": {
+        "dd_id": "DD007",
+        "entry_kind": "canonical",
+        "provenance_ref": "R006",
+        "confidence": 0.92,
+        "name": "task completion status",
+        "description": "The enterprise shall maintain task completion status for purposes of earnings calculation.",
+        "attributes": []
+      }
+    },
+    {
+      "element_type": "DataDictionaryEntry",
+      "element_id": "DD008",
+      "payload": {
+        "dd_id": "DD008",
+        "entry_kind": "canonical",
+        "provenance_ref": "R006",
+        "confidence": 0.92,
+        "name": "earnings calculation",
+        "description": "The enterprise shall maintain task completion status for purposes of earnings calculation.",
+        "attributes": [
+          {
+            "attr_name": "constraint_value",
+            "value_set": [
+              "Earnings calculation shall recur at seven-day intervals."
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "element_type": "DataDictionaryEntry",
+      "element_id": "DD009",
+      "payload": {
+        "dd_id": "DD009",
+        "entry_kind": "canonical",
+        "provenance_ref": "R010",
+        "confidence": 0.85,
+        "name": "task claiming",
+        "description": "The enterprise shall govern task claiming on a weekly cycle.",
+        "attributes": [
+          {
+            "attr_name": "constraint_value",
+            "value_set": [
+              "Task claiming shall recur at seven-day intervals."
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "element_type": "DataDictionaryEntry",
+      "element_id": "DD010",
+      "payload": {
+        "dd_id": "DD010",
+        "entry_kind": "synonym",
+        "provenance_ref": "R015",
+        "confidence": 0.85,
+        "surface_term": "pocket money distribution",
+        "resolves_to": "DD004"
+      }
+    },
+    {
+      "element_type": "DataDictionaryRegister",
+      "element_id": "DD_REG001",
+      "payload": {
+        "register_id": "DD_REG001",
+        "register_type": "DataDictionary",
+        "member_ids": [
+          "DD001",
+          "DD002",
+          "DD003",
+          "DD004",
+          "DD005",
+          "DD006",
+          "DD007",
+          "DD008",
+          "DD009",
+          "DD010"
+        ],
+        "completeness_rule": "This register SHALL contain the identifiers of ALL DataDictionaryEntry elements present in the ledger.",
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_type": "Segment",
+      "element_id": "SEG584",
+      "payload": {
+        "segment_id": "SEG584",
+        "title": "High Level Description",
+        "source_refs": [
+          "S4689",
+          "S4690",
+          "S4691",
+          "S4692",
+          "S4693",
+          "S4694",
+          "S4695",
+          "S4696",
+          "S4697",
+          "S4698"
+        ],
+        "confidence": 1.0,
+        "description": "Section: High Level Description"
+      }
+    },
+    {
+      "element_type": "SegmentRegister",
+      "element_id": "SEGMENT_REG001",
+      "payload": {
+        "register_id": "SEGMENT_REG001",
+        "register_type": "Segment",
+        "member_ids": [
+          "SEG584"
+        ],
+        "completeness_rule": "This register SHALL contain the identifiers of ALL Segment elements present in the ledger.",
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_type": "Signal",
+      "element_id": "SG915",
+      "payload": {
+        "signal_id": "SG915",
+        "signal_type": "Intent",
+        "row_target": "1",
+        "description": "Establishes the core purpose of enabling children to claim tasks for pocket money throughout the week.",
+        "source_refs": [
+          "S4690"
+        ],
+        "confidence": 0.75
+      }
+    },
+    {
+      "element_type": "Signal",
+      "element_id": "SG916",
+      "payload": {
+        "signal_id": "SG916",
+        "signal_type": "Intent",
+        "row_target": "1",
+        "description": "Expresses the parental motivation to define compensated tasks for children.",
+        "source_refs": [
+          "S4691"
+        ],
+        "confidence": 0.7
+      }
+    },
+    {
+      "element_type": "Signal",
+      "element_id": "SG917",
+      "payload": {
+        "signal_id": "SG917",
+        "signal_type": "Intent",
+        "row_target": "1",
+        "description": "Conveys the motivational intent for children to have visibility into available and completed work.",
+        "source_refs": [
+          "S4693"
+        ],
+        "confidence": 0.68
+      }
+    },
+    {
+      "element_type": "Signal",
+      "element_id": "SG918",
+      "payload": {
+        "signal_id": "SG918",
+        "signal_type": "Intent",
+        "row_target": "1",
+        "description": "Articulates the purpose of providing children weekly earnings transparency.",
+        "source_refs": [
+          "S4694"
+        ],
+        "confidence": 0.72
+      }
+    },
+    {
+      "element_type": "Signal",
+      "element_id": "SG919",
+      "payload": {
+        "signal_id": "SG919",
+        "signal_type": "Intent",
+        "row_target": "1",
+        "description": "Identifies parental need for reporting to enable accurate pocket money distribution.",
+        "source_refs": [
+          "S4695"
+        ],
+        "confidence": 0.73
+      }
+    },
+    {
+      "element_type": "Signal",
+      "element_id": "SG920",
+      "payload": {
+        "signal_id": "SG920",
+        "signal_type": "Intent",
+        "row_target": "1",
+        "description": "Expresses the strategic requirement for historical tracking capability.",
+        "source_refs": [
+          "S4697"
+        ],
+        "confidence": 0.66
+      }
+    },
+    {
+      "element_type": "SignalRegister",
+      "element_id": "SIGNAL_REG001",
+      "payload": {
+        "register_id": "SIGNAL_REG001",
+        "register_type": "Signal",
+        "member_ids": [
+          "SG915",
+          "SG916",
+          "SG917",
+          "SG918",
+          "SG919",
+          "SG920"
+        ],
+        "completeness_rule": "This register SHALL contain the identifiers of ALL Signal elements present in the ledger.",
+        "confidence": 1.0
+      }
+    },
+    {
+      "element_type": "Stakeholder",
+      "element_id": "SH001",
+      "payload": {
+        "stakeholder_id": "SH001",
+        "name": "Practitioner SH001",
+        "role": "practitioner",
+        "stakeholder_kind": "Automated"
+      }
+    },
+    {
+      "element_type": "StakeholderRegister",
+      "element_id": "STAKEHOLDER_REG001",
+      "payload": {
+        "register_id": "STAKEHOLDER_REG001",
+        "register_type": "Stakeholder",
+        "member_ids": [
+          "SH001"
+        ],
+        "completeness_rule": "This register SHALL contain the identifiers of ALL Stakeholder elements present in the ledger.",
+        "confidence": 1.0
+      }
+    }
+  ],
+  "register_index": [
+    {
+      "register_type": "CellContentItemRegister",
+      "register_id": "CELLCONTENTITEM_REG001"
+    },
+    {
+      "register_type": "DataDictionaryRegister",
+      "register_id": "DD_REG001"
+    },
+    {
+      "register_type": "DomainRegister",
+      "register_id": "DOMAIN_REG001"
+    },
+    {
+      "register_type": "RequirementRegister",
+      "register_id": "REQUIREMENT_REG001"
+    },
+    {
+      "register_type": "SegmentRegister",
+      "register_id": "SEGMENT_REG001"
+    },
+    {
+      "register_type": "SignalRegister",
+      "register_id": "SIGNAL_REG001"
+    },
+    {
+      "register_type": "SourceRegister",
+      "register_id": "SOURCE_REG001"
+    },
+    {
+      "register_type": "StakeholderRegister",
+      "register_id": "STAKEHOLDER_REG001"
+    },
+    {
+      "register_type": "ZachmanCellRegister",
+      "register_id": "ZACHMANCELL_REG001"
+    }
+  ],
+  "content_hash": {
+    "hash_alg": "sha256",
+    "hash": "d0417df1056113e7ba46b36241646bfa2dd8bd181cc8abc36c9d0b2a74da7862"
+  }
+}
