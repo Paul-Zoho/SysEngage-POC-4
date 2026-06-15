@@ -37,7 +37,7 @@ from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 from core.ai_client import MODEL, get_ai_client
-from core.db import format_identifier, get_next_sequence_value
+from core.db import format_identifier, get_next_sequence_value, get_session, refresh_engine_pool
 from core.slots import extract_slot_terms
 from mechanisms.data_dictionary.service import (
     record_relationship,
@@ -873,6 +873,19 @@ def run_stage4(
     # used and zero_term_unresolved entries are recorded.
     dd_binding, dd_fingerprints = _run_dd_binding(proposals, new_ids, pass_data, row_ref)
     result.ai_model_fingerprints = dd_fingerprints
+
+    # Refresh the DB pool before the ledger transaction — second guard point.
+    # _run_dd_binding's AI extraction batches (F101 v0.25) idle the main session
+    # for the duration of the extraction calls (~30 s/batch × N batches); the DD
+    # binding service calls open their own sessions internally, so the main
+    # session receives no keepalive traffic during that window.  Neon can
+    # suspend and tear down the SSL session, causing the subsequent INSERT to
+    # fail (observed: R3_Run9, psycopg2.OperationalError SSL connection closed).
+    # This mirrors the pre-stage4 refresh in __init__.py but guards the
+    # stage4-internal AI window rather than the stage1–3 window.
+    session.invalidate()
+    refresh_engine_pool()
+    session = get_session()
 
     # --- 4.4.6 Ledger transaction ---
     now = datetime.now(timezone.utc)
