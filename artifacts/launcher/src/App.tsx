@@ -108,7 +108,35 @@ function LaunchPage() {
     fetchOutputs();
   }, [fetchOutputs]);
 
-  useEffect(() => { reloadConfig(); }, [reloadConfig]);
+  const connectToRun = useCallback((runId: string) => {
+    setRun({ runId, running: true, exitCode: null, logs: [] });
+    const es = new EventSource(`${API}/runs/${runId}/logs`);
+    esRef.current = es;
+    es.addEventListener("log", (e) => {
+      const line = JSON.parse((e as MessageEvent).data) as string;
+      setRun(prev => ({ ...prev, logs: [...prev.logs, line] }));
+    });
+    es.addEventListener("done", (e) => {
+      const { exitCode } = JSON.parse((e as MessageEvent).data) as { exitCode: number };
+      setRun(prev => ({ ...prev, running: false, exitCode }));
+      es.close(); esRef.current = null;
+      fetchOutputs();
+      reloadConfig();
+    });
+    es.onerror = () => { setRun(prev => ({ ...prev, running: false })); es.close(); esRef.current = null; };
+  }, [fetchOutputs, reloadConfig]);
+
+  useEffect(() => {
+    reloadConfig();
+    fetch(`${API}/runs`)
+      .then(r => r.json())
+      .then((list: Array<{ runId: string; done: boolean }>) => {
+        const active = list.find(r => !r.done);
+        if (active) connectToRun(active.runId);
+      })
+      .catch(() => {});
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     if (logRef.current) logRef.current.scrollTop = logRef.current.scrollHeight;
@@ -153,23 +181,7 @@ function LaunchPage() {
       }
 
       const { runId } = await resp.json() as { runId: string };
-      setRun(prev => ({ ...prev, runId }));
-
-      const es = new EventSource(`${API}/runs/${runId}/logs`);
-      esRef.current = es;
-
-      es.addEventListener("log", (e) => {
-        const line = JSON.parse((e as MessageEvent).data) as string;
-        setRun(prev => ({ ...prev, logs: [...prev.logs, line] }));
-      });
-      es.addEventListener("done", (e) => {
-        const { exitCode } = JSON.parse((e as MessageEvent).data) as { exitCode: number };
-        setRun(prev => ({ ...prev, running: false, exitCode }));
-        es.close(); esRef.current = null;
-        fetchOutputs();
-        reloadConfig();
-      });
-      es.onerror = () => { setRun(prev => ({ ...prev, running: false })); es.close(); esRef.current = null; };
+      connectToRun(runId);
     } catch {
       setRun(prev => ({ ...prev, running: false }));
     }
