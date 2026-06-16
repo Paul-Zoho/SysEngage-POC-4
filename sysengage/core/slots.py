@@ -41,6 +41,13 @@ apply a verb-phrase test on both sides of any and/or conjunction:
     compound_constraint_rule (Constraint), is_hard=True (previously soft).
   - Relative clause continuation (and which/that…, no second finite verb) → no flag.
 
+F103 (v0.26) — member-list carve-out: within the compound_object /
+compound_constraint_rule branch, if the predicate verb is a member-list verb
+(accept / define / consist of / contain / include), the conjunction joins
+inseparable enumeration members or definition elements — not separable
+obligations. Downgraded to is_hard=False (soft PLB-3d-01 advisory). Realises
+Row 3 RD v0.15 §4.1.1(b).
+
 See also: Row 4 Requirement Quality Analysis v0.1 D-q-2, VER-q-06.
 """
 
@@ -85,6 +92,17 @@ _ACTION_VERB = re.compile(
     r"log|flag|mark|link|bind|route|redirect|authenticate|authorise|authorize|"
     r"encrypt|decrypt|refresh|expire|revoke|enforce|notify|propagate|invoke|"
     r"validate|index|cache|queue|dispatch|emit|consume|publish|subscribe)\b",
+    re.IGNORECASE,
+)
+
+# F103 (v0.26): member-list verbs — enumeration-or-definition verbs that introduce
+# an inseparable value/member list rather than separable obligations.
+# When and/or in the predicate falls under one of these verbs (and the right conjunct
+# carries no independent action verb), the compound is an inseparable member-list,
+# not a dual obligation — downgrade from hard compound_object / compound_constraint_rule
+# to a soft PLB-3d-01 advisory.
+_MEMBER_LIST_VERB = re.compile(
+    r"\b(?:accept|define|consist\s+of|contain|include)\b",
     re.IGNORECASE,
 )
 
@@ -197,7 +215,10 @@ def _check_functional(statement: str) -> list[AtomicityViolation]:
     # Three-way branch after isolating the predicate:
     #   1. Relative clause continuation (and/or which/that) — no flag.
     #   2. Right conjunct has its own finite action verb → conjoined_predicate (hard).
-    #   3. Single verb with conjoined nouns/objects → compound_object (hard, promoted from soft).
+    #   3. Single verb with conjoined nouns/objects → compound_object.
+    #      F103 (v0.26): if the predicate verb is a member-list verb (accept/define/
+    #      consist-of/contain/include), the conjunction joins inseparable enumeration
+    #      members — soft PLB-3d-01 advisory, not a hard reject.
     and_or_in_pred = list(_AND_OR.finditer(predicate_part))
     if and_or_in_pred:
         if _RELATIVE_CLAUSE.search(predicate_part):
@@ -215,14 +236,21 @@ def _check_functional(statement: str) -> list[AtomicityViolation]:
                     is_hard=True,
                 ))
             else:
+                _member_list = bool(_MEMBER_LIST_VERB.search(predicate_part))
                 violations.append(AtomicityViolation(
                     rule="compound_object",
                     detail=(
-                        f"Conjunction '{and_or_in_pred[0].group()}' in predicate joins "
-                        "multiple objects under one verb — compound object (F98). "
-                        "Split into separate single-object statements."
+                        f"Conjunction '{and_or_in_pred[0].group()}' in predicate "
+                        + (
+                            "joins members of an inseparable enumeration or definition "
+                            "list under a member-list verb (F103 carve-out) — "
+                            "logged for Practitioner review, not a separable obligation."
+                            if _member_list else
+                            "joins multiple objects under one verb — compound object (F98). "
+                            "Split into separate single-object statements."
+                        )
                     ),
-                    is_hard=True,
+                    is_hard=not _member_list,
                 ))
 
     return violations
@@ -279,7 +307,10 @@ def _check_constraint(statement: str) -> list[AtomicityViolation]:
     # Same three-way branch as _check_functional:
     #   1. Relative clause continuation — no flag.
     #   2. Right conjunct has its own finite action verb → conjoined_predicate (hard).
-    #   3. Conjoined nouns under one constraint verb → compound_constraint_rule (hard).
+    #   3. Conjoined nouns under one constraint verb → compound_constraint_rule.
+    #      F103 (v0.26): member-list carve-out applies here too — enumeration value
+    #      lists ("shall accept only 'A', 'B', 'C'") are inseparable single constraints,
+    #      not multiple separate rules. Soft advisory when member-list verb detected.
     and_or_in_pred = list(_AND_OR.finditer(predicate_part))
     if and_or_in_pred:
         if _RELATIVE_CLAUSE.search(predicate_part):
@@ -297,14 +328,21 @@ def _check_constraint(statement: str) -> list[AtomicityViolation]:
                     is_hard=True,
                 ))
             else:
+                _member_list = bool(_MEMBER_LIST_VERB.search(predicate_part))
                 violations.append(AtomicityViolation(
                     rule="compound_constraint_rule",
                     detail=(
                         f"Conjunction '{and_or_in_pred[0].group()}' in constraint predicate "
-                        "joins multiple rule elements under one constraint verb — compound "
-                        "Constraint Rule (F98). Split into separate single-rule Constraints."
+                        + (
+                            "joins members of an inseparable enumeration or value list "
+                            "under a member-list verb (F103 carve-out) — "
+                            "logged for Practitioner review, not separable Constraint Rules."
+                            if _member_list else
+                            "joins multiple rule elements under one constraint verb — compound "
+                            "Constraint Rule (F98). Split into separate single-rule Constraints."
+                        )
                     ),
-                    is_hard=True,
+                    is_hard=not _member_list,
                 ))
 
     return violations

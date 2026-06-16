@@ -262,6 +262,7 @@ def _run_conjoined_decompose(
         result.execution_warnings.append({
             "type": "conjoined_predicate_decompose_failed",
             "source_domain_id": proposal.source_domain_id,
+            "statement_preview": proposal.statement[:80],
             "detail": str(exc),
         })
         return []  # early return — avoids double-emit and cross-call suppression below
@@ -271,6 +272,7 @@ def _run_conjoined_decompose(
         result.execution_warnings.append({
             "type": "conjoined_predicate_decompose_failed",
             "source_domain_id": proposal.source_domain_id,
+            "statement_preview": proposal.statement[:80],
         })
         return []
 
@@ -610,8 +612,19 @@ def run_stage3(
                         "decomposed_count": len(decomposed),
                     })
                     surviving_09.extend(decomposed)
-                # If decomposed is empty (AI failure), proposal absent from
-                # surviving_09 → CCIs detected as new_orphans_09 below.
+                else:
+                    # F102 (v0.26): retain-on-failure — a compound-but-present obligation
+                    # beats an atomic-but-absent one. When decompose yields no atomic
+                    # children, keep the original in surviving_09. The
+                    # conjoined_predicate_decompose_failed warning was already recorded
+                    # inside _run_conjoined_decompose. CHK-3d-05 orphan recovery is not
+                    # a sufficient fallback where CCIs are coarse (Non-Loss).
+                    result.execution_warnings.append({
+                        "type": "chk3d09_decompose_failed_retained",
+                        "source_domain_id": p.source_domain_id,
+                        "statement_preview": p.statement[:80],
+                    })
+                    surviving_09.append(p)
         else:
             for sv in soft_viols:
                 result.execution_warnings.append(
