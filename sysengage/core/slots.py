@@ -34,7 +34,8 @@ Slot patterns (Row 4 Requirement Derivation v0.24 §4.3 / CHK-3d-09):
                  missing structural element, multiple obligations.
 
 F98 (v0.24) — conjoined-predicate hard branch: after isolating the predicate,
-apply a verb-phrase test on both sides of any and/or conjunction:
+apply a verb-phrase test on both sides of any 'and' conjunction (F104 P1: 'or'
+in the predicate is a single-obligation choice/hedge, not a compound trigger):
   - Both conjuncts carry a distinct finite action verb → conjoined_predicate,
     is_hard=True (CHK-3d-09 in-place decompose repair in Stage 3).
   - Single verb with conjoined nouns/objects → compound_object (Functional) or
@@ -43,10 +44,30 @@ apply a verb-phrase test on both sides of any and/or conjunction:
 
 F103 (v0.26) — member-list carve-out: within the compound_object /
 compound_constraint_rule branch, if the predicate verb is a member-list verb
-(accept / define / consist of / contain / include), the conjunction joins
-inseparable enumeration members or definition elements — not separable
-obligations. Downgraded to is_hard=False (soft PLB-3d-01 advisory). Realises
-Row 3 RD v0.15 §4.1.1(b).
+(accept / define / consist of / contain / include / revoke / grant), the
+conjunction joins inseparable enumeration members, definition elements, or
+operation/privilege list items — not separable obligations. Downgraded to
+is_hard=False (soft PLB-3d-01 advisory). Realises Row 3 RD v0.15 §4.1.1(b).
+
+F104 (v0.27) — conjoined-predicate detector precision (four carve-outs):
+  P1 — conjunction only, never disjunction: only 'and' feeds the predicate/object
+       hard branches. 'or' in the predicate is a single-obligation choice/hedge
+       and does not trigger the compound detector. Slot-sensitive: 'or' joining
+       two condition openers still fires compound_condition (unchanged, uses
+       _CONDITION_OPENER, not the predicate conjunction check).
+  P2 — main-predicate scope: the verb-on-both-sides test is scoped to the main
+       predicate only. Locate the first relative-pronoun boundary (that/which/who);
+       any 'and' to its right is inside the subordinate clause and exempt from the
+       test. The existing "and which/that" carve-out is retained for the case where
+       the relative pronoun immediately follows the conjunction.
+  P3 — operation/privilege lists extend the F103 member-list carve-out. The
+       member-list check runs BEFORE the action-verb test so that operation names
+       (e.g. DELETE, UPDATE) under a governing verb (revoke, grant) are not
+       mis-read as independent finite action verbs.
+  P4 — temporal/sequencing subordinators are not conjunctions. A conjunction
+       whose right conjunct begins with 'then', 'prior to', 'before', or 'after'
+       is a temporal qualifier (one action with sequencing) — not a conjoined
+       obligation — and does not trigger the hard branch.
 
 See also: Row 4 Requirement Quality Analysis v0.1 D-q-2, VER-q-06.
 """
@@ -76,8 +97,25 @@ _CONDITION_OPENER = re.compile(
 
 _AND_OR = re.compile(r"\b(?:and|or)\b", re.IGNORECASE)
 
-# F98 (v0.24) — relative clause and action-verb patterns for conjoined-predicate test
-_RELATIVE_CLAUSE = re.compile(r"\b(?:and|or)\s+(?:which|that)\b", re.IGNORECASE)
+# F104 P1 (v0.27): 'and'-only pattern for predicate/object hard branches.
+# 'or' in the predicate is a single-obligation choice/hedge — not a compound
+# trigger. Only _AND feeds the hard branches; _AND_OR is kept for any callers
+# that still need disjunction awareness (e.g. _RELATIVE_CLAUSE).
+_AND = re.compile(r"\band\b", re.IGNORECASE)
+
+# F98 (v0.24) — relative clause patterns for conjoined-predicate exemption.
+# _RELATIVE_CLAUSE: "and which/that" immediately at the junction.
+# _RELATIVE_CLAUSE_BOUNDARY (F104 P2): first that/which/who in the predicate;
+# any 'and' to its right is inside the subordinate clause and exempt.
+_RELATIVE_CLAUSE = re.compile(r"\band\s+(?:which|that)\b", re.IGNORECASE)
+_RELATIVE_CLAUSE_BOUNDARY = re.compile(r"\b(?:that|which|who)\b", re.IGNORECASE)
+
+# F104 P4 (v0.27): temporal/sequencing subordinators. If the right conjunct
+# (text after 'and') begins with one of these words, the conjunction is a
+# temporal qualifier — one action with sequencing — not a conjoined obligation.
+_TEMPORAL_SUBORDINATOR = re.compile(
+    r"^(?:then|prior\s+to|before|after)\b", re.IGNORECASE
+)
 
 _ACTION_VERB = re.compile(
     r"\b(?:provide|ensure|allow|enable|create|update|delete|manage|track|record|"
@@ -95,14 +133,16 @@ _ACTION_VERB = re.compile(
     re.IGNORECASE,
 )
 
-# F103 (v0.26): member-list verbs — enumeration-or-definition verbs that introduce
-# an inseparable value/member list rather than separable obligations.
-# When and/or in the predicate falls under one of these verbs (and the right conjunct
-# carries no independent action verb), the compound is an inseparable member-list,
-# not a dual obligation — downgrade from hard compound_object / compound_constraint_rule
-# to a soft PLB-3d-01 advisory.
+# F103 (v0.26) / F104 P3 (v0.27): member-list verbs — enumeration-or-definition
+# verbs (and operation/privilege-set verbs) that introduce an inseparable value,
+# member, or privilege list rather than separable obligations.
+# When 'and' in the predicate falls under one of these verbs, the compound is an
+# inseparable member/operation list — downgrade from hard to soft PLB-3d-01.
+# F104 P3: member-list check runs BEFORE the action-verb test so that operation
+# names (DELETE, UPDATE) under a governing verb (revoke, grant) are not mis-read
+# as independent finite action verbs.
 _MEMBER_LIST_VERB = re.compile(
-    r"\b(?:accept|define|consist\s+of|contain|include)\b",
+    r"\b(?:accept|define|consist\s+of|contain|include|revoke|grant)\b",
     re.IGNORECASE,
 )
 
@@ -198,7 +238,9 @@ def _check_functional(statement: str) -> list[AtomicityViolation]:
         ))
         return violations
 
-    # Compound condition: two or more condition openers in the full statement
+    # Compound condition: two or more condition openers in the full statement.
+    # Uses _CONDITION_OPENER (when/if/…) — unaffected by F104 P1 (the 'or'
+    # change applies to the predicate conjunction check only, not here).
     condition_matches = list(_CONDITION_OPENER.finditer(statement))
     if len(condition_matches) >= 2:
         violations.append(AtomicityViolation(
@@ -211,47 +253,66 @@ def _check_functional(statement: str) -> list[AtomicityViolation]:
             is_hard=True,
         ))
 
-    # Compound / conjoined predicate: conjunction in the predicate (F98 v0.24)
-    # Three-way branch after isolating the predicate:
-    #   1. Relative clause continuation (and/or which/that) — no flag.
-    #   2. Right conjunct has its own finite action verb → conjoined_predicate (hard).
-    #   3. Single verb with conjoined nouns/objects → compound_object.
-    #      F103 (v0.26): if the predicate verb is a member-list verb (accept/define/
-    #      consist-of/contain/include), the conjunction joins inseparable enumeration
-    #      members — soft PLB-3d-01 advisory, not a hard reject.
-    and_or_in_pred = list(_AND_OR.finditer(predicate_part))
-    if and_or_in_pred:
-        if _RELATIVE_CLAUSE.search(predicate_part):
-            pass  # relative clause continuation — one obligation, no violation
+    # Compound / conjoined predicate: 'and' conjunction in the predicate (F98 v0.24 /
+    # F104 v0.27). Resolution order per F104:
+    #   P1: only 'and' feeds these hard branches; 'or' = choice/hedge, no flag.
+    #   P2: conjunction to the right of a relative-clause boundary → exempt.
+    #   (retained) "and which/that" carve-out → exempt.
+    #   P4: right conjunct begins with temporal subordinator → exempt (sequence).
+    #   P3: predicate governed by a member-list verb → soft PLB-3d-01 (runs BEFORE
+    #       action-verb test so operation names like DELETE don't mis-trigger).
+    #   conjoined_predicate: right conjunct has its own finite action verb → hard.
+    #   compound_object: single verb with conjoined nouns/objects → hard.
+    and_in_pred = list(_AND.finditer(predicate_part))
+    if and_in_pred:
+        and_match = and_in_pred[0]
+        # P2: relative-clause boundary — first that/which/who appearing before
+        # the conjunction means the 'and' is inside the subordinate clause.
+        boundary = _RELATIVE_CLAUSE_BOUNDARY.search(predicate_part)
+        if boundary and boundary.start() < and_match.start():
+            pass  # inside relative clause — one obligation, no violation
+        elif _RELATIVE_CLAUSE.search(predicate_part):
+            pass  # "and which/that" at the junction — relative clause, no violation
         else:
-            right_conjunct = predicate_part[and_or_in_pred[0].end():].strip()
-            if _ACTION_VERB.search(right_conjunct):
-                violations.append(AtomicityViolation(
-                    rule="conjoined_predicate",
-                    detail=(
-                        f"Conjunction '{and_or_in_pred[0].group()}' in predicate separates "
-                        "two distinct finite verb phrases — each half is a separate obligation "
-                        "(F98). Decompose into two atomic single-verb statements."
-                    ),
-                    is_hard=True,
-                ))
+            right_conjunct = predicate_part[and_match.end():].strip()
+            # P4: temporal subordinator — one sequential action, not a split.
+            if _TEMPORAL_SUBORDINATOR.match(right_conjunct):
+                pass  # temporal qualifier, no violation
             else:
+                # P3: member-list carve-out runs BEFORE action-verb test.
                 _member_list = bool(_MEMBER_LIST_VERB.search(predicate_part))
-                violations.append(AtomicityViolation(
-                    rule="compound_object",
-                    detail=(
-                        f"Conjunction '{and_or_in_pred[0].group()}' in predicate "
-                        + (
-                            "joins members of an inseparable enumeration or definition "
-                            "list under a member-list verb (F103 carve-out) — "
-                            "logged for Practitioner review, not a separable obligation."
-                            if _member_list else
+                if _member_list:
+                    violations.append(AtomicityViolation(
+                        rule="compound_object",
+                        detail=(
+                            f"Conjunction '{and_match.group()}' in predicate "
+                            "joins members of an inseparable enumeration, definition, "
+                            "or operation/privilege list under a member-list verb "
+                            "(F103/F104 carve-out) — logged for Practitioner review, "
+                            "not a separable obligation."
+                        ),
+                        is_hard=False,
+                    ))
+                elif _ACTION_VERB.search(right_conjunct):
+                    violations.append(AtomicityViolation(
+                        rule="conjoined_predicate",
+                        detail=(
+                            f"Conjunction '{and_match.group()}' in predicate separates "
+                            "two distinct finite verb phrases — each half is a separate "
+                            "obligation (F98). Decompose into two atomic single-verb statements."
+                        ),
+                        is_hard=True,
+                    ))
+                else:
+                    violations.append(AtomicityViolation(
+                        rule="compound_object",
+                        detail=(
+                            f"Conjunction '{and_match.group()}' in predicate "
                             "joins multiple objects under one verb — compound object (F98). "
                             "Split into separate single-object statements."
-                        )
-                    ),
-                    is_hard=not _member_list,
-                ))
+                        ),
+                        is_hard=True,
+                    ))
 
     return violations
 
@@ -303,47 +364,57 @@ def _check_constraint(statement: str) -> list[AtomicityViolation]:
         ))
         return violations
 
-    # Compound / conjoined constraint predicate: conjunction test (F98 v0.24)
-    # Same three-way branch as _check_functional:
-    #   1. Relative clause continuation — no flag.
-    #   2. Right conjunct has its own finite action verb → conjoined_predicate (hard).
-    #   3. Conjoined nouns under one constraint verb → compound_constraint_rule.
-    #      F103 (v0.26): member-list carve-out applies here too — enumeration value
-    #      lists ("shall accept only 'A', 'B', 'C'") are inseparable single constraints,
-    #      not multiple separate rules. Soft advisory when member-list verb detected.
-    and_or_in_pred = list(_AND_OR.finditer(predicate_part))
-    if and_or_in_pred:
-        if _RELATIVE_CLAUSE.search(predicate_part):
-            pass  # relative clause continuation — one obligation, no violation
+    # Compound / conjoined constraint predicate: same four-way resolution as
+    # _check_functional (F98 v0.24 / F104 v0.27). See _check_functional comments.
+    and_in_pred = list(_AND.finditer(predicate_part))
+    if and_in_pred:
+        and_match = and_in_pred[0]
+        # P2: relative-clause boundary
+        boundary = _RELATIVE_CLAUSE_BOUNDARY.search(predicate_part)
+        if boundary and boundary.start() < and_match.start():
+            pass  # inside relative clause — one obligation, no violation
+        elif _RELATIVE_CLAUSE.search(predicate_part):
+            pass  # "and which/that" at the junction — relative clause, no violation
         else:
-            right_conjunct = predicate_part[and_or_in_pred[0].end():].strip()
-            if _ACTION_VERB.search(right_conjunct):
-                violations.append(AtomicityViolation(
-                    rule="conjoined_predicate",
-                    detail=(
-                        f"Conjunction '{and_or_in_pred[0].group()}' in constraint predicate "
-                        "separates two distinct finite verb phrases — two Constraint Rules in "
-                        "one statement (F98). Decompose into two atomic Constraint statements."
-                    ),
-                    is_hard=True,
-                ))
+            right_conjunct = predicate_part[and_match.end():].strip()
+            # P4: temporal subordinator
+            if _TEMPORAL_SUBORDINATOR.match(right_conjunct):
+                pass  # temporal qualifier, no violation
             else:
+                # P3: member-list carve-out runs BEFORE action-verb test.
                 _member_list = bool(_MEMBER_LIST_VERB.search(predicate_part))
-                violations.append(AtomicityViolation(
-                    rule="compound_constraint_rule",
-                    detail=(
-                        f"Conjunction '{and_or_in_pred[0].group()}' in constraint predicate "
-                        + (
-                            "joins members of an inseparable enumeration or value list "
-                            "under a member-list verb (F103 carve-out) — "
-                            "logged for Practitioner review, not separable Constraint Rules."
-                            if _member_list else
+                if _member_list:
+                    violations.append(AtomicityViolation(
+                        rule="compound_constraint_rule",
+                        detail=(
+                            f"Conjunction '{and_match.group()}' in constraint predicate "
+                            "joins members of an inseparable enumeration, value, "
+                            "or operation/privilege list under a member-list verb "
+                            "(F103/F104 carve-out) — logged for Practitioner review, "
+                            "not separable Constraint Rules."
+                        ),
+                        is_hard=False,
+                    ))
+                elif _ACTION_VERB.search(right_conjunct):
+                    violations.append(AtomicityViolation(
+                        rule="conjoined_predicate",
+                        detail=(
+                            f"Conjunction '{and_match.group()}' in constraint predicate "
+                            "separates two distinct finite verb phrases — two Constraint Rules "
+                            "in one statement (F98). Decompose into two atomic Constraint statements."
+                        ),
+                        is_hard=True,
+                    ))
+                else:
+                    violations.append(AtomicityViolation(
+                        rule="compound_constraint_rule",
+                        detail=(
+                            f"Conjunction '{and_match.group()}' in constraint predicate "
                             "joins multiple rule elements under one constraint verb — compound "
                             "Constraint Rule (F98). Split into separate single-rule Constraints."
-                        )
-                    ),
-                    is_hard=not _member_list,
-                ))
+                        ),
+                        is_hard=True,
+                    ))
 
     return violations
 

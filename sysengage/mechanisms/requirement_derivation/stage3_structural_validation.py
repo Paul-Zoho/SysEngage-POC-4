@@ -262,7 +262,9 @@ def _run_conjoined_decompose(
         result.execution_warnings.append({
             "type": "conjoined_predicate_decompose_failed",
             "source_domain_id": proposal.source_domain_id,
-            "statement_preview": proposal.statement[:80],
+            # F100 every-path sweep (F104 v0.27): guard against empty/None statement
+            # so the preview is always non-empty in the warning record.
+            "statement_preview": (proposal.statement or "(no statement)")[:80],
             "detail": str(exc),
         })
         return []  # early return — avoids double-emit and cross-call suppression below
@@ -272,7 +274,8 @@ def _run_conjoined_decompose(
         result.execution_warnings.append({
             "type": "conjoined_predicate_decompose_failed",
             "source_domain_id": proposal.source_domain_id,
-            "statement_preview": proposal.statement[:80],
+            # F100 every-path sweep (F104 v0.27): guard against empty/None statement.
+            "statement_preview": (proposal.statement or "(no statement)")[:80],
         })
         return []
 
