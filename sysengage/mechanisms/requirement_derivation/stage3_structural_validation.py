@@ -1,7 +1,7 @@
 """
 Stage 3 — Structural Validation (DM, with conditional IM repair).
 
-Per Requirement Derivation Mechanism Spec v0.24 §4.3:
+Per Requirement Derivation Mechanism Spec v0.28 §4.3:
   All checks run in sequence on the accumulated proposal set. Pure in-memory
   operations except the Non-Loss repair prompt (IM conditional sub-act).
 
@@ -128,6 +128,7 @@ def _strip_code_fence(text_: str) -> str:
 
 
 def _parse_repair_response(text_: str) -> list[RepairRequirementProposal] | None:
+    """All-or-nothing parse for CHK-3d-05 orphan-repair responses."""
     try:
         data = json.loads(_strip_code_fence(text_))
         if not isinstance(data, list):
@@ -135,6 +136,51 @@ def _parse_repair_response(text_: str) -> list[RepairRequirementProposal] | None
         return [RepairRequirementProposal.model_validate(item) for item in data]
     except Exception:
         return None
+
+
+def _parse_decompose_response(
+    text_: str,
+    *,
+    source_domain_id: str,
+    result: Stage3Result,
+) -> list[RepairRequirementProposal] | None:
+    """
+    Item-level resilient parse for CHK-3d-09 decompose responses (F106, v0.28).
+
+    Each child in the AI's array is validated independently.  A malformed child
+    is logged as decompose_child_discarded (with its index and validation error)
+    and discarded — the valid siblings are kept.  Returns None only when the raw
+    JSON cannot be parsed, the top-level value is not a list, or zero valid
+    children survive after per-item validation.
+
+    The CHK-3d-05 _parse_repair_response path is NOT changed by F106 — it stays
+    all-or-nothing because a partial orphan-repair response could leave orphans
+    uncovered while the re-check believes them covered.
+    """
+    try:
+        data = json.loads(_strip_code_fence(text_))
+    except Exception:
+        return None
+    if not isinstance(data, list):
+        return None
+
+    valid: list[RepairRequirementProposal] = []
+    for idx, item in enumerate(data):
+        try:
+            valid.append(RepairRequirementProposal.model_validate(item))
+        except Exception as exc:
+            result.execution_warnings.append({
+                "type": "decompose_child_discarded",
+                "source_domain_id": source_domain_id,
+                "child_index": idx,
+                "validation_error": str(exc),
+            })
+            _log.warning(
+                "CHK-3d-09 decompose: child %d discarded (validation error): %s",
+                idx, exc,
+            )
+
+    return valid if valid else None
 
 
 def _run_repair(
@@ -225,15 +271,26 @@ def _run_conjoined_decompose(
     row_ref: int,
 ) -> list[TaggedProposal]:
     """
-    F98 CHK-3d-09 in-place decompose repair for conjoined-predicate violations (v0.24).
+    F98 CHK-3d-09 in-place decompose repair for conjoined-predicate violations (v0.28).
 
     Re-expresses one compound statement (two distinct finite verb phrases under one
     'shall') as N≥2 atomic statements, each carrying a single obligation. Any
     inter-half dependency is expressed as a Condition slot on the dependent statement.
 
     This is NOT the orphan-pool / CHK-3d-05 path — the decompose replaces the
-    compound in-place so no CCI is dropped. The existing CCIs are distributed (or
-    duplicated as needed) across the atomic children by the AI.
+    compound in-place so no CCI is dropped.
+
+    F106 (v0.28) executor discipline:
+      - Uses _parse_decompose_response (item-level resilient) instead of
+        _parse_repair_response (all-or-nothing). A malformed child is discarded
+        individually (decompose_child_discarded warning); valid siblings are kept.
+        Returns [] only when zero valid children survive or the AI call fails.
+      - cci_refs inheritance: any child whose cci_refs is empty after parse is
+        assigned the parent compound's full cci_refs. This pairs with the schema
+        relaxation that dropped cci_refs_not_empty — the schema accepts empty;
+        the executor corrects it before building the TaggedProposal.
+      - confidence normalisation: a None confidence (schema Optional/defaulted)
+        is mapped to 0.85 before building the TaggedProposal.
 
     Returns TaggedProposal list (may be empty on AI failure; caller then falls through
     to the standard orphan-pool detection for the unrecovered CCIs).
@@ -256,7 +313,14 @@ def _run_conjoined_decompose(
         msg, fp = _call_repair_ai(decompose_prompt, max_tokens=4096)
         fp["stage"] = "stage3_chk3d09_decompose"
         result.ai_model_fingerprints.append(fp)
-        parsed_decompose = _parse_repair_response(msg.content[0].text)
+        # F106(1): item-level resilient parse — malformed children are discarded
+        # individually, valid siblings returned. _parse_repair_response (all-or-
+        # nothing) is kept for the CHK-3d-05 orphan-repair path unchanged.
+        parsed_decompose = _parse_decompose_response(
+            msg.content[0].text,
+            source_domain_id=proposal.source_domain_id,
+            result=result,
+        )
     except Exception as exc:
         _log.warning("CHK-3d-09 decompose AI call failed: %s", exc)
         result.execution_warnings.append({
@@ -270,7 +334,7 @@ def _run_conjoined_decompose(
         return []  # early return — avoids double-emit and cross-call suppression below
 
     if not parsed_decompose:
-        # Empty parse (no exception) — emit once per call, no guard needed.
+        # Zero valid children after per-item validation — emit failure once per call.
         result.execution_warnings.append({
             "type": "conjoined_predicate_decompose_failed",
             "source_domain_id": proposal.source_domain_id,
@@ -279,21 +343,29 @@ def _run_conjoined_decompose(
         })
         return []
 
-    return [
-        TaggedProposal(
-            source_domain_id=proposal.source_domain_id,
-            statement=rp.statement,
-            requirement_type=rp.requirement_type,
-            cci_refs=list(rp.cci_refs),
-            refines_refs=list(proposal.refines_refs),
-            rationale=rp.rationale,
-            fit_criteria=rp.fit_criteria,
-            verification_method=rp.verification_method,
-            priority=rp.priority,
-            confidence=rp.confidence,
+    children: list[TaggedProposal] = []
+    for rp in parsed_decompose:
+        # F106(2): inherit parent cci_refs for any child with empty cci_refs.
+        # The schema no longer rejects empty cci_refs at parse time; the executor
+        # corrects it here so every surviving child is fully referenced.
+        child_cci_refs = list(rp.cci_refs) if rp.cci_refs else list(proposal.cci_refs)
+        # F106(2): confidence is Optional/defaulted in the schema; normalise None.
+        child_confidence = rp.confidence if rp.confidence is not None else 0.85
+        children.append(
+            TaggedProposal(
+                source_domain_id=proposal.source_domain_id,
+                statement=rp.statement,
+                requirement_type=rp.requirement_type,
+                cci_refs=child_cci_refs,
+                refines_refs=list(proposal.refines_refs),
+                rationale=rp.rationale,
+                fit_criteria=rp.fit_criteria,
+                verification_method=rp.verification_method,
+                priority=rp.priority,
+                confidence=child_confidence,
+            )
         )
-        for rp in parsed_decompose
-    ]
+    return children
 
 
 def run_stage3(

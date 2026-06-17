@@ -21,7 +21,6 @@ from __future__ import annotations
 
 from mechanisms.requirement_derivation.prompts.requirement_derivation_prompt import (
     _REQUIREMENT_TYPE_GUIDANCE,
-    _STATEMENT_FORMULATION_GUIDANCE,
 )
 from mechanisms.requirement_derivation.prompts.requirement_row_guidance import (
     REQUIREMENT_ROW_GUIDANCE,
@@ -91,10 +90,6 @@ Decompose the compound statement into **2 (or more, if needed) atomic statements
 5. Keep the subject consistent with the original statement's row-level vocabulary.
 6. Do NOT introduce obligations absent from the original statement.
 7. Do NOT reproduce the compound statement verbatim as one of the outputs.
-
----
-
-{_STATEMENT_FORMULATION_GUIDANCE}
 
 ---
 
