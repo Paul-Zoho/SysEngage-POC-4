@@ -1,0 +1,35 @@
+F104(a) diagnostic — _run_conjoined_decompose returning empty on EASILY-splittable
+conjoined predicates.
+
+Context: R4_Run10 (F104 build) retained 3 compounds at Row 4 D015, all via
+conjoined_predicate_decompose_failed → chk3d09_decompose_failed_retained. At least two
+are trivially splittable and should NOT be failing:
+  "The mobile application shall retrieve and display tasks with available status to child user roles."
+  "The mobile application shall retrieve and display tasks with claimed status to the associated child user."
+Expected split (the spec's intended output):
+  - MA shall retrieve tasks
+  - MA shall display tasks with available status
+  - MA shall display tasks with claimed status
+(the two "retrieve tasks" halves dedupe → 3, not 4, at Matching)
+
+These are clean two-finite-verb conjoined predicates ("retrieve" AND "display"). They are
+being correctly HARD-FLAGGED (good — F104 precision is fine) but the decompose repair returns
+nothing. Determine which of two causes it is:
+
+1. PROMPT NOT SPLITTING. Call _run_conjoined_decompose directly with the "retrieve and display
+   tasks with available status" statement and report the RAW IM response. Does it return zero
+   child proposals (prompt over-constrained / no exemplar for this form / refusing), or malformed
+   output that fails to parse?
+
+2. CHILDREN SPLIT-THEN-DROPPED. If the IM DOES return children, report what happens to them
+   downstream: do "shall retrieve tasks" / "shall display tasks with available status" pass
+   re-validation, or are they rejected by a completeness/fit-criteria/slot check (e.g. "retrieve
+   tasks" flagged as missing acceptance criteria or too thin) and removed — so the NET surfaces
+   as an empty decompose?
+
+Report for each statement: (a) raw child count from the IM, (b) the child statements if any,
+(c) per-child validation outcome, (d) the exact point the result becomes empty. Also report the
+decompose prompt's current exemplars and any min-output/fit-criteria constraint on children.
+
+These two causes need opposite fixes (improve the split prompt vs. relax what children must
+satisfy), so this diagnosis gates the F104(a) spec.
