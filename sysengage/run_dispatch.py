@@ -251,7 +251,12 @@ if all_ok:
         print(f"[dispatch] ════ Row {row} — starting passes ════", flush=True)
         print(SEP, flush=True)
 
+        row_ok = True
         for pass_code in PASSES:
+            if not row_ok:
+                print(f"[dispatch] Row {row} — skipping {pass_code} (prior pass failed)", flush=True)
+                continue
+
             print(f"[dispatch] ──── Pass {pass_code} / Row {row} ────", flush=True)
 
             # ── 3a: RLSRA (SC has already run in step 4a) ─────────────────
@@ -264,11 +269,13 @@ if all_ok:
                     print(f"[dispatch]   signals  = {rld.get('signal_count','?')}", flush=True)
                     if r["execution_status"] not in ("Success", "PartialSuccess"):
                         all_ok = False
+                        row_ok = False
                 except Exception as exc:
                     import traceback
                     print(f"[dispatch] RLSRA Row {row} EXCEPTION: {exc}", file=sys.stderr, flush=True)
                     traceback.print_exc()
                     all_ok = False
+                    row_ok = False
 
             # ── 3b: CCI Construction ───────────────────────────────────────
             elif pass_code == "3b":
@@ -282,11 +289,13 @@ if all_ok:
                     print(f"[dispatch]   ccis_merged  = {cd['ccis_merged']}", flush=True)
                     if r["execution_status"] not in ("Success", "PartialSuccess"):
                         all_ok = False
+                        row_ok = False
                 except Exception as exc:
                     import traceback
                     print(f"[dispatch] CCI Row {row} EXCEPTION: {exc}", file=sys.stderr, flush=True)
                     traceback.print_exc()
                     all_ok = False
+                    row_ok = False
 
             # ── 3c: Domain Derivation ──────────────────────────────────────
             elif pass_code == "3c":
@@ -298,11 +307,13 @@ if all_ok:
                     print(f"[dispatch]   domains_produced= {md.get('domain_count_produced','?')}", flush=True)
                     if r["execution_status"] not in ("Success", "PartialSuccess"):
                         all_ok = False
+                        row_ok = False
                 except Exception as exc:
                     import traceback
                     print(f"[dispatch] DD Row {row} EXCEPTION: {exc}", file=sys.stderr, flush=True)
                     traceback.print_exc()
                     all_ok = False
+                    row_ok = False
 
             # ── 3d: Requirement Derivation ─────────────────────────────────
             elif pass_code == "3d":
@@ -321,11 +332,13 @@ if all_ok:
                     print(f"[dispatch]   requirement_count_produced= {r.get('requirement_count_produced','?')}", flush=True)
                     if r["execution_status"] not in ("Success", "PartialSuccess"):
                         all_ok = False
+                        row_ok = False
                 except Exception as exc:
                     import traceback
                     print(f"[dispatch] RD Row {row} EXCEPTION: {exc}", file=sys.stderr, flush=True)
                     traceback.print_exc()
                     all_ok = False
+                    row_ok = False
 
             # ── 3e: Requirement Matching ───────────────────────────────────
             elif pass_code == "3e":
@@ -343,6 +356,7 @@ if all_ok:
                         print(f"[dispatch] RM Row {row} EXCEPTION: {exc}", file=sys.stderr, flush=True)
                         traceback.print_exc()
                         all_ok = False
+                        row_ok = False
 
             print(flush=True)
 
