@@ -189,190 +189,200 @@ print("[dispatch] Schema up to date.", flush=True)
 print(flush=True)
 
 # ---------------------------------------------------------------------------
-# Step 4 — run passes in order
+# Step 4 — run passes in row-first order
+#
+# Execution model change: each row completes all its selected passes before the
+# next row begins. A ledger snapshot is exported after each row so that review
+# can start on Row N while Row N+1 is still running.
+#
+# Special case: Source Capture (the non-RLSRA part of pass 3a) is a once-per-
+# project step and is hoisted before the row loop. RLSRA is per-row and remains
+# inside the loop.  If SC fails, the row loop is skipped entirely.
 # ---------------------------------------------------------------------------
 
 VERIFICATION_OUTPUTS.mkdir(parents=True, exist_ok=True)
 all_ok = True
 
-for pass_code in PASSES:
+# ── 4a: Source Capture (once per project, hoisted before row loop) ─────────
+if "3a" in PASSES:
     print(SEP, flush=True)
-    print(f"[dispatch] ──── Pass {pass_code} ────", flush=True)
+    print("[dispatch] ──── Pass 3a / Source Capture (once per project) ────", flush=True)
     print(SEP, flush=True)
-
-    # ── 3a: Source Capture + RLSRA ────────────────────────────────────────
-    if pass_code == "3a":
-        # SC runs once (all rows)
-        if not SOURCE_DOC:
-            print("[dispatch] ERROR: pass 3a requires --source-doc.", file=sys.stderr, flush=True)
+    if not SOURCE_DOC:
+        print("[dispatch] ERROR: pass 3a requires --source-doc.", file=sys.stderr, flush=True)
+        all_ok = False
+    else:
+        doc_path = VERIFICATION_INPUTS / SOURCE_DOC
+        if not doc_path.exists():
+            print(f"[dispatch] ERROR: source doc not found: {doc_path}", file=sys.stderr, flush=True)
             all_ok = False
         else:
-            doc_path = VERIFICATION_INPUTS / SOURCE_DOC
-            if not doc_path.exists():
-                print(f"[dispatch] ERROR: source doc not found: {doc_path}", file=sys.stderr, flush=True)
+            print(f"[dispatch] SC — {doc_path.name}", flush=True)
+            try:
+                sc_result = sc.run_source_capture(
+                    doc_path,
+                    project_id=PROJECT_ID,
+                    practitioner_id=PRACTITIONER_ID,
+                    read_mode="Full",
+                    segmentation_policy="default",
+                )
+                print(f"[dispatch]   SC status   = {sc_result.execution_status}", flush=True)
+                print(f"[dispatch]   sources     = {sc_result.source_count}", flush=True)
+                print(f"[dispatch]   segments    = {sc_result.segment_count}", flush=True)
+                if sc_result.execution_status not in ("Success", "PartialSuccess"):
+                    print(f"[dispatch]   SC FAILED: {sc_result.failure_reason}", file=sys.stderr, flush=True)
+                    all_ok = False
+            except Exception as exc:
+                import traceback
+                print(f"[dispatch] SC EXCEPTION: {exc}", file=sys.stderr, flush=True)
+                traceback.print_exc()
                 all_ok = False
-            else:
-                print(f"[dispatch] SC — {doc_path.name}", flush=True)
+    print(flush=True)
+    if not all_ok:
+        print("[dispatch] SC failed — aborting row execution.", file=sys.stderr, flush=True)
+
+# ── 4b: Row-first execution loop ──────────────────────────────────────────
+# Entered only if SC succeeded (or 3a was not selected).
+# For each row: run all selected passes in order, then export a ledger
+# snapshot so review of that row can begin immediately.
+if all_ok:
+    for row in ROWS:
+        print(SEP, flush=True)
+        print(f"[dispatch] ════ Row {row} — starting passes ════", flush=True)
+        print(SEP, flush=True)
+
+        for pass_code in PASSES:
+            print(f"[dispatch] ──── Pass {pass_code} / Row {row} ────", flush=True)
+
+            # ── 3a: RLSRA (SC has already run in step 4a) ─────────────────
+            if pass_code == "3a":
+                print(f"[dispatch] RLSRA Row {row}…", flush=True)
                 try:
-                    sc_result = sc.run_source_capture(
-                        doc_path,
-                        project_id=PROJECT_ID,
-                        practitioner_id=PRACTITIONER_ID,
-                        read_mode="Full",
-                        segmentation_policy="default",
-                    )
-                    print(f"[dispatch]   SC status   = {sc_result.execution_status}", flush=True)
-                    print(f"[dispatch]   sources     = {sc_result.source_count}", flush=True)
-                    print(f"[dispatch]   segments    = {sc_result.segment_count}", flush=True)
-                    if sc_result.execution_status not in ("Success", "PartialSuccess"):
-                        print(f"[dispatch]   SC FAILED: {sc_result.failure_reason}", file=sys.stderr, flush=True)
+                    r = rlsra.run(project_id=PROJECT_ID, practitioner_id=PRACTITIONER_ID, row_ref=row)
+                    rld = r.get("row_lens_data", {})
+                    print(f"[dispatch]   status   = {r['execution_status']}", flush=True)
+                    print(f"[dispatch]   signals  = {rld.get('signal_count','?')}", flush=True)
+                    if r["execution_status"] not in ("Success", "PartialSuccess"):
                         all_ok = False
                 except Exception as exc:
                     import traceback
-                    print(f"[dispatch] SC EXCEPTION: {exc}", file=sys.stderr, flush=True)
+                    print(f"[dispatch] RLSRA Row {row} EXCEPTION: {exc}", file=sys.stderr, flush=True)
                     traceback.print_exc()
                     all_ok = False
 
-        if not all_ok:
+            # ── 3b: CCI Construction ───────────────────────────────────────
+            elif pass_code == "3b":
+                print(f"[dispatch] CCI Row {row}…", flush=True)
+                try:
+                    r = cci.run(project_id=PROJECT_ID, practitioner_id=PRACTITIONER_ID,
+                                row_ref=row, skip_deduplication=False)
+                    cd = r["cci_data"]
+                    print(f"[dispatch]   status       = {r['execution_status']}", flush=True)
+                    print(f"[dispatch]   ccis_created = {cd['ccis_created']}", flush=True)
+                    print(f"[dispatch]   ccis_merged  = {cd['ccis_merged']}", flush=True)
+                    if r["execution_status"] not in ("Success", "PartialSuccess"):
+                        all_ok = False
+                except Exception as exc:
+                    import traceback
+                    print(f"[dispatch] CCI Row {row} EXCEPTION: {exc}", file=sys.stderr, flush=True)
+                    traceback.print_exc()
+                    all_ok = False
+
+            # ── 3c: Domain Derivation ──────────────────────────────────────
+            elif pass_code == "3c":
+                print(f"[dispatch] DD Row {row}…", flush=True)
+                try:
+                    r = dd.run(project_id=PROJECT_ID, practitioner_id=PRACTITIONER_ID, row_ref=row)
+                    md = r["mechanism_data"]
+                    print(f"[dispatch]   status          = {r['execution_status']}", flush=True)
+                    print(f"[dispatch]   domains_produced= {md.get('domain_count_produced','?')}", flush=True)
+                    if r["execution_status"] not in ("Success", "PartialSuccess"):
+                        all_ok = False
+                except Exception as exc:
+                    import traceback
+                    print(f"[dispatch] DD Row {row} EXCEPTION: {exc}", file=sys.stderr, flush=True)
+                    traceback.print_exc()
+                    all_ok = False
+
+            # ── 3d: Requirement Derivation ─────────────────────────────────
+            elif pass_code == "3d":
+                # Purge the connection pool before each RD row. The engine is
+                # shared across the entire dispatcher run; prior AI phases may
+                # have left the pool holding connections that Neon has since
+                # suspended. refresh_engine_pool() disposes them all and waits
+                # until the endpoint is ready before proceeding.
+                print(f"[dispatch] RD Row {row} — refreshing DB pool…", flush=True)
+                refresh_engine_pool()
+                print(f"[dispatch] RD Row {row}…", flush=True)
+                try:
+                    r = rd.run_requirement_derivation(
+                        project_id=PROJECT_ID, practitioner_id=PRACTITIONER_ID, row_ref=row)
+                    print(f"[dispatch]   status                    = {r['execution_status']}", flush=True)
+                    print(f"[dispatch]   requirement_count_produced= {r.get('requirement_count_produced','?')}", flush=True)
+                    if r["execution_status"] not in ("Success", "PartialSuccess"):
+                        all_ok = False
+                except Exception as exc:
+                    import traceback
+                    print(f"[dispatch] RD Row {row} EXCEPTION: {exc}", file=sys.stderr, flush=True)
+                    traceback.print_exc()
+                    all_ok = False
+
+            # ── 3e: Requirement Matching ───────────────────────────────────
+            elif pass_code == "3e":
+                if row == 1:
+                    print(f"[dispatch] RM Row 1 SKIP — Row 1 has no parent row to match against.", flush=True)
+                else:
+                    print(f"[dispatch] RM Row {row}…", flush=True)
+                    try:
+                        r = match_row(row, PROJECT_ID)
+                        print(f"[dispatch]   refine_count    = {r.get('refine_count','?')}", flush=True)
+                        print(f"[dispatch]   no_match_count  = {r.get('no_match_count','?')}", flush=True)
+                        print(f"[dispatch]   flagged_count   = {r.get('flagged_count','?')}", flush=True)
+                    except Exception as exc:
+                        import traceback
+                        print(f"[dispatch] RM Row {row} EXCEPTION: {exc}", file=sys.stderr, flush=True)
+                        traceback.print_exc()
+                        all_ok = False
+
             print(flush=True)
-            continue
 
-        # RLSRA runs per row
-        for row in ROWS:
-            print(f"[dispatch] RLSRA Row {row}…", flush=True)
-            try:
-                r = rlsra.run(project_id=PROJECT_ID, practitioner_id=PRACTITIONER_ID, row_ref=row)
-                rld = r.get("row_lens_data", {})
-                print(f"[dispatch]   status   = {r['execution_status']}", flush=True)
-                print(f"[dispatch]   signals  = {rld.get('signal_count','?')}", flush=True)
-                if r["execution_status"] not in ("Success", "PartialSuccess"):
-                    all_ok = False
-            except Exception as exc:
-                import traceback
-                print(f"[dispatch] RLSRA Row {row} EXCEPTION: {exc}", file=sys.stderr, flush=True)
-                traceback.print_exc()
-                all_ok = False
+        # ── per-row ledger export ──────────────────────────────────────────
+        # Export the full project ledger after each row completes so the user
+        # can begin reviewing Row N while Row N+1 is still running.
+        print(SEP, flush=True)
+        print(f"[dispatch] ════ Row {row} complete — exporting ledger snapshot…", flush=True)
+        print(SEP, flush=True)
 
-    # ── 3b: CCI Construction ───────────────────────────────────────────────
-    elif pass_code == "3b":
-        for row in ROWS:
-            print(f"[dispatch] CCI Row {row}…", flush=True)
-            try:
-                r = cci.run(project_id=PROJECT_ID, practitioner_id=PRACTITIONER_ID,
-                            row_ref=row, skip_deduplication=False)
-                cd = r["cci_data"]
-                print(f"[dispatch]   status       = {r['execution_status']}", flush=True)
-                print(f"[dispatch]   ccis_created = {cd['ccis_created']}", flush=True)
-                print(f"[dispatch]   ccis_merged  = {cd['ccis_merged']}", flush=True)
-                if r["execution_status"] not in ("Success", "PartialSuccess"):
-                    all_ok = False
-            except Exception as exc:
-                import traceback
-                print(f"[dispatch] CCI Row {row} EXCEPTION: {exc}", file=sys.stderr, flush=True)
-                traceback.print_exc()
-                all_ok = False
+        row_basename = generate_filename(
+            project_id=PROJECT_CODE,
+            phase=3,
+            pass_=PASSES[-1],
+            row=row,
+            out_dir=str(VERIFICATION_OUTPUTS),
+        )
+        row_session = get_session()
+        try:
+            row_export = run_ledger_export(project_id=PROJECT_ID, session=row_session)
+        finally:
+            row_session.close()
 
-    # ── 3c: Domain Derivation ──────────────────────────────────────────────
-    elif pass_code == "3c":
-        for row in ROWS:
-            print(f"[dispatch] DD Row {row}…", flush=True)
-            try:
-                r = dd.run(project_id=PROJECT_ID, practitioner_id=PRACTITIONER_ID, row_ref=row)
-                md = r["mechanism_data"]
-                print(f"[dispatch]   status          = {r['execution_status']}", flush=True)
-                print(f"[dispatch]   domains_produced= {md.get('domain_count_produced','?')}", flush=True)
-                if r["execution_status"] not in ("Success", "PartialSuccess"):
-                    all_ok = False
-            except Exception as exc:
-                import traceback
-                print(f"[dispatch] DD Row {row} EXCEPTION: {exc}", file=sys.stderr, flush=True)
-                traceback.print_exc()
-                all_ok = False
+        row_ledger_path = VERIFICATION_OUTPUTS / row_basename
+        with open(row_ledger_path, "w", encoding="utf-8", newline="\n") as f:
+            f.write(row_export.json_str)
 
-    # ── 3d: Requirement Derivation ─────────────────────────────────────────
-    elif pass_code == "3d":
-        for row in ROWS:
-            # Purge the connection pool before each row.  The engine is shared
-            # across the entire dispatcher run; previous passes (or prior RD
-            # rows) may have left the pool holding connections that Neon has
-            # since suspended.  refresh_engine_pool() disposes them all and
-            # waits until the endpoint is ready before we proceed.
-            print(f"[dispatch] RD Row {row} — refreshing DB pool…", flush=True)
-            refresh_engine_pool()
-            print(f"[dispatch] RD Row {row}…", flush=True)
-            try:
-                r = rd.run_requirement_derivation(
-                    project_id=PROJECT_ID, practitioner_id=PRACTITIONER_ID, row_ref=row)
-                print(f"[dispatch]   status                    = {r['execution_status']}", flush=True)
-                print(f"[dispatch]   requirement_count_produced= {r.get('requirement_count_produced','?')}", flush=True)
-                if r["execution_status"] not in ("Success", "PartialSuccess"):
-                    all_ok = False
-            except Exception as exc:
-                import traceback
-                print(f"[dispatch] RD Row {row} EXCEPTION: {exc}", file=sys.stderr, flush=True)
-                traceback.print_exc()
-                all_ok = False
+        row_ledger  = row_export.ledger
+        n_elements  = len(row_ledger.get("elements", []))
+        n_registers = len(row_ledger.get("register_index", []))
+        hash_prefix = row_ledger.get("content_hash", {}).get("hash", "")[:16]
 
-    # ── 3e: Requirement Matching ───────────────────────────────────────────
-    elif pass_code == "3e":
-        for row in ROWS:
-            if row == 1:
-                print(f"[dispatch] RM Row 1 SKIP — Row 1 has no parent row to match against.", flush=True)
-                continue
-            print(f"[dispatch] RM Row {row}…", flush=True)
-            try:
-                r = match_row(row, PROJECT_ID)
-                print(f"[dispatch]   refine_count    = {r.get('refine_count','?')}", flush=True)
-                print(f"[dispatch]   no_match_count  = {r.get('no_match_count','?')}", flush=True)
-                print(f"[dispatch]   flagged_count   = {r.get('flagged_count','?')}", flush=True)
-            except Exception as exc:
-                import traceback
-                print(f"[dispatch] RM Row {row} EXCEPTION: {exc}", file=sys.stderr, flush=True)
-                traceback.print_exc()
-                all_ok = False
-
-    print(flush=True)
+        print(f"[dispatch] Ledger written : {row_basename}", flush=True)
+        print(f"[dispatch]   Elements    : {n_elements}", flush=True)
+        print(f"[dispatch]   Registers   : {n_registers}", flush=True)
+        print(f"[dispatch]   Hash        : {hash_prefix}…", flush=True)
+        print(flush=True)
 
 # ---------------------------------------------------------------------------
-# Step 5 — ledger export
-# ---------------------------------------------------------------------------
-
-print(SEP, flush=True)
-print("[dispatch] Exporting ledger…", flush=True)
-print(SEP, flush=True)
-
-max_pass = PASSES[-1]
-max_row = max(ROWS)
-basename = generate_filename(
-    project_id=PROJECT_CODE,
-    phase=3,
-    pass_=max_pass.replace("3", "3"),  # e.g. "3c"
-    row=max_row,
-    out_dir=str(VERIFICATION_OUTPUTS),
-)
-session = get_session()
-try:
-    export_result = run_ledger_export(project_id=PROJECT_ID, session=session)
-finally:
-    session.close()
-
-ledger_path = VERIFICATION_OUTPUTS / basename
-with open(ledger_path, "w", encoding="utf-8", newline="\n") as f:
-    f.write(export_result.json_str)
-
-ledger = export_result.ledger
-n_elements  = len(ledger.get("elements", []))
-n_registers = len(ledger.get("register_index", []))
-hash_prefix = ledger.get("content_hash", {}).get("hash", "")[:16]
-
-print(f"[dispatch] Ledger written : {basename}", flush=True)
-print(f"[dispatch]   Elements    : {n_elements}", flush=True)
-print(f"[dispatch]   Registers   : {n_registers}", flush=True)
-print(f"[dispatch]   Hash        : {hash_prefix}…", flush=True)
-print(flush=True)
-
-# ---------------------------------------------------------------------------
-# Step 6 — clean up test branch (leave alive — user can inspect / snapshot)
+# Step 5 — clean up test branch (leave alive — user can inspect / snapshot)
 # ---------------------------------------------------------------------------
 
 if test_branch_name:
