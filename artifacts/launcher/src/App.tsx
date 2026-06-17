@@ -40,6 +40,8 @@ interface RunState {
   logs: string[];
 }
 
+type RowStatus = "pending" | "running" | "done" | "failed";
+
 // ---------------------------------------------------------------------------
 // Constants
 // ---------------------------------------------------------------------------
@@ -53,6 +55,10 @@ const PASS_LABELS: Record<string, string> = {
   "3d": "3d — Requirement Derivation",
   "3e": "3e — Requirement Matching",
 };
+
+// Regex patterns for the run_dispatch.py banner strings
+const ROW_START_RE = /\[dispatch\] ════ Row (\d+) — starting passes/;
+const ROW_COMPLETE_RE = /\[dispatch\] ════ Row (\d+) complete/;
 
 // ---------------------------------------------------------------------------
 // Shared styles
@@ -79,6 +85,71 @@ const checkLabelStyle: React.CSSProperties = {
 };
 
 // ---------------------------------------------------------------------------
+// RowProgressStrip
+// ---------------------------------------------------------------------------
+
+const STATUS_CONFIG: Record<RowStatus, { icon: string; bg: string; fg: string; border: string; title: string }> = {
+  pending: { icon: "–",  bg: "#f3f4f6", fg: "#6b7280", border: "#d1d5db", title: "Pending" },
+  running: { icon: "⟳",  bg: "#eff6ff", fg: "#2563eb", border: "#93c5fd", title: "Running" },
+  done:    { icon: "✓",  bg: "#f0fdf4", fg: "#16a34a", border: "#86efac", title: "Done" },
+  failed:  { icon: "✗",  bg: "#fef2f2", fg: "#dc2626", border: "#fca5a5", title: "Failed" },
+};
+
+interface RowProgressStripProps {
+  rowProgress: Record<number, RowStatus>;
+  rowCompleteLine: Record<number, number>;
+  onBadgeClick: (row: number) => void;
+}
+
+function RowProgressStrip({ rowProgress, rowCompleteLine, onBadgeClick }: RowProgressStripProps) {
+  const rows = Object.keys(rowProgress).map(Number).sort((a, b) => a - b);
+  if (rows.length === 0) return null;
+
+  return (
+    <div style={{
+      display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap",
+      background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 8,
+      padding: "10px 14px", marginBottom: 14,
+    }}>
+      <span style={{ fontSize: 11, fontWeight: 700, color: "#475569", textTransform: "uppercase", letterSpacing: "0.06em", marginRight: 4 }}>
+        Rows
+      </span>
+      {rows.map(row => {
+        const status = rowProgress[row];
+        const cfg = STATUS_CONFIG[status];
+        const hasCompleteLine = rowCompleteLine[row] !== undefined;
+        const clickable = hasCompleteLine;
+        return (
+          <button
+            key={row}
+            title={`Row ${row}: ${cfg.title}${clickable ? " — click to jump to completion in log" : ""}`}
+            onClick={() => clickable && onBadgeClick(rowCompleteLine[row])}
+            style={{
+              display: "inline-flex", alignItems: "center", gap: 4,
+              background: cfg.bg, color: cfg.fg,
+              border: `1px solid ${cfg.border}`,
+              borderRadius: 6, padding: "3px 10px",
+              fontSize: 12, fontWeight: 700,
+              cursor: clickable ? "pointer" : "default",
+              transition: "opacity 0.15s",
+              fontFamily: "system-ui, sans-serif",
+            }}
+          >
+            <span style={{ fontWeight: 600, color: "#64748b", marginRight: 1 }}>R{row}</span>
+            <span style={{
+              fontSize: status === "running" ? 14 : 13,
+              display: "inline-block",
+              animation: status === "running" ? "spin 1.2s linear infinite" : undefined,
+            }}>{cfg.icon}</span>
+          </button>
+        );
+      })}
+      <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // LaunchPage
 // ---------------------------------------------------------------------------
 
@@ -94,9 +165,12 @@ function LaunchPage() {
   const [sourceDoc, setSourceDoc] = useState("");
 
   const [run, setRun] = useState<RunState>({ runId: null, running: false, exitCode: null, logs: [] });
+  const [rowProgress, setRowProgress] = useState<Record<number, RowStatus>>({});
+  const [rowCompleteLine, setRowCompleteLine] = useState<Record<number, number>>({});
 
   const logRef = useRef<HTMLDivElement>(null);
   const esRef = useRef<EventSource | null>(null);
+  const logCountRef = useRef(0);
 
   const fetchOutputs = useCallback(() => {
     fetchWithRetry(`${API}/outputs`).then(r => r.json()).then(setOutputs).catch(() => {});
@@ -108,21 +182,59 @@ function LaunchPage() {
     fetchOutputs();
   }, [fetchOutputs]);
 
-  const connectToRun = useCallback((runId: string) => {
+  const connectToRun = useCallback((runId: string, initialRows?: number[]) => {
+    logCountRef.current = 0;
     setRun({ runId, running: true, exitCode: null, logs: [] });
+    setRowCompleteLine({});
+    if (initialRows && initialRows.length > 0) {
+      const init: Record<number, RowStatus> = {};
+      for (const r of initialRows) init[r] = "pending";
+      setRowProgress(init);
+    } else {
+      setRowProgress({});
+    }
+
     const es = new EventSource(`${API}/runs/${runId}/logs`);
     esRef.current = es;
+
     es.addEventListener("log", (e) => {
       const line = JSON.parse((e as MessageEvent).data) as string;
+      const idx = logCountRef.current;
+      logCountRef.current += 1;
+
+      const startMatch = line.match(ROW_START_RE);
+      if (startMatch) {
+        const rowNum = parseInt(startMatch[1], 10);
+        setRowProgress(prev => ({ ...prev, [rowNum]: "running" }));
+      }
+
+      const completeMatch = line.match(ROW_COMPLETE_RE);
+      if (completeMatch) {
+        const rowNum = parseInt(completeMatch[1], 10);
+        setRowProgress(prev => ({ ...prev, [rowNum]: "done" }));
+        setRowCompleteLine(prev => ({ ...prev, [rowNum]: idx }));
+      }
+
       setRun(prev => ({ ...prev, logs: [...prev.logs, line] }));
     });
+
     es.addEventListener("done", (e) => {
       const { exitCode } = JSON.parse((e as MessageEvent).data) as { exitCode: number };
       setRun(prev => ({ ...prev, running: false, exitCode }));
+      if (exitCode !== 0) {
+        setRowProgress(prev => {
+          const n = { ...prev };
+          for (const k of Object.keys(n)) {
+            if (n[Number(k)] === "running" || n[Number(k)] === "pending") n[Number(k)] = "failed";
+          }
+          return n;
+        });
+      }
       es.close(); esRef.current = null;
       fetchOutputs();
       reloadConfig();
     });
+
     es.onerror = () => { setRun(prev => ({ ...prev, running: false })); es.close(); esRef.current = null; };
   }, [fetchOutputs, reloadConfig]);
 
@@ -142,6 +254,11 @@ function LaunchPage() {
     if (logRef.current) logRef.current.scrollTop = logRef.current.scrollHeight;
   }, [run.logs]);
 
+  function scrollToLogLine(lineIdx: number) {
+    const el = logRef.current?.querySelector(`[data-log-idx="${lineIdx}"]`);
+    if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
+  }
+
   function toggleRow(r: number) {
     setSelectedRows(prev => { const n = new Set(prev); n.has(r) ? n.delete(r) : n.add(r); return n; });
   }
@@ -153,6 +270,7 @@ function LaunchPage() {
     if (run.running) return;
     if (!selectedRows.size || !selectedPasses.size) { alert("Select at least one row and one pass."); return; }
 
+    const rows = Array.from(selectedRows).sort((a, b) => a - b);
     setRun({ runId: null, running: true, exitCode: null, logs: [] });
 
     try {
@@ -160,7 +278,7 @@ function LaunchPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          project, rows: Array.from(selectedRows).sort((a, b) => a - b),
+          project, rows,
           passes: PASSES.filter(p => selectedPasses.has(p)),
           snapshot: snapshot || undefined,
           sourceDoc: sourceDoc || undefined,
@@ -181,7 +299,7 @@ function LaunchPage() {
       }
 
       const { runId } = await resp.json() as { runId: string };
-      connectToRun(runId);
+      connectToRun(runId, rows);
     } catch {
       setRun(prev => ({ ...prev, running: false }));
     }
@@ -196,6 +314,8 @@ function LaunchPage() {
     : run.exitCode === 0 ? "#16a34a"
     : run.exitCode !== null ? "#dc2626"
     : "#6b7280";
+
+  const showLog = run.logs.length > 0 || run.running;
 
   return (
     <div>
@@ -271,12 +391,23 @@ function LaunchPage() {
         {runStatus && <span style={{ fontSize: 13, fontWeight: 500, color: statusColor }}>{runStatus}</span>}
       </div>
 
-      {(run.logs.length > 0 || run.running) && (
+      {showLog && (
         <div style={{ marginBottom: 24 }}>
           <div style={{ fontSize: 12, fontWeight: 600, color: "#374151", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.05em" }}>Live Output</div>
+
+          <RowProgressStrip
+            rowProgress={rowProgress}
+            rowCompleteLine={rowCompleteLine}
+            onBadgeClick={scrollToLogLine}
+          />
+
           <div ref={logRef} style={{ background: "#0f172a", color: "#e2e8f0", fontFamily: "Menlo, Monaco, 'Courier New', monospace", fontSize: 12, lineHeight: 1.6, padding: "12px 14px", borderRadius: 8, height: 380, overflowY: "auto", whiteSpace: "pre-wrap", wordBreak: "break-all" }}>
             {run.logs.map((line, i) => (
-              <div key={i} style={{ color: line.startsWith("[stderr]") ? "#f87171" : "#e2e8f0" }}>{line}</div>
+              <div
+                key={i}
+                data-log-idx={i}
+                style={{ color: line.startsWith("[stderr]") ? "#f87171" : "#e2e8f0" }}
+              >{line}</div>
             ))}
             {run.running && <div style={{ color: "#60a5fa", opacity: 0.7 }}>▌</div>}
           </div>
@@ -355,7 +486,7 @@ function BranchesPage() {
   useEffect(() => { void load(); }, [load]);
 
   async function deleteBranch(b: BranchInfo) {
-    if (b.hasChildren) return; // button is disabled, but belt-and-suspenders
+    if (b.hasChildren) return;
     const confirmed = window.confirm(
       `Delete branch "${b.name}"?\n\nThis is permanent and cannot be undone.`
     );
@@ -496,7 +627,6 @@ export default function App() {
     <div style={{ fontFamily: "system-ui, -apple-system, sans-serif", maxWidth: 960, margin: "0 auto", padding: "24px 16px", color: "#111" }}>
       <h1 style={{ fontSize: 22, fontWeight: 700, margin: "0 0 16px" }}>SysEngage Run Launcher</h1>
 
-      {/* Tab bar */}
       <div style={{ display: "flex", borderBottom: "1px solid #e5e7eb", marginBottom: 24 }}>
         <button style={tabStyle("launch")} onClick={() => setTab("launch")}>▶ Run</button>
         <button style={tabStyle("branches")} onClick={() => setTab("branches")}>⑂ Branches</button>
