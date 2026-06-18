@@ -67,7 +67,16 @@ _log = logging.getLogger(__name__)
 
 @dataclass
 class TaggedProposal:
-    """A RequirementProposal tagged with its source Domain (in-memory only)."""
+    """A RequirementProposal tagged with its source Domain (in-memory only).
+
+    F105 (v0.33): class_model carries the AI-proposed class model dict for
+    Structural requirements. statement is projected from class_model immediately
+    on construction (project_class_model) so all downstream Stage 3 checks always
+    see a non-empty statement string.
+
+    F107 (v0.33): object_refs carries AI-proposed candidate object-reference paths
+    for Functional/Constraint requirements. Materialised in Stage 4 §4.4.3a Step 4.
+    """
     source_domain_id: str
     statement: str
     requirement_type: str
@@ -78,14 +87,24 @@ class TaggedProposal:
     verification_method: str | None
     priority: str | None
     confidence: float
+    class_model: dict | None = None
+    object_refs: list[str] = field(default_factory=list)
 
     @classmethod
     def from_proposal(
         cls, proposal: RequirementProposal, source_domain_id: str
     ) -> "TaggedProposal":
+        stmt = proposal.statement
+        cm = proposal.class_model
+        if (not stmt or not stmt.strip()) and cm:
+            from core.class_model_projection import project_class_model
+            try:
+                stmt = project_class_model(cm)
+            except Exception:
+                stmt = f"The {cm.get('entity', '?')} entity (class model)"
         return cls(
             source_domain_id=source_domain_id,
-            statement=proposal.statement,
+            statement=stmt or "",
             requirement_type=proposal.requirement_type,
             cci_refs=list(proposal.cci_refs),
             refines_refs=[],
@@ -94,6 +113,8 @@ class TaggedProposal:
             verification_method=proposal.verification_method,
             priority=proposal.priority,
             confidence=proposal.confidence,
+            class_model=cm,
+            object_refs=list(proposal.object_refs or []),
         )
 
     @classmethod

@@ -57,6 +57,7 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from core.ai_client import MODEL, get_ai_client
+from core.class_model_validity import validate_class_model
 from core.slots import check_atomicity, violation_summary
 from mechanisms.requirement_derivation.prompts.requirement_conjoined_decompose_prompt import (
     build_conjoined_decompose_prompt,
@@ -496,6 +497,49 @@ def run_stage3(
                     "statement_preview": p.statement[:80],
                 }
             )
+
+    # -------------------------------------------------------------------------
+    # CHK-3d-11 — Class-model structural validity (F105 / v0.33)
+    # Runs only on Structural proposals that carry a class_model dict.
+    # Hard violations exclude the proposal; soft violations log an advisory.
+    # -------------------------------------------------------------------------
+    surviving_11: list[TaggedProposal] = []
+    for p in proposals:
+        if p.requirement_type != "Structural" or not p.class_model:
+            surviving_11.append(p)
+            continue
+        viols = validate_class_model(p.class_model, row_ref)
+        hard_viols = [v for v in viols if v["severity"] == "hard"]
+        soft_viols = [v for v in viols if v["severity"] == "soft"]
+        if hard_viols:
+            for v in hard_viols:
+                result.validation_failures.append(
+                    {
+                        "check_id": "CHK-3d-11",
+                        "source_domain_id": p.source_domain_id,
+                        "detail": v["detail"],
+                        "statement_preview": p.statement[:80],
+                    }
+                )
+            _log.info(
+                "CHK-3d-11 HARD: domain=%s entity=%r — %d violation(s) → excluded",
+                p.source_domain_id,
+                p.class_model.get("entity", "?"),
+                len(hard_viols),
+            )
+        else:
+            for sv in soft_viols:
+                result.execution_warnings.append(
+                    {
+                        "type": "class_model_soft_violation",
+                        "advisory_id": "CHK-3d-11",
+                        "source_domain_id": p.source_domain_id,
+                        "detail": sv["detail"],
+                        "entity": p.class_model.get("entity", "?"),
+                    }
+                )
+            surviving_11.append(p)
+    proposals = surviving_11
 
     # -------------------------------------------------------------------------
     # CHK-3d-05 — Non-Loss: every eligible CCI covered by ≥1 Requirement

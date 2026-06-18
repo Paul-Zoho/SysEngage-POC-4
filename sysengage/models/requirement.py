@@ -1,7 +1,7 @@
 """
 Requirement ORM model — full Pass 3d implementation.
 
-Per Requirement Derivation Mechanism Spec v0.6 §5.1 and canonical ledger v2.13:
+Per Requirement Derivation Mechanism Spec v0.33 §5.1 and canonical ledger v2.13:
   requirement_id format: R### (R001–R999); composite PK (requirement_id, project_id).
   retired_at IS NULL = active; non-null = retired (FullRerun soft-delete).
   cci_refs / domain_refs / answer_refs / refines_refs are JSONB arrays.
@@ -11,6 +11,15 @@ Per Requirement Derivation Mechanism Spec v0.6 §5.1 and canonical ledger v2.13:
   requirement_type: three-value triad Functional/Constraint/Structural (F89/v2.13).
   verification_method: gains Measurement (v2.13).
   No direct domain_id FK column: Domain membership is via domain_refs JSONB.
+
+F105 (v0.33): class_model JSONB column — structured class model for Structural
+  requirements; NULL for Functional and Constraint types.
+  CHECK: class_model IS NULL OR requirement_type = 'Structural'
+
+F107 (v0.33): object_refs JSONB NOT NULL column — materialised object-reference
+  paths for behavioural (Functional/Constraint) requirements; always '[]' for
+  Structural types.
+  CHECK: requirement_type IN ('Functional','Constraint') OR jsonb_array_length(object_refs) = 0
 """
 
 from datetime import datetime, timezone
@@ -42,7 +51,7 @@ class RequirementModel(Base):
             name="ck_requirement_row_target",
         ),
         CheckConstraint(
-            "jsonb_array_length(cci_refs) >= 1",
+            "jsonb_array_length(cci_refs) >= 1 OR jsonb_array_length(refines_refs) >= 1",
             name="ck_requirement_cci_refs_nonempty",
         ),
         CheckConstraint(
@@ -65,6 +74,14 @@ class RequirementModel(Base):
         CheckConstraint(
             "confidence >= 0.0 AND confidence <= 1.0",
             name="ck_requirement_confidence",
+        ),
+        CheckConstraint(
+            "class_model IS NULL OR requirement_type = 'Structural'",
+            name="ck_requirement_class_model_structural_only",
+        ),
+        CheckConstraint(
+            "requirement_type IN ('Functional','Constraint') OR jsonb_array_length(object_refs) = 0",
+            name="ck_requirement_object_refs_behavioural_only",
         ),
         ForeignKeyConstraint(
             ["project_id"],
@@ -98,6 +115,10 @@ class RequirementModel(Base):
         DateTime(timezone=True),
         nullable=False,
         default=lambda: datetime.now(timezone.utc),
+    )
+    class_model: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
+    object_refs: Mapped[list] = mapped_column(
+        JSONB, nullable=False, server_default="'[]'::jsonb"
     )
 
     project = relationship("ProjectModel", back_populates="requirements")

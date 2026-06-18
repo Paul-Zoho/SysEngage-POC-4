@@ -1,7 +1,7 @@
 """
 Requirement Derivation prompt template — FirstRun / FullRerun (per-Domain).
 
-Per Requirement Derivation Mechanism Spec v0.2 §4.2 and §5.4.
+Per Requirement Derivation Mechanism Spec v0.33 §4.2 and §5.4.
 
 One call per active Domain in Stage 2. Injects:
   row_ref, domain (domain_id, name, description), domain_cci_set,
@@ -17,6 +17,14 @@ One call per active Domain in Stage 2. Injects:
       no inferred content; "and" compound test.
   (c) requirement_type reasoning signals — Why→Constraint, How/What/When→Functional,
       measurable threshold→Measurement (fit_criteria REQUIRED), quality attribute→Constraint.
+
+F105 (v0.33): Structural proposals at rows 2–5 SHOULD include a class_model dict
+  that models the entity (attributes, relationships, refinement_kind). When class_model
+  is supplied, statement may be omitted (null) — the system projects a prose statement.
+
+F107 (v0.33): Functional and Constraint proposals MAY include object_refs — a list
+  of candidate object-reference paths in the form "EntityName.attr_name[.value]".
+  These are materialised against the Structural class_models in Stage 4.
 
 LPM constraint: AI instructed not to reproduce CCI description text verbatim.
 Expected response format: JSON array of RequirementProposal objects.
@@ -62,11 +70,82 @@ Choose `requirement_type` by reasoning about the source CCIs' Zachman column and
   reliability, accessibility) → `Constraint` (a quality bound); verification_method
   Inspection or Measurement as appropriate
 - **CCIs asserting entity composition, attributes, or structural relationships**
-  → `Structural`
+  → `Structural` — prefer a `class_model` dict (see F105 below)
 
 These are reasoning signals to weigh against the CCI content and the row's
 abstraction level — not a deterministic lookup. The enum value you choose is your
 responsibility; it is enforced at the parse boundary."""
+
+_CLASS_MODEL_GUIDANCE = """\
+## F105 — class_model for Structural Requirements (rows 2–5)
+
+When `requirement_type` is `Structural`, you SHOULD provide a `class_model` dict
+that formally models the entity. When class_model is provided, `statement` is optional
+(may be omitted or null) — the system will project a prose statement from the model.
+
+class_model schema:
+```json
+{
+  "entity": "CanonicalEntityName",
+  "tier": <row_number>,
+  "refinement_kind": "identity|decompose|realise_relationship|introduce|merge",
+  "attributes": [
+    {
+      "name": "attr_name",
+      "type": "String|Integer|DateTime|Boolean|Decimal|Enum|Reference|JSON",
+      "key": "PK|FK|null",
+      "semantic_type": "identifier|lifecycle_state|quantity|...",
+      "origin": "refines|realises|introduced",
+      "domain": ["allowed_value_1", "allowed_value_2"],
+      "target_ref": "ForeignEntityName"
+    }
+  ],
+  "relationships": [
+    {
+      "kind": "association|aggregation|composition|dependency",
+      "target": "TargetEntityName",
+      "cardinality": "one-to-many|many-to-many|one-to-one"
+    }
+  ]
+}
+```
+
+**refinement_kind** options:
+- `identity` — the entity carries the same concept as the row N-1 version with added detail
+- `decompose` — this entity is one structural part of a row N-1 entity
+- `realise_relationship` — this entity realises a relationship between two row N-1 entities
+- `introduce` — an entirely new entity introduced at this tier (no parent at row N-1)
+- `merge` — two or more row N-1 entities merge into this one at row N
+
+**origin** on each attribute:
+- `refines` — the attribute exists in the parent entity at row N-1
+- `realises` — the attribute realises a relationship from row N-1
+- `introduced` — new at this tier, no parent attribute
+
+Constraints (enforced by CHK-3d-11):
+- tier MUST equal the current row number ({row_ref})
+- refinement_kind MUST be one of the five values above
+- At least one attribute is required
+- At Row 2: at least one attribute must have semantic_type set
+- FK attributes must have a non-empty target_ref"""
+
+_OBJECT_REFS_GUIDANCE = """\
+## F107 — object_refs for Functional and Constraint Requirements
+
+Functional and Constraint proposals MAY include `object_refs`: a list of paths that
+reference specific structural objects the requirement operates on. Format:
+
+    "EntityName.attr_name"           — references an attribute
+    "EntityName.attr_name.value"     — references a specific allowed value
+
+These are resolved in Stage 4 against the Structural class_models produced in the same
+row. Include only paths you can justify from the CCI evidence. Omit `object_refs` or
+leave it null when no structural object references are evident.
+
+Example:
+```json
+"object_refs": ["Payment.status.pending", "Order.total"]
+```"""
 
 
 def build_requirement_derivation_prompt(
@@ -97,6 +176,12 @@ def build_requirement_derivation_prompt(
     domain_name = domain["name"]
     domain_desc = domain["description"]
     cci_count = len(domain_cci_set)
+    example_ci_id = domain_cci_set[0]["ci_id"] if domain_cci_set else f"CCI-R{row_ref}-C-X-001"
+
+    structural_clause = (
+        " For Structural requirements (rows 2–5), prefer providing a class_model dict "
+        "(see F105 above). statement may be omitted when class_model is provided."
+    )
 
     return f"""You are a systems engineering analyst performing Requirement Derivation (Pass 3d) for Row {row_ref} of a Zachman Framework analysis.
 
@@ -120,10 +205,18 @@ CCIs in this Domain ({cci_count} total):
 
 ---
 
+{_CLASS_MODEL_GUIDANCE.format(row_ref=row_ref)}
+
+---
+
+{_OBJECT_REFS_GUIDANCE}
+
+---
+
 ## Your task
 
 Derive the canonical Requirements from the CCIs above. Each Requirement must:
-1. Have a normative statement that expresses a single obligation at Row {row_ref} abstraction level.
+1. Have a normative statement that expresses a single obligation at Row {row_ref} abstraction level.{structural_clause}
 2. Reference the ci_ids it is derived from (cci_refs). Every CCI SHOULD be covered by at least one Requirement.
 3. Have a requirement_type assigned per the guidance above.
 4. Have a confidence score between 0.0 and 1.0 reflecting your certainty.
@@ -133,17 +226,35 @@ Do NOT include: requirement_id, row_target, domain_refs, or answer_refs — thes
 Do NOT reproduce CCI description text verbatim in the statement.
 Do NOT introduce obligations absent from the source CCIs.
 
-Respond with a JSON array of Requirement proposals in this exact format:
+Respond with a JSON array of Requirement proposals. Example format (one Structural with class_model, one Functional with object_refs):
 [
+  {{
+    "statement": null,
+    "requirement_type": "Structural",
+    "cci_refs": ["{example_ci_id}"],
+    "class_model": {{
+      "entity": "ExampleEntity",
+      "tier": {row_ref},
+      "refinement_kind": "identity",
+      "attributes": [
+        {{"name": "id", "type": "Integer", "key": "PK", "semantic_type": "identifier", "origin": "refines", "domain": null, "target_ref": null}},
+        {{"name": "status", "type": "Enum", "key": null, "semantic_type": "lifecycle_state", "origin": "introduced", "domain": ["active", "inactive"], "target_ref": null}}
+      ],
+      "relationships": []
+    }},
+    "rationale": "optional — why this entity exists at this tier",
+    "confidence": 0.90
+  }},
   {{
     "statement": "The system shall ...",
     "requirement_type": "Functional",
-    "cci_refs": ["{domain_cci_set[0]['ci_id'] if domain_cci_set else 'CCI-ROW' + str(row_ref) + '-C-X-001'}"],
-    "rationale": "optional — why this requirement exists",
-    "fit_criteria": "optional — REQUIRED if type=Measurement",
+    "cci_refs": ["{example_ci_id}"],
+    "object_refs": ["ExampleEntity.status.active"],
+    "rationale": "optional",
+    "fit_criteria": null,
     "verification_method": "Test",
     "priority": "High",
-    "confidence": 0.90
+    "confidence": 0.85
   }}
 ]
 

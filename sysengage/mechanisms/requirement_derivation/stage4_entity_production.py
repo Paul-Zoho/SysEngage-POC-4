@@ -1,7 +1,7 @@
 """
 Stage 4 — Entity Production and Ledger Commit (DM + IM for §4.4.3a).
 
-Per Requirement Derivation Mechanism Spec v0.20 §4.4:
+Per Requirement Derivation Mechanism Spec v0.33 §4.4:
   4.4.1  requirement_id allocation (global per-project R###, includes retired).
   4.4.2  domain_refs DM-derivation (MD-2): intersect cci_refs with active Domain
          memberships; assert ≥1 domain_ref. Fail-closed if empty.
@@ -39,11 +39,9 @@ from sqlalchemy.orm import Session
 from core.ai_client import MODEL, get_ai_client
 from core.db import format_identifier, get_next_sequence_value, get_session, refresh_engine_pool
 from core.slots import extract_slot_terms
-from mechanisms.data_dictionary.service import (
-    record_relationship,
-    record_value,
-    resolve_and_record,
-)
+from core.class_model_coverage import check_concept_coverage
+from core.object_refs_resolver import resolve_object_refs
+from mechanisms.data_dictionary.service import resolve_and_record
 from mechanisms.requirement_derivation.prompts.requirement_dd_extraction_prompt import (
     build_dd_extraction_prompt,
 )
@@ -345,36 +343,27 @@ def _build_dd_ops_from_terms(
     proposals: list[TaggedProposal],
     req_ids: list[str],
     entity_terms: dict[str, list[str]],
-    state_qualifier_map: dict[str, list[StateQualifier]] | None = None,
 ) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
     """
-    Build DD service operation list from AI-extracted entity terms (v0.8 / F99 v0.24).
+    Build DD service resolve ops from AI-extracted entity terms (v0.33 / F107 names-only).
+
+    Post-F107: relationship-record and value-record operations removed.
+    Only 'resolve' ops are emitted for all requirement types.
+    Called only for the non-cm_structural proposal batch in _run_dd_binding.
 
     Returns:
-      ops                  — list of DD service op dicts
-      zero_term_unresolved — dd_zero_term entries: extraction-empty OR VER-3d-19
-                             pre-presentation rejects (F99 v0.24).
-                             Distinguished by reason prefix:
-                               "entity_extraction_empty" — no terms from AI
-                               "ver_3d_19_rejected:<reason>" — clause-grade term
-                             Entries also carry warning_type="ver_3d_19_term_rejected"
-                             for the VER-3d-19 rejects.
-
-    VER-3d-19 (F99 v0.24): promoted from post-commit warn to enforcing pre-presentation
-    reject. Clause-grade terms (exceeds word-count heuristic or sentence punctuation)
-    are skipped here — they never reach the DD service. The standalone _check_ver19
-    predicate is unchanged; this is a routing change.
+      ops                  — list of resolve-op dicts
+      zero_term_unresolved — entries where extraction was empty or VER-3d-19 rejected
+                             all terms.
     """
     ops: list[dict[str, Any]] = []
     zero_term_unresolved: list[dict[str, Any]] = []
 
     for proposal, req_id in zip(proposals, req_ids):
-        rtype = proposal.requirement_type
         terms = entity_terms.get(req_id, [])
         stmt = proposal.statement
 
-        # VER-3d-19 pre-presentation reject (F99 v0.24): filter clause-grade terms
-        # before building ops. Rejected terms → dd_zero_term; NOT presented to DD.
+        # VER-3d-19 pre-presentation reject: filter clause-grade terms
         clean_terms: list[str] = []
         for term in terms:
             violation = _check_ver19(term, req_id)
@@ -389,98 +378,22 @@ def _build_dd_ops_from_terms(
                 clean_terms.append(term)
         terms = clean_terms
 
-        if rtype in ("Functional", "Structural"):
-            if not terms:
-                # Zero-term for a type that should have an entity
-                zero_term_unresolved.append({
-                    "requirement_id": req_id,
-                    "term": None,
-                    "reason": "entity_extraction_empty",
-                })
-                continue
+        if not terms:
+            zero_term_unresolved.append({
+                "requirement_id": req_id,
+                "term": None,
+                "reason": "entity_extraction_empty",
+            })
+            continue
 
-            if rtype == "Structural":
-                # Check if statement asserts a relationship (DM slot parse for
-                # is_relationship flag only — not for the terms themselves)
-                slots = extract_slot_terms(stmt, rtype)
-                is_rel = slots.get("is_relationship", False)
-                if is_rel and len(terms) >= 2:
-                    ops.append({
-                        "op": "relationship",
-                        "from_term": terms[0],
-                        "to_term": terms[1],
-                        "cardinality": "unspecified",
-                        "provenance_ref": req_id,
-                    })
-                    for term in terms[2:]:
-                        if len(term) > _MIN_TERM_LEN:
-                            ops.append({
-                                "op": "resolve",
-                                "term": term,
-                                "context": stmt,
-                                "provenance_ref": req_id,
-                            })
-                else:
-                    for term in terms:
-                        if len(term) > _MIN_TERM_LEN:
-                            ops.append({
-                                "op": "resolve",
-                                "term": term,
-                                "context": stmt,
-                                "provenance_ref": req_id,
-                            })
-            else:
-                for term in terms:
-                    if len(term) > _MIN_TERM_LEN:
-                        ops.append({
-                            "op": "resolve",
-                            "term": term,
-                            "context": stmt,
-                            "provenance_ref": req_id,
-                        })
-
-        elif rtype == "Constraint":
-            if not terms:
-                # F99 (v0.24): no stmt[:60] fallback — empty Constraint extraction
-                # → dd_zero_term; no DD term presented. Non-Loss preserved by the
-                # produced Requirement; the DD simply gains no entry.
-                zero_term_unresolved.append({
-                    "requirement_id": req_id,
-                    "term": None,
-                    "reason": "entity_extraction_empty",
-                })
-                continue
-            for term in terms:
-                if len(term) > _MIN_TERM_LEN:
-                    ops.append({
-                        "op": "resolve",
-                        "term": term,
-                        "context": stmt,
-                        "provenance_ref": req_id,
-                    })
-            # Named value from fit_criteria; terms is guaranteed non-empty here.
-            if proposal.fit_criteria and proposal.fit_criteria.strip():
+        for term in terms:
+            if len(term) > _MIN_TERM_LEN:
                 ops.append({
-                    "op": "value",
-                    "canonical_term": terms[0],
-                    "attr_name": "constraint_value",
-                    "value": proposal.fit_criteria.strip(),
+                    "op": "resolve",
+                    "term": term,
+                    "context": stmt,
                     "provenance_ref": req_id,
                 })
-
-    # State qualifier recording (v0.11 §4.4.3a): lifecycle states recorded as entity
-    # attribute values on the DD entry — one record_value() call per qualifier.
-    if state_qualifier_map:
-        for req_id in req_ids:
-            for qualifier in state_qualifier_map.get(req_id, []):
-                if qualifier.entity and qualifier.state:
-                    ops.append({
-                        "op": "value",
-                        "canonical_term": qualifier.entity,
-                        "attr_name": "lifecycle_state",
-                        "value": qualifier.state,
-                        "provenance_ref": req_id,
-                    })
 
     return ops, zero_term_unresolved
 
@@ -496,50 +409,161 @@ def _run_dd_binding(
     row_ref: int,
 ) -> tuple[dict[str, Any], list[dict[str, Any]]]:
     """
-    Execute §4.4.3a DD Object-slot binding (v0.8):
-      Step 1 — IM entity extraction (AI call).
-      Step 2 — DD service calls (resolve / relationship / value).
-      Step 3 — bind / flag.
+    Execute §4.4.3a DD Object-slot binding (v0.33 / F107 names-only).
 
-    dd_unresolved   — DD service flagged entries (terms_presented but not resolved);
-                      counted in VER-3d-17 accounting.
-    dd_zero_term    — Functional/Structural proposals where entity extraction returned
-                      no terms; NOT counted in terms_presented (no resolve op was made).
-    VER-3d-17:  terms_presented == resolved + len(dd_unresolved)  ← excludes dd_zero_term.
-    VER-3d-19:  entity-grade heuristic violations logged in ver_3d_19_violations.
+    Structural proposals with class_model set — Sub-pass 1:
+      Entity name and relationship target names extracted directly from class_model;
+      no AI extraction call.  entity_ref is set in-place on class_model after
+      successful resolution.
+
+    Other proposals (Functional, Constraint, Structural-without-cm):
+      Step 1 — IM entity extraction (AI call, F101 batched).
+      Step 2 — DD resolve calls (names-only; relationship/value ops removed F107).
+
+    dd_unresolved   — DD service flagged entries (terms_presented but not resolved).
+    dd_zero_term    — proposals where no term was presented to the DD service.
+    VER-3d-17:  terms_presented == resolved + len(dd_unresolved)
+    VER-3d-23:  three-clause completeness invariant.
 
     Returns:
       dd_binding   — audit block dict for mechanism_data §4.4.3b
-      fingerprints — list containing the stage4_dd_entity_extraction fingerprint
+      fingerprints — list of per-batch AI-extraction fingerprint dicts
     """
-    # Step 1: IM entity extraction
-    entity_terms, state_qualifier_map, fingerprints = _extract_entity_terms_ai(
-        proposals, req_ids, pass_data, row_ref
-    )
+    # Split: Structural proposals with class_model vs. everything else
+    cm_struct_proposals: list[TaggedProposal] = []
+    cm_struct_ids: list[str] = []
+    other_proposals: list[TaggedProposal] = []
+    other_ids: list[str] = []
 
-    # Step 2: Build ops from AI-extracted entity terms (VER-3d-19 reject is inside)
-    ops, zero_term_entries = _build_dd_ops_from_terms(
-        proposals, req_ids, entity_terms, state_qualifier_map
-    )
+    for p, rid in zip(proposals, req_ids):
+        if p.requirement_type == "Structural" and p.class_model:
+            cm_struct_proposals.append(p)
+            cm_struct_ids.append(rid)
+        else:
+            other_proposals.append(p)
+            other_ids.append(rid)
 
     terms_presented: int = 0
     resolved: int = 0
     new_canonical: int = 0
     synonyms_recorded: int = 0
-    relationships_recorded: int = 0
-    values_recorded: int = 0
-    # dd_unresolved: DD service flagged entries only (VER-3d-17 scope)
     dd_unresolved: list[dict[str, Any]] = []
-    # VER-3d-23 clause 1: track which req_ids contributed ≥1 resolve-presented term
+    zero_term_entries: list[dict[str, Any]] = []
     reqs_with_terms: set[str] = set()
+    fingerprints: list[dict[str, Any]] = []
 
-    for op in ops:
+    # -----------------------------------------------------------------------
+    # Sub-pass 1: Structural-with-class_model — resolve names, set entity_ref
+    # -----------------------------------------------------------------------
+    for proposal, req_id in zip(cm_struct_proposals, cm_struct_ids):
+        cm = proposal.class_model  # type: ignore[index]
+        entity = (cm.get("entity") or "").strip()
+        if not entity or len(entity) <= _MIN_TERM_LEN:
+            zero_term_entries.append({
+                "requirement_id": req_id,
+                "term": None,
+                "reason": "class_model_entity_empty_or_trivial",
+            })
+            continue
+
+        # Resolve primary entity name; set entity_ref on class_model if resolved
         try:
-            if op["op"] == "resolve":
+            res = resolve_and_record(entity, proposal.statement, req_id)
+            terms_presented += 1
+            reqs_with_terms.add(req_id)
+            outcome = res.get("outcome", "flagged")
+            if outcome == "flagged":
+                dd_unresolved.append({
+                    "requirement_id": req_id,
+                    "term": entity,
+                    "reason": "flagged_ambiguous",
+                })
+            else:
+                resolved += 1
+                if outcome == "canonical":
+                    new_canonical += 1
+                elif outcome == "synonym":
+                    synonyms_recorded += 1
+                dd_id = res.get("dd_id")
+                if dd_id:
+                    cm["entity_ref"] = dd_id
+        except Exception as exc:
+            _log.warning("DD resolve failed for entity=%r req=%s: %s", entity, req_id, exc)
+            pass_data.setdefault("execution_warnings_stage4", []).append({
+                "type": "dd_binding_op_error",
+                "term": entity,
+                "provenance_ref": req_id,
+                "error": str(exc),
+            })
+
+        # Resolve relationship target names (names-only; no record_relationship)
+        for rel in cm.get("relationships") or []:
+            if not isinstance(rel, dict):
+                continue
+            target = (rel.get("target") or "").strip()
+            if not target or len(target) <= _MIN_TERM_LEN:
+                continue
+            viol = _check_ver19(target, req_id)
+            if viol:
+                zero_term_entries.append({
+                    "requirement_id": req_id,
+                    "term": target,
+                    "reason": f"ver_3d_19_rejected:{viol['reason']}",
+                    "warning_type": "ver_3d_19_term_rejected",
+                })
+                continue
+            try:
+                res = resolve_and_record(target, proposal.statement, req_id)
+                terms_presented += 1
+                reqs_with_terms.add(req_id)
+                outcome = res.get("outcome", "flagged")
+                if outcome == "flagged":
+                    dd_unresolved.append({
+                        "requirement_id": req_id,
+                        "term": target,
+                        "reason": "flagged_ambiguous",
+                    })
+                else:
+                    resolved += 1
+                    if outcome == "canonical":
+                        new_canonical += 1
+                    elif outcome == "synonym":
+                        synonyms_recorded += 1
+            except Exception as exc:
+                _log.warning(
+                    "DD resolve failed for rel-target=%r req=%s: %s", target, req_id, exc
+                )
+                pass_data.setdefault("execution_warnings_stage4", []).append({
+                    "type": "dd_binding_op_error",
+                    "term": target,
+                    "provenance_ref": req_id,
+                    "error": str(exc),
+                })
+
+    # -----------------------------------------------------------------------
+    # Other proposals — AI extraction (F101 batched) + resolve ops
+    # -----------------------------------------------------------------------
+    if other_proposals:
+        entity_terms, _sq_map, ext_fps = _extract_entity_terms_ai(
+            other_proposals, other_ids, pass_data, row_ref
+        )
+        fingerprints.extend(ext_fps)
+
+        ops, other_zero = _build_dd_ops_from_terms(
+            other_proposals, other_ids, entity_terms
+        )
+        zero_term_entries.extend(other_zero)
+
+        for op in ops:
+            if op["op"] != "resolve":
+                continue
+            try:
                 terms_presented += 1
                 reqs_with_terms.add(op["provenance_ref"])
-                result = resolve_and_record(op["term"], op["context"], op["provenance_ref"])
-                outcome = result.get("outcome", "flagged")
+                op_result = resolve_and_record(
+                    op["term"], op["context"], op["provenance_ref"]
+                )
+                outcome = op_result.get("outcome", "flagged")
                 if outcome == "flagged":
                     dd_unresolved.append({
                         "requirement_id": op["provenance_ref"],
@@ -552,57 +576,24 @@ def _run_dd_binding(
                         new_canonical += 1
                     elif outcome == "synonym":
                         synonyms_recorded += 1
-
-            elif op["op"] == "relationship":
-                rel_result = record_relationship(
-                    op["from_term"],
-                    op["to_term"],
-                    op["cardinality"],
-                    op["provenance_ref"],
+            except Exception as exc:
+                _log.warning(
+                    "DD binding op failed for term=%r req=%s: %s",
+                    op.get("term", "?"), op.get("provenance_ref", "?"), exc,
                 )
-                if rel_result.get("status") == "recorded":
-                    relationships_recorded += 1
+                pass_data.setdefault("execution_warnings_stage4", []).append({
+                    "type": "dd_binding_op_error",
+                    "term": op.get("term", "?"),
+                    "provenance_ref": op.get("provenance_ref", "?"),
+                    "error": str(exc),
+                })
 
-            elif op["op"] == "value":
-                val_result = record_value(
-                    op["canonical_term"],
-                    op["attr_name"],
-                    op["value"],
-                    op["provenance_ref"],
-                )
-                if val_result.get("status") == "recorded":
-                    values_recorded += 1
-
-        except Exception as exc:
-            _log.warning(
-                "DD binding op failed for term=%r req=%s: %s",
-                op.get("term") or op.get("from_term", "?"),
-                op.get("provenance_ref", "?"),
-                exc,
-            )
-            pass_data.setdefault("execution_warnings_stage4", []).append({
-                "type": "dd_binding_op_error",
-                "term": op.get("term") or op.get("from_term", "?"),
-                "provenance_ref": op.get("provenance_ref", "?"),
-                "error": str(exc),
-            })
-
-    # --- VER-3d-23: three-clause completeness invariant (v0.25 corrected) -------
-    # Clause 1 — requirement-level completeness:
-    #   |reqs contributing ≥1 presented term| + |dd_zero_term| == row req count
-    #   dd_zero_term may contain multiple entries per req_id (one per VER-3d-19
-    #   rejected term); use unique req_ids.
+    # --- VER-3d-23: three-clause completeness invariant -----------------------
     zero_term_req_ids: set[str] = {e["requirement_id"] for e in zero_term_entries}
     reqs_accounted: int = len(reqs_with_terms) + len(zero_term_req_ids)
     row_req_count: int = len(req_ids)
     ver23_c1_ok: bool = reqs_accounted == row_req_count
-
-    # Clause 2 — term-level consistency:
-    #   terms_presented == resolved + |dd_unresolved|
     ver23_c2_ok: bool = terms_presented == resolved + len(dd_unresolved)
-
-    # Clause 3 — no swallowed truncation:
-    #   no dd_extraction_batch_truncated warning recorded
     truncation_batches = [
         w for w in pass_data.get("execution_warnings_stage4", [])
         if w.get("type") == "dd_extraction_batch_truncated"
@@ -641,13 +632,9 @@ def _run_dd_binding(
         "resolved": resolved,
         "new_canonical": new_canonical,
         "synonyms_recorded": synonyms_recorded,
-        "relationships_recorded": relationships_recorded,
-        "values_recorded": values_recorded,
-        # DD service flagged entries — counted in terms_presented (VER-3d-17 scope)
+        "relationships_recorded": 0,
+        "values_recorded": 0,
         "dd_unresolved": dd_unresolved,
-        # Zero-term and VER-3d-19 pre-presentation rejects — NOT in terms_presented.
-        # Entries with warning_type="ver_3d_19_term_rejected" are the F99 rejects;
-        # entries with reason="entity_extraction_empty" are empty-extraction cases.
         "dd_zero_term": zero_term_entries,
     }
 
@@ -867,12 +854,52 @@ def run_stage4(
             prior_active, proposals, new_ids
         )
 
-    # --- §4.4.3a DD entity extraction (IM, v0.8) — outside the ledger transaction ---
+    # --- §4.4.3a DD entity extraction (IM, v0.33) — outside the ledger transaction ---
     # The extraction AI call happens before the transaction so that failures
     # do not roll back the ledger write. On extraction failure, empty terms are
     # used and zero_term_unresolved entries are recorded.
+    # F107: _run_dd_binding also sets entity_ref on class_model dicts in-place.
     dd_binding, dd_fingerprints = _run_dd_binding(proposals, new_ids, pass_data, row_ref)
     result.ai_model_fingerprints = dd_fingerprints
+
+    # --- §4.4.3a Step 4: Object-refs materialisation (F107 / v0.33) -------
+    # Build working set from resolved class_models (entity_ref now set).
+    # Materialise behavioural proposals' candidate object_refs paths.
+    class_models_by_entity: dict[str, dict] = {}
+    for p in proposals:
+        if p.class_model and p.class_model.get("entity"):
+            class_models_by_entity[p.class_model["entity"]] = p.class_model
+
+    proposal_object_refs: list[list[str]] = []
+    for proposal, req_id in zip(proposals, new_ids):
+        if proposal.requirement_type not in ("Functional", "Constraint"):
+            proposal_object_refs.append([])
+            continue
+        if not proposal.object_refs:
+            proposal_object_refs.append([])
+            continue
+        try:
+            resolved_paths, dangling = resolve_object_refs(
+                proposal.object_refs, class_models_by_entity, req_id
+            )
+            proposal_object_refs.append(resolved_paths)
+            if dangling:
+                pass_data.setdefault("execution_warnings_stage4", []).append({
+                    "type": "object_refs_dangling",
+                    "provenance_ref": req_id,
+                    "dangling_count": len(dangling),
+                    "dangling": dangling,
+                })
+        except Exception as exc:
+            _log.warning(
+                "object_refs materialisation failed for req=%s: %s", req_id, exc
+            )
+            pass_data.setdefault("execution_warnings_stage4", []).append({
+                "type": "object_refs_materialisation_error",
+                "provenance_ref": req_id,
+                "error": str(exc),
+            })
+            proposal_object_refs.append([])
 
     # Refresh the DB pool before the ledger transaction — second guard point.
     # _run_dd_binding's AI extraction batches (F101 v0.25) idle the main session
@@ -902,21 +929,26 @@ def run_stage4(
                 {"now": now, "pid": project_id, "row": str(row_ref)},
             )
 
-        # Step 2: INSERT new Requirement entities
-        for proposal, req_id in zip(proposals, new_ids):
+        # Step 2: INSERT new Requirement entities (F105 + F107: class_model, object_refs)
+        for idx, (proposal, req_id) in enumerate(zip(proposals, new_ids)):
             domain_refs = getattr(proposal, "_domain_refs", [])
+            obj_refs = proposal_object_refs[idx] if idx < len(proposal_object_refs) else []
+            cm_json: str | None = (
+                json.dumps(proposal.class_model) if proposal.class_model else None
+            )
             session.execute(
                 text(
                     "INSERT INTO requirement "
                     "(requirement_id, project_id, statement, requirement_type, "
                     " row_target, rationale, cci_refs, domain_refs, fit_criteria, "
                     " verification_method, priority, answer_refs, refines_refs, "
-                    " confidence, retired_at, created_at) "
+                    " confidence, retired_at, created_at, class_model, object_refs) "
                     "VALUES (:rid, :pid, :stmt, :rtype, :row, :rationale, "
                     "        CAST(:cci_refs AS jsonb), CAST(:domain_refs AS jsonb), "
                     "        :fit_criteria, :verification_method, :priority, "
                     "        CAST(:answer_refs AS jsonb), CAST(:refines_refs AS jsonb), "
-                    "        :confidence, NULL, :now)"
+                    "        :confidence, NULL, :now, "
+                    "        CAST(:class_model AS jsonb), CAST(:object_refs AS jsonb))"
                 ),
                 {
                     "rid": req_id,
@@ -934,6 +966,8 @@ def run_stage4(
                     "refines_refs": json.dumps(sorted(proposal.refines_refs)),
                     "confidence": proposal.confidence,
                     "now": now,
+                    "class_model": cm_json,
+                    "object_refs": json.dumps(obj_refs),
                 },
             )
 
@@ -988,6 +1022,40 @@ def run_stage4(
         result.status = "failed"
         result.failure_reason = f"Ledger transaction rolled back: {exc}"
         return result
+
+    # --- CHK-3d-12: Concept-coverage check (F107 / v0.33, soft advisory) -----
+    # Row-level check: every prior-row entity should be covered by ≥1 current-row
+    # class_model with refinement_kind != 'introduce'. Advisory only — does not
+    # change execution_status. Result recorded in mechanism_data.
+    try:
+        current_row_cms = [
+            p.class_model
+            for p in proposals
+            if p.requirement_type == "Structural" and p.class_model
+        ]
+        coverage = check_concept_coverage(
+            project_id=project_id,
+            row_ref=row_ref,
+            current_row_class_models=current_row_cms,
+            session=session,
+        )
+        pass_data.setdefault("mechanism_data_stage4", {})["chk3d12"] = coverage
+        if coverage.get("status") not in ("ok",):
+            _log.info(
+                "CHK-3d-12 %s: %d uncovered entity(ies) out of %d at row %d",
+                coverage.get("status"),
+                len(coverage.get("uncovered_entities", [])),
+                coverage.get("prior_entity_count", 0),
+                row_ref,
+            )
+            pass_data.setdefault("execution_warnings_stage4", []).append({
+                "type": "chk3d12_concept_coverage_gap",
+                "status": coverage.get("status"),
+                "uncovered_entities": coverage.get("uncovered_entities", []),
+                "hard_extinction": coverage.get("hard_extinction", False),
+            })
+    except Exception as exc:
+        _log.warning("CHK-3d-12 failed: %s", exc)
 
     # Build result summary
     type_dist: dict[str, int] = {
