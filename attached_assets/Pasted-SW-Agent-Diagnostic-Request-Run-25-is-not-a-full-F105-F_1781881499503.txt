@@ -1,0 +1,80 @@
+SW-Agent Diagnostic Request — Run 25 is not a full F105/F107 implementation
+
+Run reviewed: PMT_Ph03_3e_RequirementMatching_R2_Run25.json
+run_id 119e171b-338b-4393-94be-70c67d035586, created 2026-06-19T14:51 UTC, generator sysengage-ledger-export v1.0.
+
+Spec baseline this run was expected to exercise: Row 3 RD v0.19 / Row 4 RD v0.33 / ledger v2.17 / DD v0.3 (Row 3) / v0.2 (Row 4) — i.e. class_model on Structural requirements (F105), materialised object_refs on behavioural requirements (F107), the names-only DD strip, and the one-time promote_dd_to_class_model migration.
+
+The run does not match that baseline, and Row 2 collapsed before any of the new machinery could be exercised. This is a request to root-cause why — please confirm or correct each inference below and answer the numbered questions. We are not asking for fixes yet; we want an accurate picture of the deployed build state.
+
+
+A. Evidence: the build is not at the v2.17 / F105 / F107 baseline
+
+
+Ledger export is v2.15, not v2.17. Top-level sysengage_ledger_version: 2.15, schema_id: sysengage.ledger.instance.v2_15.
+Requirement payloads carry no class_model and no object_refs fields. The exported Requirement payload keys are exactly: requirement_id, statement, requirement_type, row_target, confidence, cci_refs, domain_refs, answer_refs, refines_refs, rationale, verification_method, priority. The two v2.17 fields are absent.
+F105 class_model appears unimplemented. Row 1 requirement_type_distribution = {Functional: 7, Constraint: 2, Structural: 0} — zero Structural requirements. There is no class_model_binding, no model_coverage / model_coverage_gaps, and no CHK-3d-11 / CHK-3d-12 trace anywhere in any RequirementDerivation mechanism_data.
+F107 object_refs — only the consumer (resolver) is present. The Row 1 RequirementDerivation pass (P1690) emits object_refs_dangling warnings, so the resolver is wired in. But with zero class_models to resolve against, every object_ref dangles:
+
+R001: Task.claimable → entity_not_in_working_set:'Task'; Task.monetary_value → entity_not_in_working_set:'Task'
+R002: Task → malformed_path_min_2_segments
+R006: WeeklyEarnings.amount → entity_not_in_working_set:'WeeklyEarnings'
+R008: HistoricalRecord.child_id, HistoricalRecord.task_id → entity_not_in_working_set:'HistoricalRecord'
+
+
+
+The DD strip (F107 / DD v0.3 / v0.2) did not land. DataDictionaryEntry payloads still carry the attributes field (empty [] on canonicals, null on synonyms) and an entry_kind. The Row 1 dd_binding block still reports the pre-F107 keys relationships_recorded: 0 and values_recorded: 0 — under v0.30+ those keys were removed from dd_binding.
+
+
+Inference: the deployed build merged the object_refs resolver ahead of (a) class_model production (F105), (b) the DD strip + promote_dd_to_class_model migration (F107 DD half), and (c) the v2.17 ledger/export schema. The consumer landed without the producer.
+
+Questions — A
+
+
+A1. Which spec version is each deployed mechanism actually built to? Please give a per-mechanism version map (Source Capture, Row-Lens, CCI Construction, Domain Derivation, Requirement Derivation, Requirement Matching, Data Dictionary service) and the branch/commit the run came from.
+A2. Is the database on the v2.15 or v2.17 schema? Has the add_class_model_object_refs_columns migration been applied? Has promote_dd_to_class_model been run? If not, what is gating them?
+A3. Is class_model production (Row 4 v0.33 §4.4.3c + the Stage-2 class_model proposal, §5.2/§5.4) implemented at all in the deployed Requirement Derivation, or only the object_refs resolver? If partial, what was the merge order and why did the resolver ship first?
+A4. Is the v2.15 export tool simply stripping class_model/object_refs because the export schema is v2.15, or are those fields genuinely never written onto the Requirement? (i.e. is this an export-schema gap or a derivation gap?)
+
+
+
+B. Priority defect — Row 2 CCIConstruction silently produced 0 CCIs from 9 content-bearing signals
+
+This is independent of F105/F107 and is the reason the run is effectively R1-only.
+
+
+Row 2 Row-Lens Source Reanalysis (P1691, Success) produced 9 substantive Row 2 signals — SG921–SG929: section-boundary intent, the core "children claim pocket-money tasks on completion" concept, business entities (tasks with monetary values, parent/child), the completed-task→child relationship, information visibility, weekly aggregated-earnings reporting, parent visibility, the weekly-reset business rule, and temporal data retention. This is exactly the Row 2 conceptual model.
+Row 2 CCIConstruction (P1692) reports execution_status: Success, evaluated_scope: "All Row 2 Signals", mechanism_data: {} (empty), mode_violations: [], and zero CCIs produced. All 15 CCIs in the ledger are Row 1 (ZC-R1-*); there are no Row 2 cells or CCIs.
+Cascade from the zero CCIs: Domain Derivation P1693 (PartialSuccess, no_cci_input, 0 domains, scenario: FirstRun) → Requirement Derivation P1694 (PartialSuccess, scenario: ZeroCCI, 0 requirements) → Requirement Matching P1695 (counts.processed: 0, match_records: [], all nine Row 1 requirements recorded as downward gap_records — unrefined).
+
+
+Concern: nine content-bearing Row 2 signals were consumed and zero CCIs were produced, yet the pass reported Success with an empty mechanism_data — no record of what happened to the nine signals. This is a silent Non-Loss break (loud-failure-over-silent-swallow): a true zero-output on content-bearing input should be a hard failure or at minimum a loud, accounted-for warning, not a Success.
+
+Questions — B
+
+
+B1. Why did CCIConstruction produce 0 CCIs from the 9 Row 2 signals? Is this a row-scoping issue (the pass read Row 1 cells / didn't bind the Row 2 signals to Row 2 cells), an AI-call failure swallowed to empty, or a genuine "no CCIs warranted" decision?
+B2. Why is execution_status Success (not Failed/PartialSuccess) and mechanism_data empty on a 9-signals-in / 0-CCIs-out pass? Where is the per-signal accounting that would show each of SG921–SG929 either producing a CCI or being explicitly, loudly dropped?
+B3. Is there an AI-call error, truncation, or exception on the Row 2 CCIConstruction call that was caught and reduced to an empty success? (Compare the Row 1 CCIConstruction P1688, which succeeded — what differs at Row 2?)
+B4. Is this a regression of the earlier row-scoping fix, or a distinct path? Please trace the signal→cell→CCI binding for Row 2 specifically.
+
+
+
+C. Two F107 findings the run surfaces (carry regardless of build state)
+
+
+C1 — Producer/consumer ordering. Per the population profile, entity existence begins at Row 2; there are no class_models at Row 1 by design. Yet object_refs are extracted from Row 1 behavioural statements and therefore all dangle. Is object_refs extraction intended to run at Row 1 at all (before any class_model can exist), or should it be gated to rows where a class_model working set exists? We may tighten the spec here — please advise what the deployed resolver currently does (does it attempt extraction at every row, or only where a working set is non-empty?).
+C2 — Path arity: malformed_path_min_2_segments vs the spec. R002's object_ref Task was rejected because the resolver requires ≥2 segments, but Row 4 v0.33 §5.4/§5.5 (and Row 3 v0.19) currently list bare <Entity> as a valid object_ref form. We think the resolver's ≥2-segment rule is the correct design (a bare entity name binds nothing — naming an entity is the DD's job; an object_ref should bind a value/attribute) and intend to tighten the spec to require <Entity>.<attr> minimum. Please confirm the resolver's exact arity rule and any edge handling, so the spec and implementation agree.
+
+
+
+D. What we need back
+
+
+A per-mechanism version/commit map (Question A1) and the DB schema + migration state (A2) — so we know exactly what is deployed vs pending.
+Confirmation of the F105/F107 merge state (A3/A4): is class_model production implemented, partially implemented, or absent; and is the missing-fields situation an export-schema gap or a derivation gap.
+A root-cause for the Row 2 CCIConstruction zero-output (B1–B4), with the Row 2 signal→cell→CCI trace, and confirmation of why it reported Success with empty mechanism_data.
+The resolver's actual object_refs behaviour (C1/C2): per-row extraction gating and the exact path-arity rule.
+
+
+Once we have this, we can sequence the remaining build work (bring the deployment to v0.33 / v2.17, fix the Row 2 CCI break) and re-run R1–R2 against a build that can actually exercise F105/F107.
