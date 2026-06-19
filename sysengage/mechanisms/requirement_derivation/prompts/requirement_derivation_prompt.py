@@ -85,12 +85,12 @@ that formally models the entity. When class_model is provided, `statement` is op
 
 class_model schema:
 ```json
-{
+{{
   "entity": "CanonicalEntityName",
   "tier": <row_number>,
   "refinement_kind": "identity|decompose|realise_relationship|introduce|merge",
   "attributes": [
-    {
+    {{
       "name": "attr_name",
       "type": "String|Integer|DateTime|Boolean|Decimal|Enum|Reference|JSON",
       "key": "PK|FK|null",
@@ -98,16 +98,16 @@ class_model schema:
       "origin": "refines|realises|introduced",
       "domain": ["allowed_value_1", "allowed_value_2"],
       "target_ref": "ForeignEntityName"
-    }
+    }}
   ],
   "relationships": [
-    {
+    {{
       "kind": "association|aggregation|composition|dependency",
       "target": "TargetEntityName",
       "cardinality": "one-to-many|many-to-many|one-to-one"
-    }
+    }}
   ]
-}
+}}
 ```
 
 **refinement_kind** options:
