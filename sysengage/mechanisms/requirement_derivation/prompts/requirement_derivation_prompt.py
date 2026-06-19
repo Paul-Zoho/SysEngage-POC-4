@@ -76,25 +76,124 @@ These are reasoning signals to weigh against the CCI content and the row's
 abstraction level — not a deterministic lookup. The enum value you choose is your
 responsibility; it is enforced at the parse boundary."""
 
-_CLASS_MODEL_GUIDANCE = """\
+_CLASS_MODEL_GUIDANCE_COMMON_TAIL = """\
+
+**refinement_kind** options:
+- `identity` — the entity carries the same concept as the row N-1 version with added detail
+- `decompose` — this entity is one structural part of a row N-1 entity
+- `realise_relationship` — this entity realises a relationship between two row N-1 entities
+- `introduce` — an entirely new entity introduced at this tier (no parent at row N-1)
+- `merge` — two or more row N-1 entities merge into this one at row N
+
+**origin** on each attribute:
+- `refines` — the attribute exists in the parent entity at row N-1
+- `realises` — the attribute realises a relationship from row N-1
+- `introduced` — new at this tier, no parent attribute"""
+
+
+def _build_class_model_guidance(row_ref: int) -> str:
+    """
+    Return the F105 class_model guidance block scoped to the given row.
+
+    P1 (Row 1): no class_model — CHK-3d-11 hard-rejects any class_model here.
+    P2 (Row 2): restricted attribute profile — name/semantic_type/origin/description only.
+    Row 3: adds logical type/key/domain/target_ref (physical types rejected by CHK-3d-11).
+    Row 4+: all attribute fields permitted.
+    """
+    if row_ref == 1:
+        return """\
 ## F105 — class_model for Structural Requirements (rows 2–5)
 
-When `requirement_type` is `Structural`, you SHOULD provide a `class_model` dict
-that formally models the entity. When class_model is provided, `statement` is optional
-(may be omitted or null) — the system will project a prose statement from the model.
+**P1 — YOU ARE AT ROW 1 (Scope/Planner level). DO NOT include `class_model`.**
 
-class_model schema:
+Row 1 Structural requirements express enterprise-scope obligations in prose only.
+`class_model` structural modelling begins at Row 2.  Any `class_model` on a Row 1
+proposal will be HARD-rejected by CHK-3d-11 (`tier1_class_model`) and the entire
+proposal will be excluded from production.  Do not author class_model at Row 1."""
+
+    if row_ref == 2:
+        # f-string: {{ → literal {, }} → literal }, {{field}} → literal {field}
+        return f"""\
+## F105 — class_model for Structural Requirements (rows 2–5)
+
+When `requirement_type` is `Structural`, you SHOULD provide a `class_model` dict.
+When class_model is provided, `statement` is optional — the system will project prose.
+
+**P2 — YOU ARE AT ROW 2 (Conceptual/Owner level). RESTRICTED ATTRIBUTE PROFILE.**
+Row 2 models the CONCEPTUAL data shape only. Each attribute MUST include ONLY:
+  • `name`          — snake_case attribute name DERIVED from the statement
+                      (e.g. "monetary_value", "availability_status", "completion_date").
+                      NEVER use "attr_name" literally; NEVER leave it null.
+  • `semantic_type` — a semantic CATEGORY noun such as "money", "identifier",
+                      "lifecycle_state", "name", "date", "quantity", "code",
+                      "reference", "flag", "amount", "label".
+                      Do NOT use POS tags ("Noun", "Verb", "Qualifier") — wrong.
+  • `origin`        — refines | realises | introduced
+  • `description`   — one-line description
+
+Do NOT set `type`, `key`, `domain`, or `target_ref` on Row 2 attributes.
+Those fields belong at Row 4 (physical/builder level).
+CHK-3d-11 HARD-rejects Row 2 attributes that carry `key`, `domain`, or `target_ref`
+(`profile_violation_row2:{{field}}`) — the entire proposal is excluded.
+
+Row 2 class_model schema:
 ```json
 {{
   "entity": "CanonicalEntityName",
-  "tier": <row_number>,
+  "tier": 2,
+  "refinement_kind": "identity|decompose|realise_relationship|introduce|merge",
+  "attributes": [
+    {{
+      "name": "monetary_value",
+      "semantic_type": "money",
+      "origin": "introduced",
+      "description": "Monetary value associated with the task"
+    }}
+  ],
+  "relationships": [
+    {{
+      "kind": "association|aggregation|composition|dependency",
+      "target": "TargetEntityName",
+      "cardinality": "one-to-many|many-to-many|one-to-one"
+    }}
+  ]
+}}
+```
+""" + _CLASS_MODEL_GUIDANCE_COMMON_TAIL + """
+
+Constraints (enforced by CHK-3d-11):
+- tier MUST be 2
+- refinement_kind MUST be one of the five values above
+- At least one attribute is required; ≥1 attribute must have semantic_type set
+- Row 2 attributes: ONLY name/semantic_type/origin/description (P2 — see above)"""
+
+    if row_ref == 3:
+        # f-string: {{ → literal {, }} → literal }
+        return f"""\
+## F105 — class_model for Structural Requirements (rows 2–5)
+
+When `requirement_type` is `Structural`, you SHOULD provide a `class_model` dict.
+When class_model is provided, `statement` is optional — the system will project prose.
+
+**Row 3 (Logical/Designer level) attribute profile.**
+Row 3 adds `type` (LOGICAL types only — see enum), `key`, `domain`, `target_ref`.
+Physical DB types such as VARCHAR(255) or BIGINT are NOT permitted at Row 3 —
+CHK-3d-11 HARD-rejects them (`profile_violation_row3:type_not_logical`).
+
+Logical `type` closed enum: String | Integer | DateTime | Boolean | Decimal | Enum | Reference | JSON
+
+Row 3 class_model schema:
+```json
+{{
+  "entity": "CanonicalEntityName",
+  "tier": 3,
   "refinement_kind": "identity|decompose|realise_relationship|introduce|merge",
   "attributes": [
     {{
       "name": "attr_name",
       "type": "String|Integer|DateTime|Boolean|Decimal|Enum|Reference|JSON",
       "key": "PK|FK|null",
-      "semantic_type": "identifier|lifecycle_state|quantity|...",
+      "semantic_type": "identifier|lifecycle_state|quantity|money|name|date|...",
       "origin": "refines|realises|introduced",
       "domain": ["allowed_value_1", "allowed_value_2"],
       "target_ref": "ForeignEntityName"
@@ -109,24 +208,55 @@ class_model schema:
   ]
 }}
 ```
-
-**refinement_kind** options:
-- `identity` — the entity carries the same concept as the row N-1 version with added detail
-- `decompose` — this entity is one structural part of a row N-1 entity
-- `realise_relationship` — this entity realises a relationship between two row N-1 entities
-- `introduce` — an entirely new entity introduced at this tier (no parent at row N-1)
-- `merge` — two or more row N-1 entities merge into this one at row N
-
-**origin** on each attribute:
-- `refines` — the attribute exists in the parent entity at row N-1
-- `realises` — the attribute realises a relationship from row N-1
-- `introduced` — new at this tier, no parent attribute
+""" + _CLASS_MODEL_GUIDANCE_COMMON_TAIL + """
 
 Constraints (enforced by CHK-3d-11):
-- tier MUST equal the current row number ({row_ref})
+- tier MUST be 3
 - refinement_kind MUST be one of the five values above
 - At least one attribute is required
-- At Row 2: at least one attribute must have semantic_type set
+- type MUST be from the closed logical enum (no physical types)
+- FK attributes must have a non-empty target_ref"""
+
+    # Row 4+ — full physical schema
+    # f-string: {{ → literal {, }} → literal }, {row_ref} → substituted
+    return f"""\
+## F105 — class_model for Structural Requirements (rows 2–5)
+
+When `requirement_type` is `Structural`, you SHOULD provide a `class_model` dict.
+When class_model is provided, `statement` is optional — the system will project prose.
+
+class_model schema:
+```json
+{{
+  "entity": "CanonicalEntityName",
+  "tier": {row_ref},
+  "refinement_kind": "identity|decompose|realise_relationship|introduce|merge",
+  "attributes": [
+    {{
+      "name": "attr_name",
+      "type": "String|Integer|DateTime|Boolean|Decimal|Enum|Reference|JSON",
+      "key": "PK|FK|null",
+      "semantic_type": "identifier|lifecycle_state|quantity|money|name|date|...",
+      "origin": "refines|realises|introduced",
+      "domain": ["allowed_value_1", "allowed_value_2"],
+      "target_ref": "ForeignEntityName"
+    }}
+  ],
+  "relationships": [
+    {{
+      "kind": "association|aggregation|composition|dependency",
+      "target": "TargetEntityName",
+      "cardinality": "one-to-many|many-to-many|one-to-one"
+    }}
+  ]
+}}
+```
+""" + _CLASS_MODEL_GUIDANCE_COMMON_TAIL + f"""
+
+Constraints (enforced by CHK-3d-11):
+- tier MUST equal {row_ref}
+- refinement_kind MUST be one of the five values above
+- At least one attribute is required
 - FK attributes must have a non-empty target_ref"""
 
 _OBJECT_REFS_GUIDANCE = """\
@@ -205,7 +335,7 @@ CCIs in this Domain ({cci_count} total):
 
 ---
 
-{_CLASS_MODEL_GUIDANCE.format(row_ref=row_ref)}
+{_build_class_model_guidance(row_ref)}
 
 ---
 

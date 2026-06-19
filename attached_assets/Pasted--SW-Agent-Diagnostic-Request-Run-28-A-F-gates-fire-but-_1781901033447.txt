@@ -1,0 +1,95 @@
+# SW-Agent Diagnostic Request — Run 28: A–F gates fire, but the producer was not fixed and the CHK-3d-13 repair is broken → the Row 2 data model collapses
+
+**Run reviewed:** `PMT_Ph03_3e_RequirementMatching_R2_Run28.json`
+`run_id 034f644c-880b-46b2-84ea-e7619c0ab8d1`, created 2026-06-19T20:08 UTC, **ledger v2.17**.
+**Spec baseline:** Row 3 RD v0.20 / Row 4 RD v0.36 (changes [A]–[F] + prompt restrictions P1/P2).
+
+## What landed correctly (confirmed — do NOT regress)
+- The §4.4.3b audit blocks now **emit** (`class_model_binding`, `object_refs_binding`, `model_coverage`, `model_coverage_gaps`) — the never-read bug is fixed.
+- **[C]** profile reject fires HARD (25 `profile_violation_row2:{key,domain,target_ref}`).
+- **[D]** tier-1 reject fires (7 Row 1 tier-1 models rejected).
+- **[E]** CHK-3d-13 detector + exempt fire (`chk3d13_constraint_exempt` ×5, `chk3d13_data_assertion_unmodelled` ×2).
+- **[F]** bare-`<Entity>` rejected (`malformed_path_min_2_segments`).
+- CHK-3d-09 hard reject + decompose; matching processes 60.
+
+**The problem:** the gates now correctly reject the IM's output — but the IM's output was **not** changed to stop producing what the gates reject, and the **CHK-3d-13 repair that should recover produces malformed models**. Net result is worse than Run 26: only **4 garbage Task fragments survive Row 2**, and **0 object_refs resolve**. Diagnose the implementation; the one spec item ([G], §6) is fenced — report current behaviour there, don't hard-code it.
+
+---
+
+## 1. PRIORITY — the CHK-3d-13 repair produces malformed `class_model`s (null attribute names, POS-tag semantic types)
+
+The only 4 `class_model`s that survive Row 2 are all `Task`, all produced by CHK-3d-13 repair (`chk3d13_repair_performed` ×6), and all malformed:
+
+| Req | statement | `refinement_kind` | attribute (`attr_name`, `semantic_type`, `origin`) |
+|---|---|---|---|
+| R026 | "Each task shall have an associated monetary value." | introduce | **(null, `'Qualifier'`, introduced)** |
+| R043 | "A task shall consist of a monetary value attribute." | decompose | **(null, `'Noun'`, introduced)** |
+| R044 | "A task shall have an availability status attribute." | introduce | **(null, `'Qualifier'`, introduced)** |
+| R046 | "…monetary value representing the reward for completion." | introduce | **(null, `'Noun'`, introduced)** |
+
+Two defects in the repair output:
+- **`attr_name` is `null`** — the attribute has no name. "A task shall have an associated monetary value" should yield `Task.monetary_value` (attr_name `monetary_value`, semantic_type `money`), not a nameless attribute.
+- **`semantic_type` is a part-of-speech tag** — `'Noun'`, `'Qualifier'` — not a semantic type (`money`, `identifier`, `lifecycle_state`, …). Something in the repair path is writing the grammatical category of the source token into `semantic_type`.
+
+### Questions — 1
+- **1a.** What prompt/parse path does the CHK-3d-13 repair use? The spec says `requirement_derivation_prompt.py` scoped to one entity with a `class_model`-only instruction. Is that what's deployed, or a different/lighter path that emits `{attr_name:null, semantic_type:<POS>}`?
+- **1b.** Why is `semantic_type` being set to a POS tag (`Noun`/`Qualifier`)? Trace one repair (R026) from the prose statement to the emitted `class_model` — where does `'Qualifier'` come from?
+- **1c.** Why is `attr_name` null? A repair of "task shall have a monetary value" must name the attribute (`monetary_value`).
+
+---
+
+## 2. P1/P2 prompt restrictions are not effective — the IM still over-generates, so the gates reject nearly everything
+
+The IM is still authoring exactly what v0.35/v0.36 P1/P2 told it not to:
+- **Row 1:** 7 tier-1 `class_model`s authored (`Task`, `AccomplishmentRecord`, `Child`, `Reward`, `Earnings`, `CompensationCommitment`, …) — **all 7 rejected** `tier1_class_model`. P1 says "Row 1 Structurals carry no `class_model`."
+- **Row 2:** of 16 Structurals / 9 with `class_model`, the real entities (`Task` with `PK`+`domain`, `Child`, `TaskCompletion`, `WeeklyEarnings`, `SettlementPeriod`, `Parent`, `TaskDefinition`) carry Row-4 detail (`PK`/`FK`/`domain`/`target_ref`) — **all profile-rejected** (25 violations). P2 says "Row 2 populates `name`/`semantic_type`/`origin` only."
+
+So [C]/[D] are doing 100% of the work as a backstop with nothing upstream — the result is mass rejection and a collapsed model.
+
+### Questions — 2
+- **2a.** Are the P1 (Row 1 "no `class_model`") and P2 (Row 2 profile restriction) guidance blocks from §5.4 actually present in the deployed `requirement_derivation_prompt.py` / shared `class_model` guidance? Please paste the deployed Row-1 and Row-2 `class_model` instruction text.
+- **2b.** If deployed, the IM is ignoring them — is the restriction in a part of the prompt the model isn't attending to (e.g. buried below the schema), or is the shared block not row-scoped so the IM sees the full physical schema regardless? Run 26 and Run 28 both show full physical detail at Row 2, so this has never taken effect.
+
+---
+
+## 3. [B] uniqueness is not firing — 4 duplicate `Task` `class_model`s survive
+
+R026, R043, R044, R046 are four `Task` `class_model`s at the same row (Row 2). [B] requires one `class_model` per `(entity, row)`; divergent duplicates are a HARD finding. None were collapsed (`duplicate_requirement_collapsed` ×7 fired on other requirements, but not on these).
+
+### Questions — 3
+- **3a.** Is the [B] uniqueness clause (Stage-4 referential, one `class_model` per `(entity_ref, row)`) implemented? If yes, why didn't it fire on four `Task`→DD002 models?
+- **3b.** CHK-3d-13 repair created a separate `Task` model per prose Structural rather than merging into one. Should a repair that targets an already-modelled entity **merge into the existing `class_model`** rather than mint a new one? (This is the interaction between CHK-3d-13 repair and [B] — they must work together: repair-into-existing, not repair-into-duplicate.)
+
+---
+
+## 4. Net collapse — `object_refs formed: 0`, every behavioural reference dangles
+
+Both rows report `object_refs_binding.formed: 0`. Every Row 2 dangler is a real attribute that can't resolve because its entity's model was rejected or is garbage: `Task.availability_status` / `Task.completion_status` (`attribute_not_in_class_model` — the surviving Task fragments don't have these), `TaskCompletion.*`, `WeeklyEarnings.total`, `SettlementPeriod.*` (`entity_not_in_working_set` — models rejected). `model_coverage.parent_elements: 0` at Row 2 (Row 1 models all rejected → no parents → CHK-3d-12 still never exercised).
+
+This is the downstream consequence of §1–§3, not a separate bug — but it confirms the model is non-functional: nothing for behavioural requirements to bind to.
+
+---
+
+## 5. Implementation-status confirmation requested
+
+Run 28 evidence suggests a partial implementation. Please confirm per item what is actually deployed:
+- **[A] strict `entity_ref`** (`resolve_and_record(..., strict=True)`, no AI judge): implemented? (Can't confirm from survivors — the entities that previously mis-bound were profile-rejected first. Please confirm the strict path exists and the AI-judge is bypassed for the `class_model` entity.)
+- **[B] uniqueness**: implemented? (§3 says it isn't firing.)
+- **P1/P2 prompt restrictions**: deployed? (§2 says ineffective.)
+- **A4** `class_model_binding.by_tier`: still integer keys (`{"1":7}`, `{"2":9}`) — spec is tier-name strings (`{2:conceptual,…}`). Align.
+
+---
+
+## 6. Spec finding — fenced; we will spec this, do NOT hard-code
+
+The 4 garbage Task models **passed CHK-3d-11** because the Row-2 "≥1 semantic-typed attribute" clause checks that `semantic_type` is *present*, not *valid* — so `{attr_name:null, semantic_type:'Noun'}` survives. We will add **[G]**: CHK-3d-11 requires every attribute to have a **non-empty `attr_name`**, and `semantic_type` to be drawn from a **controlled vocabulary** (rejecting POS tags / free text). Your part: report what the repair currently emits (§1b/1c) so we scope the vocabulary correctly — don't add the validation yet.
+
+---
+
+## What we need back
+1. **The CHK-3d-13 repair prompt/parse trace** (§1) and the fix so it emits named attributes with real semantic types — top priority.
+2. **The deployed Row-1/Row-2 `class_model` prompt text** (§2a) and why P1/P2 aren't steering the IM.
+3. **[B] uniqueness status** and the repair-merge-vs-duplicate decision (§3).
+4. **Per-item implementation status** ([A], [B], P1/P2, A4) (§5).
+
+Once the repair emits valid models, P1/P2 actually restrict the IM, and [B] collapses duplicates, a re-run should produce a populated Row 2 model that the gates pass rather than destroy — and only then can object_refs resolve and (at Row 3) CHK-3d-12 finally exercise.

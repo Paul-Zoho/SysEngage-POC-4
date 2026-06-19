@@ -431,30 +431,33 @@ def _run_chk3d13_repair(
     response cannot be parsed into a valid class_model.
     Fingerprint: stage3_chk3d13_repair.
     """
-    valid_origins = "refines | realises | introduced"
-    valid_kinds = "identity | decompose | realise_relationship | introduce | merge"
     prompt = (
-        "You are a systems engineering analyst. A Structural requirement that "
-        "asserts data composition must be modelled as a class_model entity.\n\n"
+        "You are a systems engineering analyst performing CHK-3d-13 repair. "
+        "A data-asserting Structural requirement that lacks a class_model must "
+        "be re-derived as one.\n\n"
         f"Row: {row_ref}\n"
         f'Statement: "{proposal.statement}"\n\n'
-        "Extract the entity and its attributes from this statement and produce "
-        "a class_model dict. Return ONLY a JSON object — no other text.\n\n"
-        "Required schema:\n"
-        "{\n"
-        '  "entity": "EntityName",\n'
-        f'  "tier": {row_ref},\n'
-        f'  "refinement_kind": "<{valid_kinds}>",\n'
-        '  "attributes": [\n'
-        '    {\n'
-        '      "name": "attr_name",\n'
-        '      "semantic_type": "Noun|Verb|Qualifier|…",\n'
-        f'      "origin": "<{valid_origins}>",\n'
-        '      "description": "…"\n'
-        "    }\n"
-        "  ],\n"
-        '  "relationships": []\n'
-        "}"
+        "From this statement, identify:\n"
+        "  1. The primary ENTITY being described (e.g. Task, Payment, Child).\n"
+        "  2. Each ATTRIBUTE of that entity mentioned in the statement.\n\n"
+        "CRITICAL field rules:\n"
+        "  - `name`: a snake_case identifier derived from the attribute concept "
+        "(e.g. 'monetary_value', 'availability_status', 'completion_date'). "
+        "NEVER use 'attr_name' literally. NEVER leave it null.\n"
+        "  - `semantic_type`: a semantic CATEGORY noun (e.g. 'money', 'identifier', "
+        "'lifecycle_state', 'name', 'date', 'quantity', 'code', 'reference', "
+        "'flag', 'amount', 'label'). "
+        "Do NOT use POS tags ('Noun', 'Verb', 'Qualifier') — those are wrong.\n"
+        "  - `origin`: 'refines' | 'realises' | 'introduced'\n"
+        "  - `description`: one-line description of the attribute.\n\n"
+        "Row 2 ONLY: do NOT include 'type', 'key', 'domain', or 'target_ref'.\n\n"
+        "Example for 'Each task shall have an associated monetary value':\n"
+        '{"entity":"Task","tier":2,"refinement_kind":"identity",'
+        '"attributes":[{"name":"monetary_value","semantic_type":"money",'
+        '"origin":"introduced","description":"Monetary value associated with the task"}],'
+        '"relationships":[]}\n\n'
+        "Now produce the class_model for the statement above. "
+        "Return ONLY a JSON object — no other text."
     )
     try:
         client = get_ai_client()
@@ -625,9 +628,13 @@ def run_stage3(
     _cm_by_tier: dict[str, int] = {}
     _cm_by_refinement_kind: dict[str, int] = {}
     _cm_invalid: list[dict[str, Any]] = []
+    _TIER_NAMES: dict[int, str] = {
+        1: "scope", 2: "conceptual", 3: "logical", 4: "physical", 5: "detailed"
+    }
     for p in proposals:
         if p.requirement_type == "Structural" and p.class_model:
-            tier_key = str(p.class_model.get("tier", "unknown"))
+            tier_raw = p.class_model.get("tier")
+            tier_key = _TIER_NAMES.get(tier_raw, f"tier{tier_raw}" if tier_raw is not None else "unknown")
             _cm_by_tier[tier_key] = _cm_by_tier.get(tier_key, 0) + 1
             rk = p.class_model.get("refinement_kind", "unknown")
             _cm_by_refinement_kind[rk] = _cm_by_refinement_kind.get(rk, 0) + 1
@@ -1096,10 +1103,21 @@ def run_stage3(
     #   1. DM detector → "yes" | "no" | "ambiguous"
     #   2. "ambiguous" → IM judge (fingerprint stage3_chk3d13_judge)
     #   3. data-asserting → IM repair (fingerprint stage3_chk3d13_repair)
-    #   4. Repair success → proposal carries new class_model, survives
+    #   4. Repair success + entity not yet modelled → proposal gets class_model, survives
+    #      Repair success + entity ALREADY modelled → excluded as redundant ([B] interaction)
     #   5. Repair failure / persistent → HARD validation_failure, excluded
     #   6. "no" (constraint/policy) → chk3d13_constraint_exempt, kept as prose
     # -------------------------------------------------------------------------
+    # Seed entity_modelled from proposals that already carry a class_model.
+    # This set grows as successful repairs mint new models so that each entity
+    # is modelled at most once across the whole CHK-3d-13 pass ([B] interaction).
+    entity_modelled: set[str] = {
+        (p.class_model.get("entity") or "").strip().lower()
+        for p in proposals
+        if p.requirement_type == "Structural" and p.class_model
+        if (p.class_model.get("entity") or "").strip()
+    }
+
     surviving_13: list[TaggedProposal] = []
     for p in proposals:
         if p.requirement_type != "Structural" or p.class_model is not None:
@@ -1137,12 +1155,30 @@ def run_stage3(
         repaired_cm = _run_chk3d13_repair(p, row_ref=row_ref, result=result)
 
         if repaired_cm is not None:
+            repaired_entity_norm = (repaired_cm.get("entity") or "").strip().lower()
+
+            # [B] interaction: if this entity is already modelled by a prior surviving
+            # proposal (original or repaired), exclude this prose Structural as redundant.
+            if repaired_entity_norm and repaired_entity_norm in entity_modelled:
+                result.execution_warnings.append({
+                    "type": "chk3d13_entity_already_modelled",
+                    "entity": repaired_cm.get("entity"),
+                    "statement_preview": stmt[:80],
+                })
+                _log.info(
+                    "CHK-3d-13 repair: entity=%r already modelled — "
+                    "prose Structural excluded as redundant",
+                    repaired_cm.get("entity"),
+                )
+                continue  # excluded — entity already has a class_model
+
             hard_viols = [
                 v for v in validate_class_model(repaired_cm, row_ref)
                 if v["severity"] == "hard"
             ]
             if not hard_viols:
                 p.class_model = repaired_cm
+                entity_modelled.add(repaired_entity_norm)
                 if not p.statement:
                     try:
                         from core.class_model_projection import project_class_model

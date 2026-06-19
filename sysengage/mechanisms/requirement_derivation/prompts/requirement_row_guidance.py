@@ -192,7 +192,11 @@ distribution.
   commitment form; it does NOT mean renaming the domain entities — keep the source's
   domain nouns (see Domain entity vocabulary above).
 - Do NOT produce one thin requirement per CCI mechanically; consolidate where CCIs
-  express one obligation, split where one CCI carries two.""",
+  express one obligation, split where one CCI carries two.
+- **P1 — Do NOT include `class_model` on any Structural requirement at Row 1.**
+  Row 1 Structural requirements are prose-only obligations at enterprise scope.
+  Structural data modelling (class_model) belongs at Row 2+. Any class_model on a
+  Row 1 proposal will be HARD-rejected by CHK-3d-11 and the proposal excluded.""",
 
     "2": """\
 ## Row 2 — Owner / Business Level — Requirement Statement Formulation
@@ -316,6 +320,16 @@ carry a Row-1 lean into Row 2; judge each statement on its source columns.
 - Do NOT introduce actors, roles, capabilities, or rules not present in the source CCIs.
 - Do NOT reproduce CCI description text verbatim — derive a normative statement.
 - Do NOT state a workflow sequence; state a stateless capability / responsibility.
+- **P2 — Row 2 class_model attributes: ONLY `name`, `semantic_type`, `origin`, `description`.**
+  Do NOT set `type`, `key`, `domain`, or `target_ref` on Row 2 attributes. These are
+  physical-tier (Row 4) fields. At Row 2 you are modelling the CONCEPTUAL data shape:
+  name the attribute and classify it semantically — nothing more.
+  `key: "PK"` on a Row 2 attribute, `domain: [...]` on a Row 2 attribute, and
+  `target_ref: "..."` on a Row 2 attribute are all CHK-3d-11 HARD violations
+  (`profile_violation_row2:{field}`) that exclude the entire proposal from production.
+  The `semantic_type` MUST be a semantic CATEGORY noun such as "money", "identifier",
+  "lifecycle_state", "name", "date", "quantity", "code", "reference", "flag", "amount"
+  — NOT a POS tag ("Noun", "Verb", "Qualifier").
 - Do NOT frame at enterprise/scope level (Row 1).
 - Do NOT describe HOW the system realises a capability (Row 3 — operations, validation, structure); for a system subject, name only WHAT it provides at the boundary.""",
 
