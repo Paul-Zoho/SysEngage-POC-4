@@ -268,10 +268,77 @@ def resolve_term(
         session.close()
 
 
+def _resolve_strict(term: str, provenance_ref: str | None) -> dict[str, Any]:
+    """
+    Strict entity binding — spec [A] / v0.36.
+
+    Bypasses the AI judge entirely: exact normalised match → "existing"; no
+    match → mint a new canonical immediately.  This is the correct binding
+    contract for class_model entity_ref: entity identity is exact-match-or-mint,
+    never the fuzzy AI-judge similarity path used for behavioural synonymy.
+    Prevents the ChildEarnings→"monetary value" mis-binding observed in Run 26.
+    """
+    session = get_session()
+    try:
+        existing = _lookup_existing(session, term)
+        if existing:
+            append_resolution_log(
+                session,
+                surface_term=term,
+                provenance_ref=provenance_ref,
+                outcome="existing",
+                confidence=1.0,
+                competing_refs=None,
+                auto_recorded=True,
+            )
+            session.commit()
+            return {"outcome": "existing", "dd_id": existing["dd_id"], "confidence": 1.0}
+
+        # No exact match — mint new canonical (skip AI judge, spec [A])
+        new_dd_id = _next_dd_id(session)
+        session.execute(
+            text(
+                "INSERT INTO data_dictionary_entry "
+                "(dd_id, entry_kind, name, description, attributes, provenance_ref, confidence, created_at) "
+                "VALUES (:did, 'canonical', :name, :desc, '[]'::jsonb, :pr, :conf, :now)"
+            ),
+            {
+                "did": new_dd_id,
+                "name": term,
+                "desc": (
+                    f"Auto-minted by strict class_model entity binding "
+                    f"(provenance: {provenance_ref})"
+                ),
+                "pr": provenance_ref,
+                "conf": 1.0,
+                "now": datetime.now(timezone.utc),
+            },
+        )
+        append_resolution_log(
+            session,
+            surface_term=term,
+            provenance_ref=provenance_ref,
+            outcome="canonical",
+            confidence=1.0,
+            competing_refs=None,
+            auto_recorded=True,
+        )
+        session.commit()
+        return {"outcome": "canonical", "dd_id": new_dd_id, "confidence": 1.0}
+
+    except Exception:
+        session.rollback()
+        raise
+    finally:
+        session.close()
+
+
 def resolve_and_record(
     term: str,
     context: str,
     provenance_ref: str | None,
+    *,
+    strict: bool = False,
 ) -> dict[str, Any]:
     """
     Spec §4.4.3a entry point — resolve a surface term and record the outcome.
@@ -279,9 +346,15 @@ def resolve_and_record(
     Wraps resolve_term with the parameter order specified in §4.4.3a:
       resolve_and_record(term, context, provenance_ref)
 
+    strict=True — bypass the AI judge; use exact normalised match or mint-new
+    (spec [A]).  This is the contract for class_model entity_ref binding:
+    entity identity is exact-match-or-mint, never the AI-judge similarity path.
+
     Returns the same dict as resolve_term:
       {outcome: existing|synonym|canonical|flagged, dd_id: str|None, confidence: float}
     """
+    if strict:
+        return _resolve_strict(term, provenance_ref)
     return resolve_term(term, provenance_ref, context)
 
 

@@ -1,7 +1,7 @@
 """
 CHK-3d-11 — Structural class_model validity check.
 
-Per Requirement Derivation Mechanism Spec v0.33 §4.3.
+Per Requirement Derivation Mechanism Spec v0.36 §4.3.
 
 Validates a class_model dict on a Structural proposal after Stage 2.
 Returns a list of violation dicts.  Callers must inspect severity:
@@ -12,7 +12,8 @@ Returns a list of violation dicts.  Callers must inspect severity:
 
 Hard violations:
   - entity absent or empty
-  - tier not in {2,3,4,5}
+  - tier == 1 (detail: tier1_class_model) — [D] Row 1 authors no class_model
+  - tier not in {2,3,4,5} (other invalid tiers)
   - tier does not match row_target
   - refinement_kind not in valid enum
   - no attributes (list is empty)
@@ -21,6 +22,8 @@ Hard violations:
   - any attribute with blank name
   - any attribute with invalid origin enum
   - any relationship with blank target
+  - [C] Row 2 profile violations: key/domain/target_ref forbidden at Row 2
+  - [C] Row 2–3 type violation: type value not in logical closed enum
 
 Soft violations:
   - FK attribute missing target_ref (referential check deferred to sub-pass 2)
@@ -36,12 +39,19 @@ _VALID_KINDS = frozenset(
 )
 _VALID_ORIGINS = frozenset({"refines", "realises", "introduced"})
 
+# [C] Closed logical type enum — valid at Rows 2 and 3.
+# A value outside this set at Row 2 or 3 is a profile violation (type_not_logical).
+# Rows 4+ allow free-form physical types (VARCHAR(255), etc.).
+_LOGICAL_TYPE_ENUM = frozenset(
+    {"String", "Integer", "DateTime", "Boolean", "Decimal", "Enum", "Reference", "JSON"}
+)
+
 
 def validate_class_model(
     cm: dict[str, Any], row_ref: int
 ) -> list[dict[str, Any]]:
     """
-    Run CHK-3d-11 structural validity checks.
+    Run CHK-3d-11 structural validity checks (v0.36: adds [C] profile + [D] tier-1).
 
     Returns list of violation dicts:
         {"check_id": "CHK-3d-11", "detail": str, "severity": "hard"|"soft"}
@@ -71,7 +81,10 @@ def validate_class_model(
 
     # --- tier ---
     tier = cm.get("tier")
-    if tier not in {2, 3, 4, 5}:
+    if tier == 1:
+        # [D] Row 1 authors no class_model — specific detail for diagnostics
+        hard("tier1_class_model")
+    elif tier not in {2, 3, 4, 5}:
         hard(f"tier must be in {{2,3,4,5}}, got {tier!r}")
     elif int(tier) != int(row_ref):
         hard(f"tier {tier} does not match row_target {row_ref}")
@@ -118,7 +131,47 @@ def validate_class_model(
                 f"{sorted(_VALID_ORIGINS)}"
             )
 
-        if attr.get("key") == "FK":
+        # [C] Per-row attribute profile enforcement (v0.36)
+        if row_ref == 2:
+            # Row 2 profile forbids: key, domain, target_ref.
+            # type is allowed ONLY if it is from the closed logical enum.
+            if attr.get("key") is not None:
+                hard(
+                    f"profile_violation_row2:key — "
+                    f"attributes[{i}] key={attr['key']!r} forbidden at Row 2"
+                )
+            if attr.get("domain") is not None:
+                hard(
+                    f"profile_violation_row2:domain — "
+                    f"attributes[{i}] domain field forbidden at Row 2"
+                )
+            if attr.get("target_ref") is not None and str(attr.get("target_ref", "")).strip():
+                hard(
+                    f"profile_violation_row2:target_ref — "
+                    f"attributes[{i}] target_ref forbidden at Row 2"
+                )
+            type_val = attr.get("type")
+            if type_val is not None and str(type_val).strip():
+                if str(type_val).strip() not in _LOGICAL_TYPE_ENUM:
+                    hard(
+                        f"profile_violation_row2:type_not_logical — "
+                        f"attributes[{i}] type={type_val!r} is not in the "
+                        f"logical closed enum {sorted(_LOGICAL_TYPE_ENUM)}"
+                    )
+
+        elif row_ref == 3:
+            # Row 3: key/domain/target_ref are allowed; type must still be logical.
+            type_val = attr.get("type")
+            if type_val is not None and str(type_val).strip():
+                if str(type_val).strip() not in _LOGICAL_TYPE_ENUM:
+                    hard(
+                        f"profile_violation_row3:type_not_logical — "
+                        f"attributes[{i}] type={type_val!r} is not in the "
+                        f"logical closed enum {sorted(_LOGICAL_TYPE_ENUM)}"
+                    )
+
+        # Row 2 profile check already hard-rejects key; run FK soft check for rows 3+
+        if row_ref != 2 and attr.get("key") == "FK":
             tr = attr.get("target_ref", "")
             if not tr or not str(tr).strip():
                 soft(
@@ -127,7 +180,7 @@ def validate_class_model(
                 )
 
         domain_vals = attr.get("domain")
-        if domain_vals is not None:
+        if domain_vals is not None and row_ref != 2:
             if not isinstance(domain_vals, list):
                 soft(f"attributes[{i}].domain is not a list")
             else:

@@ -59,6 +59,7 @@ from typing import Any
 from core.ai_client import MODEL, get_ai_client
 from core.class_model_validity import validate_class_model
 from core.slots import check_atomicity, violation_summary
+from core.structural_data_assertion import is_data_asserting
 from mechanisms.requirement_derivation.prompts.requirement_conjoined_decompose_prompt import (
     build_conjoined_decompose_prompt,
 )
@@ -370,6 +371,116 @@ def _run_conjoined_decompose(
     return children
 
 
+# ---------------------------------------------------------------------------
+# CHK-3d-13 helpers — data-asserting Structural without class_model [E] v0.36
+# ---------------------------------------------------------------------------
+
+def _run_chk3d13_judge(statement: str, result: "Stage3Result") -> bool | None:
+    """
+    IM judge for genuinely ambiguous CHK-3d-13 cases.
+
+    Returns True=data-asserting, False=not-data-asserting, None=judge failed.
+    Fingerprint: stage3_chk3d13_judge.
+    """
+    prompt = (
+        "You are a systems engineering data analyst.\n\n"
+        "A *data-asserting* Structural requirement names a data entity and "
+        "asserts its composition — it uses a have/comprise/define/contain/"
+        "consist-of/be-associated-with predicate over attributes, "
+        "relationships, keys, or domain values.\n\n"
+        "A *constraint/policy* Structural requirement expresses a retention "
+        "rule, auditability obligation, cross-entity policy, or other "
+        "structural constraint that does NOT define an entity's data "
+        "composition.\n\n"
+        f'Statement: "{statement}"\n\n'
+        'Respond with a single JSON object: {"is_data_asserting": true} or '
+        '{"is_data_asserting": false}. No other text.'
+    )
+    try:
+        client = get_ai_client()
+        msg = client.messages.create(
+            model=MODEL,
+            max_tokens=64,
+            messages=[{"role": "user", "content": prompt}],
+        )
+        result.ai_model_fingerprints.append({
+            "stage": "stage3_chk3d13_judge",
+            "model": msg.model,
+            "input_tokens": msg.usage.input_tokens,
+            "output_tokens": msg.usage.output_tokens,
+        })
+        raw = _strip_code_fence(msg.content[0].text if msg.content else "")
+        data = json.loads(raw)
+        return bool(data.get("is_data_asserting"))
+    except Exception as exc:
+        _log.warning("CHK-3d-13 judge failed: %s", exc)
+        return None
+
+
+def _run_chk3d13_repair(
+    proposal: "TaggedProposal",
+    *,
+    row_ref: int,
+    result: "Stage3Result",
+) -> dict | None:
+    """
+    IM repair for CHK-3d-13: re-derive the data-asserting Structural as a
+    class_model (§4.4.3c derivation path, one call per failing Structural).
+
+    Returns the class_model dict on success, None if the call fails or the
+    response cannot be parsed into a valid class_model.
+    Fingerprint: stage3_chk3d13_repair.
+    """
+    valid_origins = "refines | realises | introduced"
+    valid_kinds = "identity | decompose | realise_relationship | introduce | merge"
+    prompt = (
+        "You are a systems engineering analyst. A Structural requirement that "
+        "asserts data composition must be modelled as a class_model entity.\n\n"
+        f"Row: {row_ref}\n"
+        f'Statement: "{proposal.statement}"\n\n'
+        "Extract the entity and its attributes from this statement and produce "
+        "a class_model dict. Return ONLY a JSON object — no other text.\n\n"
+        "Required schema:\n"
+        "{\n"
+        '  "entity": "EntityName",\n'
+        f'  "tier": {row_ref},\n'
+        f'  "refinement_kind": "<{valid_kinds}>",\n'
+        '  "attributes": [\n'
+        '    {\n'
+        '      "name": "attr_name",\n'
+        '      "semantic_type": "Noun|Verb|Qualifier|…",\n'
+        f'      "origin": "<{valid_origins}>",\n'
+        '      "description": "…"\n'
+        "    }\n"
+        "  ],\n"
+        '  "relationships": []\n'
+        "}"
+    )
+    try:
+        client = get_ai_client()
+        msg = client.messages.create(
+            model=MODEL,
+            max_tokens=1024,
+            messages=[{"role": "user", "content": prompt}],
+        )
+        result.ai_model_fingerprints.append({
+            "stage": "stage3_chk3d13_repair",
+            "model": msg.model,
+            "input_tokens": msg.usage.input_tokens,
+            "output_tokens": msg.usage.output_tokens,
+        })
+        raw = _strip_code_fence(msg.content[0].text if msg.content else "")
+        cm = json.loads(raw)
+        if not isinstance(cm, dict):
+            return None
+        if not cm.get("entity") or not cm.get("attributes"):
+            return None
+        return cm
+    except Exception as exc:
+        _log.warning("CHK-3d-13 repair failed: %s", exc)
+        return None
+
+
 def run_stage3(
     *,
     stage1: Stage1Result,
@@ -563,6 +674,44 @@ def run_stage3(
                 )
             surviving_11.append(p)
     proposals = surviving_11
+
+    # -------------------------------------------------------------------------
+    # CHK-3d-11 uniqueness — one class_model per (entity, row) [B] v0.36
+    # A second Structural for the same entity at the same row_ref is a hard
+    # error: only the first occurrence is kept; duplicates are rejected with
+    # detail "duplicate_entity_model".
+    # -------------------------------------------------------------------------
+    entity_seen: dict[str, int] = {}  # normalised entity name → index in surviving_11_unique
+    surviving_11_unique: list[TaggedProposal] = []
+    for p in proposals:
+        if p.requirement_type != "Structural" or not p.class_model:
+            surviving_11_unique.append(p)
+            continue
+        entity_norm = (p.class_model.get("entity") or "").strip().lower()
+        if entity_norm and entity_norm in entity_seen:
+            result.validation_failures.append({
+                "check_id": "CHK-3d-11",
+                "source_domain_id": p.source_domain_id,
+                "detail": "duplicate_entity_model",
+                "entity": p.class_model.get("entity", "?"),
+                "statement_preview": (p.statement or "")[:80],
+            })
+            result.execution_warnings.append({
+                "type": "class_model_invalid",
+                "source_domain_id": p.source_domain_id,
+                "entity": p.class_model.get("entity", "?"),
+                "detail": "duplicate_entity_model",
+            })
+            _log.info(
+                "CHK-3d-11 [B] HARD: duplicate class_model for entity=%r at row %d — excluded",
+                p.class_model.get("entity", "?"),
+                row_ref,
+            )
+        else:
+            if entity_norm:
+                entity_seen[entity_norm] = len(surviving_11_unique)
+            surviving_11_unique.append(p)
+    proposals = surviving_11_unique
 
     result.class_model_binding = {
         "structural_count": _cm_structural_count,
@@ -939,6 +1088,95 @@ def run_stage3(
                 "concern-atomicity over-bundling signal",
                 placeholder, len(types), len(cols),
             )
+
+    # -------------------------------------------------------------------------
+    # CHK-3d-13 — data-asserting Structural MUST carry class_model [E] v0.36
+    #
+    # A Structural without class_model is examined:
+    #   1. DM detector → "yes" | "no" | "ambiguous"
+    #   2. "ambiguous" → IM judge (fingerprint stage3_chk3d13_judge)
+    #   3. data-asserting → IM repair (fingerprint stage3_chk3d13_repair)
+    #   4. Repair success → proposal carries new class_model, survives
+    #   5. Repair failure / persistent → HARD validation_failure, excluded
+    #   6. "no" (constraint/policy) → chk3d13_constraint_exempt, kept as prose
+    # -------------------------------------------------------------------------
+    surviving_13: list[TaggedProposal] = []
+    for p in proposals:
+        if p.requirement_type != "Structural" or p.class_model is not None:
+            surviving_13.append(p)
+            continue
+
+        stmt = p.statement or ""
+        placeholder_13 = f"proposal:{stmt[:40].rstrip()}"
+        decidability = is_data_asserting(stmt)
+
+        if decidability == "no":
+            result.execution_warnings.append({
+                "type": "chk3d13_constraint_exempt",
+                "statement_preview": stmt[:80],
+            })
+            surviving_13.append(p)
+            continue
+
+        if decidability == "ambiguous":
+            judge_result = _run_chk3d13_judge(stmt, result)
+            if judge_result is False:
+                result.execution_warnings.append({
+                    "type": "chk3d13_constraint_exempt",
+                    "statement_preview": stmt[:80],
+                })
+                surviving_13.append(p)
+                continue
+            # judge_result is True or None (AI failure → conservative: treat as asserting)
+
+        # data-asserting — attempt IM repair
+        result.execution_warnings.append({
+            "type": "chk3d13_repair_performed",
+            "statement_preview": stmt[:80],
+        })
+        repaired_cm = _run_chk3d13_repair(p, row_ref=row_ref, result=result)
+
+        if repaired_cm is not None:
+            hard_viols = [
+                v for v in validate_class_model(repaired_cm, row_ref)
+                if v["severity"] == "hard"
+            ]
+            if not hard_viols:
+                p.class_model = repaired_cm
+                if not p.statement:
+                    try:
+                        from core.class_model_projection import project_class_model
+                        p.statement = project_class_model(repaired_cm)
+                    except Exception:
+                        pass
+                surviving_13.append(p)
+                _log.info(
+                    "CHK-3d-13 repair success: entity=%r statement=%.60s",
+                    repaired_cm.get("entity"),
+                    stmt,
+                )
+                continue
+            _log.warning(
+                "CHK-3d-13 repaired class_model failed CHK-3d-11: %s",
+                [v["detail"] for v in hard_viols],
+            )
+
+        # Persistent failure → HARD, excluded
+        result.validation_failures.append({
+            "check_id": "CHK-3d-13",
+            "requirement_id": placeholder_13,
+            "detail": "data_assertion_without_class_model",
+            "statement_preview": stmt[:80],
+        })
+        result.execution_warnings.append({
+            "type": "chk3d13_data_assertion_unmodelled",
+            "statement_preview": stmt[:80],
+        })
+        _log.info(
+            "CHK-3d-13 HARD: data-asserting Structural without class_model — excluded: %.60s",
+            stmt,
+        )
+    proposals = surviving_13
 
     # -------------------------------------------------------------------------
     # VER-3d-21 — Seed-set provenance guard (v0.14).

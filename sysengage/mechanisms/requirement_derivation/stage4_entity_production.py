@@ -466,9 +466,11 @@ def _run_dd_binding(
             })
             continue
 
-        # Resolve primary entity name; set entity_ref on class_model if resolved
+        # Resolve primary entity name; set entity_ref on class_model if resolved.
+        # strict=True — exact-match-or-mint; bypasses AI judge ([A] v0.36).
+        # Entity identity is never the fuzzy-synonym path used for behavioural terms.
         try:
-            res = resolve_and_record(entity, proposal.statement, req_id)
+            res = resolve_and_record(entity, proposal.statement, req_id, strict=True)
             terms_presented += 1
             reqs_with_terms.add(req_id)
             outcome = res.get("outcome", "flagged")
