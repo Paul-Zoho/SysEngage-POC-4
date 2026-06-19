@@ -118,7 +118,7 @@ class RequirementModel(Base):
     )
     class_model: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
     object_refs: Mapped[list] = mapped_column(
-        JSONB, nullable=False, server_default="'[]'::jsonb"
+        JSONB, nullable=False, server_default="[]"
     )
 
     project = relationship("ProjectModel", back_populates="requirements")

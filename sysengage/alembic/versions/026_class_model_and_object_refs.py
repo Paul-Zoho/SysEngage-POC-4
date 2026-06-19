@@ -29,7 +29,7 @@ def upgrade() -> None:
             "object_refs",
             JSONB,
             nullable=False,
-            server_default="'[]'::jsonb",
+            server_default="[]",
         ),
     )
     op.create_check_constraint(
