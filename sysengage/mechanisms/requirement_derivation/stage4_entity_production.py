@@ -865,6 +865,11 @@ def run_stage4(
     # --- §4.4.3a Step 4: Object-refs materialisation (F107 / v0.33) -------
     # Build working set from resolved class_models (entity_ref now set).
     # Materialise behavioural proposals' candidate object_refs paths.
+    # Row-1 gate: if no Structural proposals produced class_models in this row
+    # (e.g. Row 1 — no Structural requirements), the working set is empty and
+    # every path would dangle.  Skip the resolver entirely in that case and
+    # record no dangling warnings — the absence of class_models is expected, not
+    # an error.
     class_models_by_entity: dict[str, dict] = {}
     for p in proposals:
         if p.class_model and p.class_model.get("entity"):
@@ -876,6 +881,9 @@ def run_stage4(
             proposal_object_refs.append([])
             continue
         if not proposal.object_refs:
+            proposal_object_refs.append([])
+            continue
+        if not class_models_by_entity:
             proposal_object_refs.append([])
             continue
         try:

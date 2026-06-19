@@ -1,7 +1,7 @@
 """
 Ledger Export — Canonical JSON Builder.
 
-Builds a spec-v2.15-conformant canonical JSON ledger dict from ProjectData.
+Builds a spec-v2.17-conformant canonical JSON ledger dict from ProjectData.
 Applies:
   - Non-canonical attribute stripping (project_id, created_at, phase_id, etc.)
   - execution_status normalisation (DB values → canonical enum)
@@ -21,8 +21,8 @@ from typing import Any
 
 from mechanisms.ledger_export.db_reader import ProjectData
 
-SPEC_VERSION = "2.15"
-SCHEMA_ID = "sysengage.ledger.instance.v2_15"
+SPEC_VERSION = "2.17"
+SCHEMA_ID = "sysengage.ledger.instance.v2_17"
 GENERATOR_NAME = "sysengage-ledger-export"
 GENERATOR_VERSION = "1.0"
 
@@ -253,7 +253,10 @@ def _build_requirement_element(req) -> dict[str, Any]:
         "domain_refs": req.domain_refs,
         "answer_refs": req.answer_refs if req.answer_refs else [],
         "refines_refs": list(req.refines_refs) if req.refines_refs else [],
+        "object_refs": list(req.object_refs) if req.object_refs else [],
     }
+    if req.class_model is not None:
+        payload["class_model"] = req.class_model
     if req.rationale:
         payload["rationale"] = req.rationale
     if req.fit_criteria:
@@ -283,8 +286,6 @@ def _build_data_dictionary_element(entry: dict[str, Any]) -> dict[str, Any]:
     if kind == "canonical":
         payload["name"] = entry.get("name")
         payload["description"] = entry.get("description") or ""
-        attrs = entry.get("attributes")
-        payload["attributes"] = list(attrs) if attrs is not None else []
     elif kind == "synonym":
         payload["surface_term"] = entry.get("surface_term")
         payload["resolves_to"] = entry.get("resolves_to")

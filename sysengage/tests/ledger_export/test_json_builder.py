@@ -79,11 +79,11 @@ class TestLedgerTopLevel:
 
     def test_spec_version(self, minimal_project_data):
         ledger = build_canonical_ledger(minimal_project_data)
-        assert ledger["sysengage_ledger_version"] == "2.15"
+        assert ledger["sysengage_ledger_version"] == "2.17"
 
     def test_schema_id(self, minimal_project_data):
         ledger = build_canonical_ledger(minimal_project_data)
-        assert ledger["schema_id"] == "sysengage.ledger.instance.v2_15"
+        assert ledger["schema_id"] == "sysengage.ledger.instance.v2_17"
 
     def test_generator_fields(self, minimal_project_data):
         ledger = build_canonical_ledger(minimal_project_data)
@@ -564,7 +564,7 @@ class TestJsonSerialisation:
         ledger = build_canonical_ledger(minimal_project_data)
         json_str = ledger_to_json_str(ledger)
         parsed = json.loads(json_str)
-        assert parsed["sysengage_ledger_version"] == "2.15"
+        assert parsed["sysengage_ledger_version"] == "2.17"
 
     def test_json_str_uses_lf_newlines(self, minimal_project_data):
         ledger = build_canonical_ledger(minimal_project_data)

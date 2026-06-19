@@ -168,6 +168,8 @@ def compute_execution_status(
     batches_processed: int,
     batches_failed: int,
     total_batches: int,
+    ccis_created: int,
+    candidates_rejected_step3: int,
     candidates_rejected_step5: int,
     integrity_violations: list,
     consolidation_flags: list,
@@ -176,6 +178,11 @@ def compute_execution_status(
     Compute execution_status and list of warning reasons per spec §4.6.
 
     Returns (execution_status, warning_reasons).
+
+    Zero-CCI rule: if the AI processed at least one batch (i.e. returned a
+    parseable response) but produced zero committed CCIs, the pass is
+    PartialSuccess — zero output from content-bearing input is a silent-swallow
+    signal, not a clean success.
     """
     warning_reasons: list[str] = []
 
@@ -185,6 +192,16 @@ def compute_execution_status(
     if batches_failed > 0:
         warning_reasons.append(
             f"{batches_failed} of {total_batches} batch(es) failed AI invocation"
+        )
+
+    if batches_processed > 0 and ccis_created == 0:
+        detail = (
+            f"{candidates_rejected_step3} candidate(s) rejected at Step 3 validation"
+            if candidates_rejected_step3 > 0
+            else "AI returned no candidates"
+        )
+        warning_reasons.append(
+            f"zero_ccis_from_content_bearing_input: {detail}"
         )
 
     if candidates_rejected_step5 > 0:

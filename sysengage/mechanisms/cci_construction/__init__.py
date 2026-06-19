@@ -277,6 +277,8 @@ def run(
             batches_processed=batches_processed,
             batches_failed=batches_failed,
             total_batches=total_batches,
+            ccis_created=ccis_created,
+            candidates_rejected_step3=candidates_rejected_step3,
             candidates_rejected_step5=candidates_rejected_step5,
             integrity_violations=pass_data.get("_integrity_violations", []),
             consolidation_flags=consolidation_flags,
