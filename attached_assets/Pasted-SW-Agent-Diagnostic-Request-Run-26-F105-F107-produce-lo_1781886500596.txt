@@ -1,0 +1,118 @@
+SW-Agent Diagnostic Request — Run 26: F105/F107 produce low-integrity class_models, and the audit instrumentation is missing
+
+Run reviewed: PMT_Ph03_3e_RequirementMatching_R2_Run26.json
+run_id 4d553603-8a28-4986-877f-08f8b7268305, created 2026-06-19T15:38 UTC, ledger v2.17.
+Spec baseline: Row 3 RD v0.19 / Row 4 RD v0.33 / ledger v2.17 / DD v0.3 (Row 3) / v0.2 (Row 4).
+
+What landed correctly (confirmed — please don't regress these)
+
+
+Ledger v2.17; class_model + object_refs now on requirements.
+Row 2 CCIConstruction zero-output break from Run 25 is fixed — 17 Row 2 CCIs, 53 Row 2 requirements, matching processes 53.
+DD strip (F107) landed — DataDictionaryEntry is names+synonyms only (no attributes, no relationship entry_kind).
+CHK-3d-09 conjoined-predicate hard reject works (7 hard rejects + decompositions across the two rows).
+object_refs mostly resolve (3 danglers vs all-dangling in Run 25).
+
+
+This request is about the class_model producer generating semantically broken models, and — the priority — the F105/F107 audit instrumentation being absent, which is why nothing caught the breakage. Diagnose the implementation; do not change the CHK-3d-11/12 rules themselves (some of what we observed needs a spec change, called out in §6 below — leave those to us).
+
+
+1. PRIORITY — the F105/F107 audit blocks are not emitted (we are flying blind)
+
+Row 4 v0.33 §4.4.3b / §7 require these in RequirementDerivation mechanism_data:
+class_model_binding (structural_count, with_class_model, by_tier, by_refinement_kind, invalid[]), object_refs_binding (formed, dangling[]), model_coverage (parent_elements, covered, ratio), model_coverage_gaps[].
+
+None of these appear in either RD pass (P1690 Row 1, P1694 Row 2). The mechanism_data keys present are the pre-F105 set (dd_binding, requirement_type_distribution, validation_failures, seed_coverage, …). Consequences: we cannot see whether CHK-3d-11 (structural/referential) or CHK-3d-12 (concept-coverage) ran, what they passed/failed, the tier/refinement-kind breakdown, or any profile advisory. Separately, dd_binding still carries the retired keys relationships_recorded and values_recorded (both 0) — v0.30 removed these.
+
+Questions — 1
+
+
+1a. Are CHK-3d-11 and CHK-3d-12 actually implemented and executing in the deployed Requirement Derivation, or only the class_model write + object_refs resolver? If they run, why is no result surfaced in mechanism_data?
+1b. Please implement the §4.4.3b/§7 audit blocks (class_model_binding, object_refs_binding, model_coverage[_gaps]) so each future run is inspectable, and drop relationships_recorded/values_recorded from dd_binding.
+1c. For Run 26 specifically: did any class_model get a CHK-3d-11 validation_failures entry, and did CHK-3d-12 compute a coverage ratio? If the checks ran and passed everything, that itself is a finding (see §2–§3, which they should have caught).
+
+
+
+2. entity_ref is bound to the wrong canonical (fuzzy name-matching)
+
+Row 4 §4.4.3a sets entity_ref by resolving the class_model.entity name to a DD canonical. The deployed resolver appears to be matching new entity names onto the nearest existing canonical rather than minting a new one — dd_binding for Row 2 shows only new_canonical: 3 despite several genuinely new entities. Observed bindings (DD id → canonical name in parentheses):
+
+Requirementclass_model.entityentity_refcanonical nameverdictR050TaskDD002taskcorrectR055ChildDD004childcorrectR056TaskCompletionAssignmentDD006task completionwrong canonicalR057ChildEarningsDD003monetary valuewrong canonicalR063TaskCompletionDD006task completioncollides with R056R064ChildEarningsDD003monetary valuewrong canonical
+
+ChildEarnings (a derived weekly-earnings aggregate) is bound to the "monetary value" canonical; TaskCompletionAssignment (a junction) is bound to "task completion." These resolve to a canonical (so a referential "does it resolve" check passes) but the wrong one.
+
+Questions — 2
+
+
+2a. How does the resolver match an entity name to a canonical — exact/normalised string match, synonym lookup, or fuzzy/embedding similarity? Show the match path for ChildEarnings → DD003.
+2b. When an entity name has no exact canonical (and isn't a registered synonym), does the resolver mint a new canonical or bind to the nearest existing one? It should mint. If it's fuzzy-binding, that is the bug.
+2c. Two distinct entities (TaskCompletionAssignment, TaskCompletion) share entity_ref DD006, and two ChildEarnings share DD003. Is there any uniqueness enforcement on entity_ref↔entity? (The rule itself we'll spec — §6 — but please report what the deployed code currently does.)
+
+
+
+3. Duplicate, divergent class_models for one entity slip past duplicate-collapse
+
+ChildEarnings is modelled twice with conflicting structure:
+
+
+R057: child_id [FK]→Child, weekly_period (DateTime), earnings_total (Decimal); relationship aggregation→Child.
+R064: child_id [FK]→Child, weekly_period_id [FK]→WeeklyPeriod, total_earnings (Decimal); relationship association.
+
+
+There were 4 duplicate_requirement_collapsed events at Row 2, but these two survived as separate requirements. The divergence directly causes a dangler: a behavioural ref ChildEarnings.earnings_total (R060) fails attribute_not_in_class_model:'earnings_total' because the other model named it total_earnings.
+
+Questions — 3
+
+
+3a. What is the duplicate-collapse key? It evidently keys on something that treats R057 and R064 as distinct despite both being ChildEarnings tier-2 introduce. Should two class_models for the same (entity, row) collapse/merge or raise a conflict?
+3b. Is there any "one class_model per (entity, row_target)" guard? (Rule to be spec'd — §6 — but report current behaviour.)
+
+
+
+4. Profile over-population — Row 2 (conceptual) class_models carry Row 4 (physical) detail
+
+The population profile puts Row 2 at existence + semantic type only; logical type+domain is Row 3; PK/FK+physical type is Row 4. But every Row 2 class_model carries physical-tier content. Example — R050 Task (tier 2): task_id [PK] type=Integer, monetary_value type=Decimal, availability_status type=Enum domain=[available,unavailable], completion_status type=Enum domain=[pending,completed]. The semantic_type field is correctly populated (identifier/quantity/lifecycle_state), but type/key/domain are premature. §4.4.3c specifies a class_model_profile_advisory (soft) for exactly this.
+
+Questions — 4
+
+
+4a. Is the §4.4.3c profile-conformance check implemented? If so, why is no class_model_profile_advisory surfaced (tie-in with §1)? If not, please implement it so over-population is at least measurable.
+4b. Is the Stage-2 derivation prompt instructing the IM to populate only the row's profile fields at Row 2? Please share the deployed Row-2 class_model guidance — the models look like the IM is authoring full physical detail regardless of row.
+
+
+
+5. Prose Structurals duplicating class_model content
+
+R023 ("A task shall have an associated monetary value", refines R001), R069 ("…maintain a task with its associated monetary value", refines R007), and R072 ("…maintain task availability status and completion status", refines R013) are Structural requirements with no class_model that restate attributes the R050 Task class_model already holds (monetary_value, availability_status, completion_status). F105 intends entity/attribute content to be a class_model, not prose. These prose duplicates feed the high duplicate_merge: 14 at matching.
+
+Questions — 5
+
+
+5a. Why does the IM emit a prose Structural for pure attribute assertions ("a task shall have an associated monetary value") instead of folding them into the entity's class_model? Is the Structural→class_model routing conditional on something that these statements miss?
+5b. Are these expected to be caught and merged downstream, or should they not be produced as separate Structurals at all?
+
+
+
+6. Observed behaviours that are SPEC gaps — do NOT fix in code yet; we will spec them
+
+Flagging these so you diagnose the right layer and don't hard-code rules we're about to define:
+
+
+CHK-3d-11 correctness + uniqueness. The referential clause currently only checks "entity_ref resolves to a canonical," not that it's the right canonical, nor that entity_ref is unique per entity model. We will add correctness + uniqueness (and a "one class_model per (entity, row)" rule). Your part is to report current matching/uniqueness behaviour (§2c, §3b).
+entity_ref minting rule. We will specify "exact-match-or-mint-new; never fuzzy-bind an entity name." Your §2a/2b answers drive it.
+object_ref path arity (C2). Two danglers are bare-entity refs rejected malformed_path_min_2_segments. The resolver's ≥2-segment rule is what we'll adopt; we'll drop the bare-<Entity> form from the spec. No code change needed — just confirm the exact arity rule and edge handling.
+Profile advisory severity. Given how systematic §4 is, we may strengthen the advisory; for now just surface it (§4a).
+
+
+
+What we need back
+
+
+The §4.4.3b/§7 audit blocks implemented (§1b) — top priority; we cannot validate F105/F107 without visible CHK-3d-11/12 results.
+Confirmation of whether CHK-3d-11/12 and the profile check execute at all in the deployed RD (§1a, §4a), and for Run 26 what they produced (§1c).
+The entity_ref resolver's match algorithm + mint behaviour (§2a–2c), with the ChildEarnings → DD003 trace.
+The duplicate-collapse key and any per-(entity,row) guard (§3a–3b).
+The deployed Row-2 class_model derivation guidance (§4b) and the Structural→class_model routing condition (§5a).
+
+
+With the audit blocks in place and the resolver/dedup behaviour explained, we can correct the spec (§6) and you can re-implement against checks that actually surface what Run 26 hid.

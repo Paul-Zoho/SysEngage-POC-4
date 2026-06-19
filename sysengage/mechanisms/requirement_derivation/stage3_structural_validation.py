@@ -105,6 +105,7 @@ class Stage3Result:
     extinction_failure: bool = False
     status: str = "ok"
     failure_reason: str | None = None
+    class_model_binding: dict[str, Any] = field(default_factory=dict)
 
 
 def _call_repair_ai(prompt: str, *, max_tokens: int = 8192) -> tuple[Any, dict[str, Any]]:
@@ -503,6 +504,23 @@ def run_stage3(
     # Runs only on Structural proposals that carry a class_model dict.
     # Hard violations exclude the proposal; soft violations log an advisory.
     # -------------------------------------------------------------------------
+    # Collect class_model_binding audit stats (§4.4.3b / §7)
+    _cm_structural_count: int = sum(
+        1 for p in proposals if p.requirement_type == "Structural"
+    )
+    _cm_with_class_model: int = sum(
+        1 for p in proposals if p.requirement_type == "Structural" and p.class_model
+    )
+    _cm_by_tier: dict[str, int] = {}
+    _cm_by_refinement_kind: dict[str, int] = {}
+    _cm_invalid: list[dict[str, Any]] = []
+    for p in proposals:
+        if p.requirement_type == "Structural" and p.class_model:
+            tier_key = str(p.class_model.get("tier", "unknown"))
+            _cm_by_tier[tier_key] = _cm_by_tier.get(tier_key, 0) + 1
+            rk = p.class_model.get("refinement_kind", "unknown")
+            _cm_by_refinement_kind[rk] = _cm_by_refinement_kind.get(rk, 0) + 1
+
     surviving_11: list[TaggedProposal] = []
     for p in proposals:
         if p.requirement_type != "Structural" or not p.class_model:
@@ -521,6 +539,11 @@ def run_stage3(
                         "statement_preview": p.statement[:80],
                     }
                 )
+                _cm_invalid.append({
+                    "source_domain_id": p.source_domain_id,
+                    "entity": p.class_model.get("entity", "?"),
+                    "detail": v["detail"],
+                })
             _log.info(
                 "CHK-3d-11 HARD: domain=%s entity=%r — %d violation(s) → excluded",
                 p.source_domain_id,
@@ -540,6 +563,14 @@ def run_stage3(
                 )
             surviving_11.append(p)
     proposals = surviving_11
+
+    result.class_model_binding = {
+        "structural_count": _cm_structural_count,
+        "with_class_model": _cm_with_class_model,
+        "by_tier": _cm_by_tier,
+        "by_refinement_kind": _cm_by_refinement_kind,
+        "invalid": _cm_invalid,
+    }
 
     # -------------------------------------------------------------------------
     # CHK-3d-05 — Non-Loss: every eligible CCI covered by ≥1 Requirement

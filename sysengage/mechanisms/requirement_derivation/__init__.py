@@ -252,8 +252,6 @@ def run_requirement_derivation(
                                 "resolved": 0,
                                 "new_canonical": 0,
                                 "synonyms_recorded": 0,
-                                "relationships_recorded": 0,
-                                "values_recorded": 0,
                                 "dd_unresolved": [],
                                 "dd_zero_term": [],
                             },
@@ -499,6 +497,30 @@ def run_requirement_derivation(
                             "elaboration_gaps": stage3.elaboration_gaps,
                             "path_r_count": stage2.path_r_count,
                             "mode_violations": [],
+                            # F105/F107 audit blocks (§4.4.3b / §7)
+                            "class_model_binding": stage3.class_model_binding,
+                            "object_refs_binding": pass_data.get(
+                                "mechanism_data_stage4", {}
+                            ).get("object_refs_binding", {"formed": 0, "dangling": []}),
+                            "model_coverage": (lambda chk: {
+                                "parent_elements": chk.get("prior_entity_count", 0),
+                                "covered": len(chk.get("covered_entities", [])),
+                                "ratio": (
+                                    round(
+                                        len(chk.get("covered_entities", []))
+                                        / chk.get("prior_entity_count", 1),
+                                        3,
+                                    )
+                                    if chk.get("prior_entity_count", 0) > 0
+                                    else None
+                                ),
+                            })(pass_data.get("mechanism_data_stage4", {}).get("chk3d12", {})),
+                            "model_coverage_gaps": [
+                                {"entity": e}
+                                for e in pass_data.get(
+                                    "mechanism_data_stage4", {}
+                                ).get("chk3d12", {}).get("uncovered_entities", [])
+                            ],
                         },
                         "execution_warnings": all_warnings,
                         "ai_model_fingerprints": (

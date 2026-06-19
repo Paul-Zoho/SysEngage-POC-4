@@ -632,8 +632,6 @@ def _run_dd_binding(
         "resolved": resolved,
         "new_canonical": new_canonical,
         "synonyms_recorded": synonyms_recorded,
-        "relationships_recorded": 0,
-        "values_recorded": 0,
         "dd_unresolved": dd_unresolved,
         "dd_zero_term": zero_term_entries,
     }
@@ -908,6 +906,22 @@ def run_stage4(
                 "error": str(exc),
             })
             proposal_object_refs.append([])
+
+    # Build object_refs_binding audit block (§4.4.3b / §7)
+    _orb_formed: int = sum(1 for paths in proposal_object_refs if paths)
+    _orb_dangling: list[dict[str, Any]] = []
+    for w in pass_data.get("execution_warnings_stage4", []):
+        if w.get("type") == "object_refs_dangling":
+            for d in w.get("dangling", []):
+                _orb_dangling.append({
+                    "provenance_ref": w.get("provenance_ref"),
+                    "path": d.get("path"),
+                    "reason": d.get("reason"),
+                })
+    pass_data.setdefault("mechanism_data_stage4", {})["object_refs_binding"] = {
+        "formed": _orb_formed,
+        "dangling": _orb_dangling,
+    }
 
     # Refresh the DB pool before the ledger transaction — second guard point.
     # _run_dd_binding's AI extraction batches (F101 v0.25) idle the main session
