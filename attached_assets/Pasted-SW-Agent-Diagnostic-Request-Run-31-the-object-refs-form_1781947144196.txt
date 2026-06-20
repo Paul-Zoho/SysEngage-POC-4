@@ -1,0 +1,73 @@
+SW-Agent Diagnostic Request — Run 31: the object_refs formed count is a false signal, the [G] attr_name gate isn't firing, and the producer still emits anonymous attributes
+
+Run reviewed: PMT_Ph03_3e_RequirementMatching_R2_Run31.json
+run_id 8a363206-5688-4633-830c-068581ed2828, created 2026-06-20T07:52 UTC, ledger v2.17, [G] partially deployed (the semantic_type_registry is live: Row 2 minted: 5, reused: 3).
+
+Three interlocking defects make the behavioural→model binding layer hollow while reporting as healthy. The first is the priority because it means we currently cannot trust the object_refs_binding.formed metric in any run.
+
+What's confirmed good (do NOT regress)
+
+
+[A] strict binding: TaskCompletionRecord→DD010, ChildEarningsRecord→DD011 each mint their own canonical (no fuzzy-bind to monetary value/reward).
+P1 (Row 1 authors no class_model), P2 (Row 2 profile clean, no over-population), CHK-3d-13 exempt/repair, semantic_type values clean (money, lifecycle_state, identifier, date, reference), the registry, matching (36 processed, 4 refine-links).
+[F] bare-entity reject works (TaskCompletionRecord → malformed_path_min_2_segments).
+
+
+
+1. PRIORITY — the object_refs resolver commits attribute paths WITHOUT verifying the attribute exists in the class_model (formed is a false positive)
+
+object_refs_binding.formed: 4 at Row 2. The four "formed" paths and the actual model attributes they should resolve against:
+
+object_ref (formed)fromtarget modelmodel's actual attributesTask.availability_statusR027, R028R026 Task(attr_name=null, money), (attr_name=null, lifecycle_state)TaskCompletionRecord.performing_child_refR029, R032R030 TaskCompletionRecord(attr_name=null, reference), (attr_name=null, date), (attr_name=null, reference)
+
+Every attribute in every model has attr_name: null. There is no attribute named availability_status or performing_child_ref anywhere — yet both resolve as formed. With all attribute names null, no attribute-level path can legitimately match by name, so all four should dangle attribute_not_in_class_model. Instead the resolver is committing them.
+
+This means formed does not measure what we read it as. Across runs the count has climbed 0→1→3→4 and looked like recovery, but it is the resolver rubber-stamping paths it never validated. This is the same class of bug as the Run-26 audit blocks that were written-but-never-read: the instrument reports success without doing the check.
+
+Questions — 1
+
+
+1a. In core/object_refs_resolver.py, after resolving the leading <Entity> to a class_model, does the resolver verify the .attr (and .value) segment against that model's attributes (by attr_name) before marking the path formed? Walk the resolution of Task.availability_status (R027) against R026's Task model and show where it should have dangled.
+1b. Make a path whose .attr segment has no matching attr_name in the target class_model dangle attribute_not_in_class_model (loud), never formed. After the fix, Run 31's four would all dangle (because the attributes are nameless) — which is the correct, honest signal.
+
+
+
+2. The [G] attr_name non-empty hard gate is not firing (the registry shipped, the gate didn't)
+
+[G] is partially deployed: the soft semantic_type_registry is live (minted: 5, reused: 3), but the hard attr_name-non-empty check is not rejecting null names. All three surviving Row 2 models (R026 Task, R030 TaskCompletionRecord, R033 ChildEarningsRecord) carry only attr_name: null attributes, and class_model_binding.invalid contains no attr_name_empty — the only invalid entry is a zero-attribute Child from the older ≥1-attribute rule.
+
+So the same half-a-feature pattern as object_refs (Run 25) and the audit blocks (Run 26): the open/soft side landed ahead of the hard gate.
+
+Questions — 2
+
+
+2a. Is the [G] CHK-3d-11 clause attr_name non-empty (detail: attr_name_empty) implemented in core/class_model_validity.py? If yes, why did three models of all-null attr_name pass with invalid empty of it? If no, it needs adding alongside the semantic_type shape/POS checks (Row 4 RD v0.37 §4.3 [G]).
+2b. Confirm the semantic_type shape (^[a-z][a-z0-9_]*$) and POS-tag rejection are also implemented and firing (the values look clean, but we need to know the gate exists, not that the producer happens to be clean this run).
+
+
+
+3. The producer still emits attr_name: null (the root cause)
+
+Both gates above are backstops; the root is that the IM / CHK-3d-13 repair produces attributes with a semantic_type but no attr_name. Note the name must be the referenceable attribute name, not a placeholder: R027/R028 reference Task.availability_status, so the Task model's lifecycle_state attribute must be named availability_status (and its money attribute monetary_value, etc.) — i.e. the attribute names the model emits must be the same names the behavioural statements use, or nothing will ever resolve even after gates #1/#2 are honest.
+
+Questions — 3
+
+
+3a. Why does the producer emit attr_name: null? Is the IM prompt asking for semantic_type but not attr_name, or is the parse dropping it? Show the Row-2 class_model instruction and the emitted JSON for R026 Task.
+3b. Ensure the emitted attr_name is the attribute's real, referenceable name (the noun the prose uses — availability_status, monetary_value), so behavioural object_refs can bind to it.
+
+
+
+How these interlock (why fix all three)
+
+Right now #1 masks #2 and #3: because the resolver doesn't validate the attribute segment, anonymous attributes don't cause visible failures — the paths just "form." Fixing #1 alone would (correctly) turn the four formed into four danglers, making the breakage visible; fixing #2 makes the model itself rejected until named; fixing #3 makes it pass honestly. Land all three and the next run's formed count becomes trustworthy for the first time.
+
+What we need back
+
+
+The resolver attribute-segment validation (§1) — top priority; until it lands, every formed count is suspect.
+The [G] attr_name_empty gate firing (§2a) and confirmation the semantic_type shape/POS gate exists (§2b).
+The producer emitting real attr_names (§3) matching the names the behavioural statements reference.
+
+
+With all three, a re-run should show either honest danglers (if names still missing) or real formed bindings (if named) — and only then is a Row 1–3 run worth doing to finally exercise CHK-3d-12.

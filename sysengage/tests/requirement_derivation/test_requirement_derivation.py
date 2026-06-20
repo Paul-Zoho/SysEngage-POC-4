@@ -27,6 +27,7 @@ import pytest
 from sqlalchemy import text
 
 from core.class_model_validity import validate_class_model
+from core.object_refs_resolver import resolve_object_refs
 from core.semantic_type_registry import SemanticTypeRegistry
 from mechanisms.requirement_derivation.schemas.requirement_derivation_response_schema import (
     RequirementProposal,
@@ -1158,3 +1159,105 @@ class TestSemanticTypeRegistry:
         reg1.register("amount")
         result = reg2.register("amount")
         assert result["outcome"] == "minted"
+
+
+# ---------------------------------------------------------------------------
+# VER-3d-27: object_refs_resolver null-name dangle behaviour
+# ---------------------------------------------------------------------------
+
+
+class TestObjectRefsResolver:
+    """
+    VER-3d-27: object_refs_resolver attribute-segment validation.
+
+    Key contracts:
+      - A path whose .attr segment matches an attr by name → resolved (formed).
+      - A path whose .attr segment has no matching attr name → dangle
+        attribute_not_in_class_model (never crash, never formed).
+      - An attr with name=None → dangle, not AttributeError crash.
+      - An entity not in the working set → dangle entity_not_in_working_set.
+      - A path with only 1 segment → dangle malformed_path_min_2_segments.
+
+    Run individually (no DB required):
+      pytest "tests/requirement_derivation/test_requirement_derivation.py::TestObjectRefsResolver::test_named_attr_resolves" -v
+    """
+
+    def _working_set(self, entity: str, attrs: list[dict]) -> dict:
+        return {entity: {"entity": entity, "tier": 2, "attributes": attrs}}
+
+    def test_named_attr_resolves(self):
+        """Path whose .attr matches a named attribute → resolved (formed), no dangling."""
+        ws = self._working_set(
+            "Task",
+            [{"name": "availability_status", "semantic_type": "lifecycle_state", "origin": "introduced"}],
+        )
+        resolved, dangling = resolve_object_refs(["Task.availability_status"], ws, "R027")
+        assert resolved == ["Task.availability_status"]
+        assert dangling == []
+
+    def test_null_name_attr_dangles_not_crashes(self):
+        """Attr with name=None → dangle attribute_not_in_class_model; no AttributeError crash."""
+        ws = self._working_set(
+            "Task",
+            [{"name": None, "semantic_type": "lifecycle_state", "origin": "introduced"}],
+        )
+        resolved, dangling = resolve_object_refs(["Task.availability_status"], ws, "R027")
+        assert resolved == [], f"Expected no formed paths; got {resolved}"
+        assert len(dangling) == 1
+        assert "attribute_not_in_class_model" in dangling[0]["reason"]
+
+    def test_empty_name_attr_dangles(self):
+        """Attr with name='' → dangle attribute_not_in_class_model."""
+        ws = self._working_set(
+            "Task",
+            [{"name": "", "semantic_type": "lifecycle_state", "origin": "introduced"}],
+        )
+        resolved, dangling = resolve_object_refs(["Task.some_attr"], ws, "R027")
+        assert resolved == []
+        assert any("attribute_not_in_class_model" in d["reason"] for d in dangling)
+
+    def test_unrecognised_attr_dangles(self):
+        """Path .attr segment not in model attributes → dangle attribute_not_in_class_model."""
+        ws = self._working_set(
+            "Task",
+            [{"name": "monetary_value", "semantic_type": "money", "origin": "introduced"}],
+        )
+        resolved, dangling = resolve_object_refs(["Task.nonexistent_attr"], ws, "R028")
+        assert resolved == []
+        assert any("attribute_not_in_class_model" in d["reason"] for d in dangling)
+
+    def test_entity_not_in_working_set_dangles(self):
+        """Entity not in working set → dangle entity_not_in_working_set."""
+        ws = self._working_set(
+            "Task",
+            [{"name": "status", "semantic_type": "lifecycle_state", "origin": "introduced"}],
+        )
+        resolved, dangling = resolve_object_refs(["Payment.amount"], ws, "R029")
+        assert resolved == []
+        assert any("entity_not_in_working_set" in d["reason"] for d in dangling)
+
+    def test_malformed_single_segment_dangles(self):
+        """Path with only 1 segment → dangle malformed_path_min_2_segments."""
+        ws = self._working_set(
+            "Task",
+            [{"name": "status", "semantic_type": "lifecycle_state", "origin": "introduced"}],
+        )
+        resolved, dangling = resolve_object_refs(["TaskCompletionRecord"], ws, "R031")
+        assert resolved == []
+        assert dangling[0]["reason"] == "malformed_path_min_2_segments"
+
+    def test_mixed_valid_and_null_name_attrs(self):
+        """Model with one named and one null-named attr: named path resolves, wrong path dangles."""
+        ws = self._working_set(
+            "Task",
+            [
+                {"name": "monetary_value", "semantic_type": "money", "origin": "introduced"},
+                {"name": None, "semantic_type": "lifecycle_state", "origin": "introduced"},
+            ],
+        )
+        resolved, dangling = resolve_object_refs(
+            ["Task.monetary_value", "Task.availability_status"], ws, "R026"
+        )
+        assert resolved == ["Task.monetary_value"]
+        assert len(dangling) == 1
+        assert "attribute_not_in_class_model" in dangling[0]["reason"]

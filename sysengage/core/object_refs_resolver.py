@@ -94,12 +94,15 @@ def resolve_object_refs(
             continue
 
         # Step 2 — resolve attribute
+        # str(... or "") guards against None attr names (stored as null in JSONB):
+        # a.get("name", "") returns None (not "") when the key exists with a null
+        # value, which would crash on .strip(). The or-pattern converts None → "".
         attrs: list[dict[str, Any]] = cm.get("attributes", [])
         matched_attr: dict[str, Any] | None = None
         for a in attrs:
             if (
                 isinstance(a, dict)
-                and a.get("name", "").strip().lower() == attr_name.lower()
+                and str(a.get("name") or "").strip().lower() == attr_name.lower()
             ):
                 matched_attr = a
                 break

@@ -180,6 +180,10 @@ Row 3 adds `type` (LOGICAL types only — see enum), `key`, `domain`, `target_re
 Physical DB types such as VARCHAR(255) or BIGINT are NOT permitted at Row 3 —
 CHK-3d-11 HARD-rejects them (`profile_violation_row3:type_not_logical`).
 
+**`name` field**: use a referenceable snake_case noun derived from the concept
+(e.g. "availability_status", "monetary_value", "completion_date", "task_ref").
+NEVER copy the placeholder literally. NEVER leave `name` null or empty.
+
 Logical `type` closed enum: String | Integer | DateTime | Boolean | Decimal | Enum | Reference | JSON
 
 Row 3 class_model schema:
@@ -190,7 +194,7 @@ Row 3 class_model schema:
   "refinement_kind": "identity|decompose|realise_relationship|introduce|merge",
   "attributes": [
     {{
-      "name": "attr_name",
+      "name": "availability_status",
       "type": "String|Integer|DateTime|Boolean|Decimal|Enum|Reference|JSON",
       "key": "PK|FK|null",
       "semantic_type": "identifier|lifecycle_state|quantity|money|name|date|...",
@@ -225,6 +229,10 @@ Constraints (enforced by CHK-3d-11):
 When `requirement_type` is `Structural`, you SHOULD provide a `class_model` dict.
 When class_model is provided, `statement` is optional — the system will project prose.
 
+**`name` field**: use a referenceable snake_case noun derived from the concept
+(e.g. "availability_status", "monetary_value", "completion_date", "task_ref").
+NEVER copy the placeholder literally. NEVER leave `name` null or empty.
+
 class_model schema:
 ```json
 {{
@@ -233,7 +241,7 @@ class_model schema:
   "refinement_kind": "identity|decompose|realise_relationship|introduce|merge",
   "attributes": [
     {{
-      "name": "attr_name",
+      "name": "availability_status",
       "type": "String|Integer|DateTime|Boolean|Decimal|Enum|Reference|JSON",
       "key": "PK|FK|null",
       "semantic_type": "identifier|lifecycle_state|quantity|money|name|date|...",
