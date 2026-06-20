@@ -9,10 +9,12 @@ Tests that require a live Neon DB are marked @pytest.mark.db.
 DB tests MUST be run one at a time due to Neon connection-pool interference.
 
 Test coverage:
-  TestStage1Preflight         — Unit / DB tests for Stage 1 logic
-  TestStage3Validation        — Unit tests for CHK-3d-01 through CHK-3d-07
-  TestStage2Routing           — Unit tests for scenario detection routing
-  TestVerificationCriteria    — VER-3d-XX criteria (mocked AI, live session)
+  TestStage1Preflight              — Unit / DB tests for Stage 1 logic
+  TestStage3Validation             — Unit tests for CHK-3d-01 through CHK-3d-07
+  TestStage2Routing                — Unit tests for scenario detection routing
+  TestVerificationCriteria         — VER-3d-XX criteria (mocked AI, live session)
+  TestCHK3d11AttributeWellFormed   — VER-3d-26: [G] attr_name + semantic_type shape/POS checks
+  TestSemanticTypeRegistry         — Unit tests for the accreting semantic_type registry
 """
 
 from __future__ import annotations
@@ -24,6 +26,8 @@ from unittest.mock import MagicMock, patch
 import pytest
 from sqlalchemy import text
 
+from core.class_model_validity import validate_class_model
+from core.semantic_type_registry import SemanticTypeRegistry
 from mechanisms.requirement_derivation.schemas.requirement_derivation_response_schema import (
     RequirementProposal,
 )
@@ -941,3 +945,216 @@ class TestVerificationCriteria:
         assert second.get("scenario") == "IdempotentRerun", (
             f"Expected IdempotentRerun on second run; got scenario={second.get('scenario')}"
         )
+
+
+# ---------------------------------------------------------------------------
+# VER-3d-26: CHK-3d-11 [G] attribute well-formedness (v0.37)
+# ---------------------------------------------------------------------------
+
+
+class TestCHK3d11AttributeWellFormed:
+    """
+    VER-3d-26: CHK-3d-11 [G] attribute well-formedness checks (v0.37).
+
+    Hard checks added by [G]:
+      attr_name_empty       — attribute.name is null/empty
+      semantic_type_pos_tag — semantic_type is a universal POS tag (case-insensitive)
+      semantic_type_malformed — semantic_type fails ^[a-z][a-z0-9_]*$ shape
+
+    Run individually (no DB required):
+      pytest "tests/requirement_derivation/test_requirement_derivation.py::TestCHK3d11AttributeWellFormed::test_attr_name_empty_is_hard_violation" -v
+    """
+
+    def _cm(self, attrs: list[dict], row_ref: int = 2) -> dict:
+        return {
+            "entity": "BloodPressure",
+            "tier": row_ref,
+            "refinement_kind": "introduce",
+            "attributes": attrs,
+        }
+
+    def test_attr_name_empty_is_hard_violation(self):
+        """attr_name null/empty → hard violation with detail 'attr_name_empty'."""
+        cm = self._cm([
+            {"name": "", "origin": "introduced", "semantic_type": "measurement"},
+        ])
+        violations = validate_class_model(cm, row_ref=2)
+        details = [v["detail"] for v in violations]
+        assert "attr_name_empty" in details, f"Expected attr_name_empty; got {details}"
+        assert all(
+            v["severity"] == "hard"
+            for v in violations
+            if v["detail"] == "attr_name_empty"
+        )
+
+    def test_attr_name_none_is_hard_violation(self):
+        """attr_name=None → hard violation with detail 'attr_name_empty'."""
+        cm = self._cm([
+            {"name": None, "origin": "introduced", "semantic_type": "measurement"},
+        ])
+        violations = validate_class_model(cm, row_ref=2)
+        details = [v["detail"] for v in violations]
+        assert "attr_name_empty" in details, f"Expected attr_name_empty; got {details}"
+
+    def test_semantic_type_pos_tag_capitalized(self):
+        """semantic_type='Noun' → hard violation 'semantic_type_pos_tag' (POS check before shape)."""
+        cm = self._cm([
+            {"name": "systolic", "origin": "introduced", "semantic_type": "Noun"},
+        ])
+        violations = validate_class_model(cm, row_ref=2)
+        details = [v["detail"] for v in violations]
+        assert "semantic_type_pos_tag" in details, f"Expected semantic_type_pos_tag; got {details}"
+        assert all(
+            v["severity"] == "hard"
+            for v in violations
+            if v["detail"] == "semantic_type_pos_tag"
+        )
+
+    def test_semantic_type_pos_tag_lowercase(self):
+        """semantic_type='noun' (lowercase) → hard violation 'semantic_type_pos_tag'."""
+        cm = self._cm([
+            {"name": "status", "origin": "introduced", "semantic_type": "noun"},
+        ])
+        violations = validate_class_model(cm, row_ref=2)
+        details = [v["detail"] for v in violations]
+        assert "semantic_type_pos_tag" in details, f"Expected semantic_type_pos_tag; got {details}"
+
+    def test_semantic_type_pos_tag_verb(self):
+        """semantic_type='verb' → hard violation 'semantic_type_pos_tag'."""
+        cm = self._cm([
+            {"name": "action", "origin": "introduced", "semantic_type": "verb"},
+        ])
+        violations = validate_class_model(cm, row_ref=2)
+        details = [v["detail"] for v in violations]
+        assert "semantic_type_pos_tag" in details, f"Expected semantic_type_pos_tag; got {details}"
+
+    def test_semantic_type_malformed_physical_type(self):
+        """semantic_type='VARCHAR(255)' → hard violation 'semantic_type_malformed'."""
+        cm = self._cm([
+            {"name": "bp_value", "origin": "introduced", "semantic_type": "VARCHAR(255)"},
+        ], row_ref=3)
+        violations = validate_class_model(cm, row_ref=3)
+        details = [v["detail"] for v in violations]
+        assert "semantic_type_malformed" in details, f"Expected semantic_type_malformed; got {details}"
+        assert all(
+            v["severity"] == "hard"
+            for v in violations
+            if v["detail"] == "semantic_type_malformed"
+        )
+
+    def test_semantic_type_malformed_uppercase_start(self):
+        """semantic_type='BloodPressure' → hard violation 'semantic_type_malformed' (shape fails)."""
+        cm = self._cm([
+            {"name": "value", "origin": "introduced", "semantic_type": "BloodPressure"},
+        ], row_ref=3)
+        violations = validate_class_model(cm, row_ref=3)
+        details = [v["detail"] for v in violations]
+        assert "semantic_type_malformed" in details, f"Expected semantic_type_malformed; got {details}"
+
+    def test_domain_specific_semantic_type_passes(self):
+        """systolic_pressure is a novel domain term — shape-valid, not a POS tag → no [G] violation."""
+        cm = self._cm([
+            {"name": "value", "origin": "introduced", "semantic_type": "systolic_pressure"},
+        ])
+        violations = validate_class_model(cm, row_ref=2)
+        g_violations = [
+            v for v in violations
+            if v["detail"] in ("attr_name_empty", "semantic_type_malformed", "semantic_type_pos_tag")
+        ]
+        assert not g_violations, f"Expected no [G] violations for 'systolic_pressure'; got {g_violations}"
+
+    def test_identifier_semantic_type_passes(self):
+        """semantic_type='identifier' is shape-valid and not a POS tag → passes [G]."""
+        cm = self._cm([
+            {"name": "id", "origin": "introduced", "semantic_type": "identifier"},
+        ])
+        violations = validate_class_model(cm, row_ref=2)
+        g_violations = [
+            v for v in violations
+            if v["detail"] in ("attr_name_empty", "semantic_type_malformed", "semantic_type_pos_tag")
+        ]
+        assert not g_violations, f"Expected no [G] violations for 'identifier'; got {g_violations}"
+
+    def test_semantic_type_absent_no_g_violation(self):
+        """semantic_type absent (null) → no [G] shape/POS violations (field is optional)."""
+        cm = self._cm([
+            {"name": "quantity", "origin": "introduced", "semantic_type": None},
+        ], row_ref=3)
+        violations = validate_class_model(cm, row_ref=3)
+        g_violations = [
+            v for v in violations
+            if v["detail"] in ("semantic_type_malformed", "semantic_type_pos_tag")
+        ]
+        assert not g_violations, f"Expected no [G] shape/POS violations when semantic_type=None; got {g_violations}"
+
+
+# ---------------------------------------------------------------------------
+# Semantic-type registry unit tests
+# ---------------------------------------------------------------------------
+
+
+class TestSemanticTypeRegistry:
+    """
+    Unit tests for SemanticTypeRegistry (core/semantic_type_registry.py).
+
+    Run individually:
+      pytest "tests/requirement_derivation/test_requirement_derivation.py::TestSemanticTypeRegistry::test_first_registration_is_minted" -v
+    """
+
+    def test_first_registration_is_minted(self):
+        """First time a term is registered → outcome='minted'."""
+        reg = SemanticTypeRegistry()
+        result = reg.register("monetary_value")
+        assert result["outcome"] == "minted"
+        assert result["near_duplicates"] == []
+
+    def test_second_registration_is_reused(self):
+        """Same term registered twice → second call returns outcome='reused'."""
+        reg = SemanticTypeRegistry()
+        reg.register("monetary_value")
+        result = reg.register("monetary_value")
+        assert result["outcome"] == "reused"
+
+    def test_summary_counts_correct(self):
+        """Summary minted/reused counts match registration history."""
+        reg = SemanticTypeRegistry()
+        reg.register("amount")
+        reg.register("quantity")
+        reg.register("amount")
+        reg.register("rate")
+        summary = reg.summary()
+        assert summary["minted"] == 3
+        assert summary["reused"] == 1
+
+    def test_near_duplicate_detected(self):
+        """'monetary_value' and 'monetary_values' are near-duplicates (ratio ≥ 0.75)."""
+        reg = SemanticTypeRegistry()
+        reg.register("monetary_value")
+        result = reg.register("monetary_values")
+        assert result["near_duplicates"] == ["monetary_value"], (
+            f"Expected near-dup 'monetary_value'; got {result['near_duplicates']}"
+        )
+        summary = reg.summary()
+        assert len(summary["near_duplicates"]) == 1
+        assert summary["near_duplicates"][0]["check_id"] == "PLB-3d-07"
+
+    def test_distinct_terms_no_near_duplicate(self):
+        """'identifier' and 'lifecycle_state' are not near-duplicates."""
+        reg = SemanticTypeRegistry()
+        reg.register("identifier")
+        result = reg.register("lifecycle_state")
+        assert result["near_duplicates"] == []
+
+    def test_empty_string_does_not_crash(self):
+        """Empty string is handled gracefully."""
+        reg = SemanticTypeRegistry()
+        result = reg.register("")
+        assert result["outcome"] in ("minted", "reused")
+
+    def test_registry_is_independent_per_instance(self):
+        """Two SemanticTypeRegistry instances do not share state."""
+        reg1 = SemanticTypeRegistry()
+        reg2 = SemanticTypeRegistry()
+        reg1.register("amount")
+        result = reg2.register("amount")
+        assert result["outcome"] == "minted"

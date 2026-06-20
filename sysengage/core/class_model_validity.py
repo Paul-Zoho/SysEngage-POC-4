@@ -1,7 +1,7 @@
 """
 CHK-3d-11 — Structural class_model validity check.
 
-Per Requirement Derivation Mechanism Spec v0.36 §4.3.
+Per Requirement Derivation Mechanism Spec v0.37 §4.3.
 
 Validates a class_model dict on a Structural proposal after Stage 2.
 Returns a list of violation dicts.  Callers must inspect severity:
@@ -19,8 +19,10 @@ Hard violations:
   - no attributes (list is empty)
   - Row 2: no attribute carries semantic_type
   - >1 attribute with key == 'PK'
-  - any attribute with blank name
+  - [G] any attribute with null/empty name (detail: attr_name_empty)
   - any attribute with invalid origin enum
+  - [G] semantic_type present but is a universal POS tag (detail: semantic_type_pos_tag)
+  - [G] semantic_type present but fails ^[a-z][a-z0-9_]*$ shape (detail: semantic_type_malformed)
   - any relationship with blank target
   - [C] Row 2 profile violations: key/domain/target_ref forbidden at Row 2
   - [C] Row 2–3 type violation: type value not in logical closed enum
@@ -32,12 +34,25 @@ Soft violations:
 
 from __future__ import annotations
 
+import re
 from typing import Any
 
 _VALID_KINDS = frozenset(
     {"identity", "decompose", "realise_relationship", "introduce", "merge"}
 )
 _VALID_ORIGINS = frozenset({"refines", "realises", "introduced"})
+
+# [G] Closed universal POS tag set — case-insensitive match.
+# A semantic_type that resolves to one of these (lower-cased) is a POS tag,
+# not a domain concept, and is rejected as semantic_type_pos_tag (HARD).
+_POS_TAG_SET = frozenset({
+    "noun", "verb", "qualifier", "adjective", "adverb",
+    "pronoun", "preposition", "conjunction", "determiner",
+    "interjection", "article", "particle",
+})
+
+# [G] Shape pattern for semantic_type: single lowercase snake_case token.
+_SEMANTIC_TYPE_SHAPE = re.compile(r"^[a-z][a-z0-9_]*$")
 
 # [C] Closed logical type enum — valid at Rows 2 and 3.
 # A value outside this set at Row 2 or 3 is a profile violation (type_not_logical).
@@ -51,7 +66,7 @@ def validate_class_model(
     cm: dict[str, Any], row_ref: int
 ) -> list[dict[str, Any]]:
     """
-    Run CHK-3d-11 structural validity checks (v0.36: adds [C] profile + [D] tier-1).
+    Run CHK-3d-11 structural validity checks (v0.37: adds [G] attr_name + semantic_type).
 
     Returns list of violation dicts:
         {"check_id": "CHK-3d-11", "detail": str, "severity": "hard"|"soft"}
@@ -121,8 +136,9 @@ def validate_class_model(
             hard(f"attributes[{i}] is not a dict")
             continue
 
-        if not attr.get("name", "").strip():
-            hard(f"attributes[{i}].name is empty")
+        # [G] attr_name non-empty (standardised detail key)
+        if not str(attr.get("name") or "").strip():
+            hard("attr_name_empty")
 
         origin = attr.get("origin", "")
         if origin not in _VALID_ORIGINS:
@@ -130,6 +146,16 @@ def validate_class_model(
                 f"attributes[{i}].origin {origin!r} not in "
                 f"{sorted(_VALID_ORIGINS)}"
             )
+
+        # [G] semantic_type shape + POS gate (only when value is present)
+        st = attr.get("semantic_type")
+        if st is not None and str(st).strip():
+            st_str = str(st).strip()
+            # POS check runs first (case-insensitive); catches "Noun", "noun", etc.
+            if st_str.lower() in _POS_TAG_SET:
+                hard("semantic_type_pos_tag")
+            elif not _SEMANTIC_TYPE_SHAPE.match(st_str):
+                hard("semantic_type_malformed")
 
         # [C] Per-row attribute profile enforcement (v0.36)
         if row_ref == 2:

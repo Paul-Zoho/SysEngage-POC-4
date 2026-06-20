@@ -41,6 +41,7 @@ from core.db import format_identifier, get_next_sequence_value, get_session, ref
 from core.slots import extract_slot_terms
 from core.class_model_coverage import check_concept_coverage
 from core.object_refs_resolver import resolve_object_refs
+from core.semantic_type_registry import SemanticTypeRegistry
 from mechanisms.data_dictionary.service import resolve_and_record
 from mechanisms.requirement_derivation.prompts.requirement_dd_extraction_prompt import (
     build_dd_extraction_prompt,
@@ -924,6 +925,30 @@ def run_stage4(
         "formed": _orb_formed,
         "dangling": _orb_dangling,
     }
+
+    # --- §4.4.3c Semantic-type registry (v0.37 [G]) -----------------------
+    # Scan all committed class_model attributes and accrete their semantic_type
+    # tokens into a session-scoped registry. Near-duplicate pairs (ratio ≥ 0.75)
+    # emit PLB-3d-07 soft warnings; novel terms are minted; reused terms increment
+    # a counter. The summary is written into mechanism_data for §7 reporting.
+    _st_registry = SemanticTypeRegistry()
+    for p in proposals:
+        if p.class_model and isinstance(p.class_model.get("attributes"), list):
+            for attr in p.class_model["attributes"]:
+                if isinstance(attr, dict):
+                    st = attr.get("semantic_type")
+                    if st and isinstance(st, str):
+                        reg_result = _st_registry.register(st)
+                        if reg_result["near_duplicates"]:
+                            pass_data.setdefault("execution_warnings_stage4", []).append({
+                                "type": "semantic_type_near_duplicate",
+                                "check_id": "PLB-3d-07",
+                                "semantic_type": st,
+                                "near_duplicates": reg_result["near_duplicates"],
+                            })
+    pass_data.setdefault("mechanism_data_stage4", {})["semantic_type_registry"] = (
+        _st_registry.summary()
+    )
 
     # Refresh the DB pool before the ledger transaction — second guard point.
     # _run_dd_binding's AI extraction batches (F101 v0.25) idle the main session

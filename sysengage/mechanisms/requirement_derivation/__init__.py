@@ -521,6 +521,12 @@ def run_requirement_derivation(
                                     "mechanism_data_stage4", {}
                                 ).get("chk3d12", {}).get("uncovered_entities", [])
                             ],
+                            "semantic_type_registry": pass_data.get(
+                                "mechanism_data_stage4", {}
+                            ).get(
+                                "semantic_type_registry",
+                                {"minted": 0, "reused": 0, "near_duplicates": []},
+                            ),
                         },
                         "execution_warnings": all_warnings,
                         "ai_model_fingerprints": (
